@@ -1504,13 +1504,28 @@ function _ibx(x,y,w,h,l1,l2,res){
 function buildInspectorTree(p,ctx){
   try{
   var e=p.eng||{}, n=p.notes||'', pc=ctx.pc, pm=ctx.pm, h=p.h, r=ctx.r, base=ctx.base, growth=ctx.growth, scar=ctx.scarcity;
+  var rfEng=(e.b==='vet')&&/RECENCY FLOOR v16/.test(n);
   var pure=[];
-  if(e.b==='vet'){ pure.push([(e.rch?'2026 to-date (ratchet)':'Peak season'),(e.pk!=null?e.pk+' FP':'peak')]); if(e.rm!=null&&e.rm<1)pure.push(['x regression','x'+e.rm.toFixed(2)]); if(e.cl!=null&&e.cl<1)pure.push(['x Father-Time cliff','x'+e.cl.toFixed(2)]); }
+  if(e.b==='vet'){
+    pure.push([(e.rch?'2026 to-date (ratchet)':'Peak season'),(e.pk!=null?e.pk+' FP':'peak')]);
+    if(rfEng&&e.pk!=null){
+      var _cl=(e.cl!=null&&e.cl<1)?e.cl:1, _reg=Math.round(e.pk*(e.rm!=null?e.rm:1)*_cl);
+      var _A=Math.round((p.pace||0)*0.85), _B=Math.round(e.pk*0.90), _F=Math.min(_A,_B);
+      pure.push(['x regr '+(e.rm!=null?e.rm.toFixed(3):'1.000')+(_cl<1?(' x cliff '+_cl.toFixed(2)):''),'= '+_reg]);
+      pure.push(['recency: pace '+(p.pace||0)+' x0.85','= '+_A]);
+      pure.push(['recency: peak '+e.pk+' x0.90 (cap)','= '+_B]);
+      pure.push(['floor = lesser of two','= '+_F]);
+      pure.push(['Pure = max(regr '+_reg+', floor '+_F+')','']);
+    } else {
+      if(e.rm!=null&&e.rm<1)pure.push(['x regression','x'+e.rm.toFixed(2)]);
+      if(e.cl!=null&&e.cl<1)pure.push(['x Father-Time cliff','x'+e.cl.toFixed(2)]);
+    }
+  }
   else if(e.b==='prod'){ var _scp=(e.sc!=null?e.sc:scar)||1; var _pb=(e.pk!=null?e.pk:Math.round(pc/((growth||1)*_scp))); pure.push([(e.rch?'2026 to-date (banked)':'Best qualifying season'),''+_pb]); pure.push(['x growth (age '+p.a+')','x'+growth.toFixed(2)]); }
   else if(e.b==='tool'){ pure.push(['FV'+(e.fv||'?')+' tool ceiling',''+(e.tc!=null?e.tc:pc)]); if(e.bdisc!=null)pure.push(['x SP/RP/Wash '+(e.bw||''),'x'+e.bdisc]); }
   else { pure.push(['career best x 1.05','']); }
-  var sc=(e.sc!=null?e.sc:scar); if(sc!==1)pure.push(['x scarcity ('+p.p+')','x'+sc.toFixed(2)]);
-  if(/closer/i.test(n))pure.push(['x closer','x1.20']);
+  var sc=(e.sc!=null?e.sc:scar); if(sc!==1&&!rfEng)pure.push(['x scarcity ('+p.p+')','x'+sc.toFixed(2)]);
+  if(/closer/i.test(n)&&!rfEng)pure.push(['x closer','x1.20']);
   if(p.t==='T4'){ var pmx=n.match(/(AAA|AA|High-?A|A|Rookie)\s*([-+]?\d+%)\s*(?:hitter|pitcher)?\s*proximity/i); if(pmx)pure.push(['x '+pmx[1]+' proximity',pmx[2]]); }
   pure.push(['= PURE CEILING',''+pc]);
   var hit=[];
@@ -1520,7 +1535,7 @@ function buildInspectorTree(p,ctx){
   else { hit.push(['depth default','0.50']); }
   hit.push(['= HIT %',h.toFixed(3)]);
   var pace=[]; pace.push(['2026 pace',''+(p.pace!=null?p.pace:'n/a')]);
-  if(Math.abs(pm-1)<1e-9){ var why=(/active IL/i.test(n)?'on IL':(pc<300?'Pure<300':((p.pace||0)<=50?'low pace':'~ expectation'))); pace.push(['= PACE MULT','1.00 ('+why+')']); }
+  if(Math.abs(pm-1)<1e-9){ var why=(rfEng?'floor banks pace':(/active IL/i.test(n)?'on IL':(pc<300?'Pure<300':((p.pace||0)<=50?'low pace':'~ expectation')))); pace.push(['= PACE MULT','1.00 ('+why+')']); }
   else { pace.push(['vs expected','clamp .5-1.5']); pace.push(['= PACE MULT',pm.toFixed(3)]); }
   var cols=[['PURE',pure],['HIT %',hit],['PACE',pace]];
   var W=720,colW=210,cx=[120,360,600],boxH=30,vg=10,topY=120,hdrY=104;
@@ -1586,7 +1601,20 @@ function renderInspector(p) {
     const e = p.eng; if(!e) return '';
     const pkAgeTxt = isPitcher ? 'peak 27' : 'peak 26';
     if (e.b === 'vet') {
-      let x = sub2(e.rch ? 'Best production — 2026 to-date (in-season ratchet)' : 'Best career season (peak)', `${e.pk} FP (${e.py||'?'})`);
+      const rfEng = /RECENCY FLOOR v16/.test(p.notes||'');
+      let x = sub2(e.rch ? 'Best production â 2026 to-date (in-season ratchet)' : 'Best career season (peak)', `${e.pk} FP (${e.py||'?'})`);
+      if (rfEng && e.pk!=null) {
+        const _cl=(e.cl!=null&&e.cl<1)?e.cl:1;
+        const _reg=Math.round(e.pk*(e.rm!=null?e.rm:1)*_cl);
+        const _A=Math.round((p.pace||0)*0.85), _B=Math.round(e.pk*0.90), _F=Math.min(_A,_B);
+        x += sub2(`× Age regression (${e.ry||'?'} yr past peak)${_cl<1?` × Father-Time cliff ×${_cl.toFixed(3)}`:''}`, `×${(e.rm!=null?e.rm:1).toFixed(3)} → ${_reg}`, 'sub');
+        x += sub2(`Recency floor — 2026 pace ${p.pace} × 0.85`, `= ${_A}`, 'sub');
+        x += sub2(`Recency floor — career peak ${e.pk} × 0.90 (sanity cap)`, `= ${_B}`, 'sub');
+        x += sub2('Recency floor = lesser of the two', `= ${_F}`, 'sub');
+        x += sub2(`= Pure ceiling = greater of (regressed ${_reg}, floor ${_F})`, pc, 'subtotal');
+        x += `<div class="formula-row note"><span class="value">Recency floor (§20.12): this still-producing past-peak vet's regressed peak (${_reg}) fell below his demonstrated 2026 production, so Pure is floored to the lesser of 85% of current pace and 90% of career peak. Because current pace is now banked into Pure, the pace multiplier is retired to ×1.00 to avoid paying for it twice.</span></div>`;
+        return x;
+      }
       x += (e.rm < 1)
         ? sub2(`× Age regression (${e.ry} yr${e.ry>1?'s':''} past peak; starts age ${e.rs})`, `×${e.rm.toFixed(3)}`)
         : sub2(`× Age regression (held flat — begins age ${e.rs})`, '×1.000');
