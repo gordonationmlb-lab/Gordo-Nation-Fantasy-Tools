@@ -475,6 +475,13 @@ function healthyBaseJS(age, role) {
 
 // When FADE_MODE is on, T3/T4 players get their bust discount linearly faded out
 // from year 1 (full discount) to peak age (full healthy_base, no rookie penalty).
+function prospectBlend(player) {
+  const e = player.eng || {};
+  if (e.bdisc != null) return e.bdisc;
+  const m = (player.notes || '').match(/blend\s+(\d+)\/(\d+)\/(\d+)/);
+  if (m) { const a=+m[1], b=+m[2], c=+m[3]; return Math.round((a/100*1.0 + b/100*0.60 + c/100*0.0)*1000)/1000; }
+  return 1.0;
+}
 function fadeAdjustedTj(player, yearIdx) {
   const type = String(player.t || '');
   if (FADE_MODE === 'off' || (type !== 'T3' && type !== 'T4')) {
@@ -490,18 +497,17 @@ function fadeAdjustedTj(player, yearIdx) {
   const yearAge = currentAge + yearIdx;
   const currentHit = player.h || 0.80;
   const targetHit = healthyBaseJS(yearAge, role);
-  let hit;
-  if (yearAge >= peakAge) {
-    hit = targetHit;  // Full fade
-  } else {
-    const yearsToFade = peakAge - currentAge;
-    if (yearsToFade <= 0) { hit = targetHit; }
-    else {
-      const fraction = Math.min(1, yearIdx / yearsToFade);
-      hit = currentHit + (targetHit - currentHit) * fraction;
-    }
-  }
-  return player.tjp[yearIdx] * hit;
+  const yearsToFade = peakAge - currentAge;
+  let fraction;
+  if (yearAge >= peakAge || yearsToFade <= 0) fraction = 1;
+  else fraction = Math.min(1, yearIdx / yearsToFade);
+  // Hit% bust fades toward healthy base
+  const hit = currentHit + (targetHit - currentHit) * fraction;
+  // SP/RP/Washout blend fades toward 1.0 (prospect realizes the starter/ace outcome)
+  const bd = prospectBlend(player);
+  const bdFaded = bd + (1 - bd) * fraction;
+  const fadedPure = (player.tjp[yearIdx] / bd) * bdFaded;
+  return fadedPure * hit;
 }
 
 function getValue(p) {
@@ -726,6 +732,7 @@ function updateLabels() {
     $('fadeModeReadout').textContent = FADE_MODE === 'on' ? 'Ceiling fade' : 'Risk-adj';
     ['A','B'].forEach(s => renderResults(s));
     renderPicked('A'); renderPicked('B'); renderVerdict();
+    if (typeof INSP_CURRENT !== 'undefined' && INSP_CURRENT) renderInspector(INSP_CURRENT);
     try { localStorage.setItem('gn-trade-fade-mode', FADE_MODE); } catch(e) {}
   });
 });
@@ -1835,9 +1842,9 @@ function renderInspector(p) {
       </div>
 
       <div class="formula-section" style="grid-column: 1 / -1;">
-        <h4>10-Year Trajectory (year-by-year RA, ramping toward peak then regressing)</h4>
+        <h4>10-Year Trajectory (year-by-year ${FADE_MODE==='on' && (p.t==='T3'||p.t==='T4') ? 'RA — Ceiling-fade view: bust risk &amp; SP/RP-blend phasing out' : 'RA, ramping toward peak then regressing'})</h4>
         <div style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; font-size: 11px; font-variant-numeric: tabular-nums;">
-          ${(p.tj || []).map((v, i) => `<div style="text-align: center; padding: 4px; background: ${i === 0 ? '#fff8e1' : '#fff'}; border-radius: 4px; ${i === 0 ? 'border: 1px solid #f0c674;' : ''}"><div style="color: #6e6d68;">${i === 0 ? 'Current' : 'Y'+(i+1)}</div><div style="font-weight: 500;">${Math.round(v)}</div></div>`).join('')}
+          ${(p.tj || []).map((v, i) => { const vv = fadeAdjustedTj(p, i); return `<div style="text-align: center; padding: 4px; background: ${i === 0 ? '#fff8e1' : '#fff'}; border-radius: 4px; ${i === 0 ? 'border: 1px solid #f0c674;' : ''}"><div style="color: #6e6d68;">${i === 0 ? 'Current' : 'Y'+(i+1)}</div><div style="font-weight: 500;">${Math.round(vv)}</div></div>`; }).join('')}
         </div>
       </div>
 
