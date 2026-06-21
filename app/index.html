@@ -240,7 +240,7 @@ body, html { background: transparent; }
   <div class="tc-header">
     <div>
       <p class="tc-title">Gordo Nation Dynasty Trade Calculator</p>
-      <p class="tc-sub">1,232 players. Mode: <span id="modeLabel">Risk-Adj</span>. v9.1.</p>
+      <p class="tc-sub"><span id="playerCount">2,122</span> players. Mode: <span id="modeLabel">Risk-Adj</span>. v9.1.</p>
     </div>
     <div class="controls">
       <button class="btn" id="clearAll">Clear</button>
@@ -474,6 +474,7 @@ const state = { A: [], B: [] };
 const $ = (id) => document.getElementById(id);
 const orgList = [...new Set(PLAYERS.map(p => p.o))].sort();
 const posList = [...new Set(PLAYERS.map(p => p.p).filter(Boolean))].sort();
+(function(){var _pc=document.getElementById("playerCount");if(_pc)_pc.textContent=PLAYERS.length.toLocaleString();})();
 
 // Single-year blended raw value
 function blendedRaw(p) {
