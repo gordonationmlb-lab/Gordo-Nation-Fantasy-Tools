@@ -2296,4 +2296,91 @@ input[type=range],.slider-input{accent-color:#C9A227;}
  });
 })();
 </script>
+
+<style id="gn-timeview-css">
+.gn-tv{float:right;display:inline-flex;gap:0;border:1px solid #9C7C1B;border-radius:999px;overflow:hidden;
+ font-family:var(--font-display);font-size:9.5px;letter-spacing:.06em;line-height:1;vertical-align:middle;}
+.gn-tv button{border:none;background:#fff;color:#0B2C5C;padding:4px 9px;cursor:pointer;font-weight:900;
+ text-transform:uppercase;font-size:9.5px;letter-spacing:.06em;}
+.gn-tv button.on{background:linear-gradient(180deg,#F2D77E,#C9A227);color:#0B2C5C;
+ box-shadow:inset 0 0 0 1.2px rgba(255,255,255,.55);}
+</style>
+<script id="gn-timeview-js">
+(function(){
+ if(window.__gnTV) return; window.__gnTV=1;
+ window.GN_TIMEVIEW='career';
+ function hasShape(p){ return p && p.eid!=null && !!GNDAILY.shape[String(p.eid)]; }
+ function seasonSeries(p){
+   var base=(MODE==='dollar')?(p.d||0):(p.r||0);
+   var D=GNDAILY.days, out=new Array(D);
+   var sh=hasShape(p)?GNDAILY.shape[String(p.eid)]:null;
+   for(var i=0;i<D;i++) out[i]= sh? base*(1+sh[i]/100) : base;
+   return out;
+ }
+ window.__gnSeasonSeries=seasonSeries;
+ function seasonOptions(unit,legendSize){
+   return { responsive:true, maintainAspectRatio:false, interaction:{mode:'nearest',intersect:false},
+     plugins:{ legend:{position:'bottom',labels:{font:{size:legendSize||10},boxWidth:12}},
+       tooltip:{callbacks:{ title:function(items){return items.length?GNDAILY.dates[items[0].dataIndex]:'';},
+         label:function(c){return c.dataset.label+': '+unit+(c.parsed.y==null?'-':c.parsed.y.toFixed(2));} }} },
+     scales:{ y:{ ticks:{font:{size:10},callback:function(v){return unit+v.toFixed(0);}}, beginAtZero:false },
+       x:{ type:'category', ticks:{font:{size:9},maxTicksLimit:12,autoSkip:true} } } };
+ }
+ var origP=gnRenderArcPlayer, origT=gnRenderArcTeam;
+ window.gnRenderArcPlayer=function(){
+   if(GN_TIMEVIEW==='career') return origP();
+   var ctx=document.getElementById('playerChart').getContext('2d');
+   var all=state.A.concat(state.B);
+   var em=document.getElementById('playerChartEmpty');
+   if(all.length===0){ if(window.chartPlayer||chartPlayer){ try{chartPlayer.destroy();}catch(e){} chartPlayer=null; } em.style.display='block'; return; }
+   em.style.display='none';
+   var unit=(MODE==='dollar')?'$':'';
+   var datasets=all.map(function(p,i){
+     var isA=state.A.some(function(x){return x.n===p.n&&x.o===p.o;});
+     var ds=gnArcDataset(p.n+' ('+(isA?'A':'B')+')'+(hasShape(p)?'':' \u2014 no 2026 games'),
+                         seasonSeries(p), PALETTE[i%PALETTE.length]);
+     ds.segment={}; ds.tension=0.12; return ds;
+   });
+   try{ if(chartPlayer){chartPlayer.destroy();}
+     chartPlayer=new Chart(ctx,{type:'line',data:{labels:GNDAILY.dates.slice(),datasets:datasets},options:seasonOptions(unit,10)});
+   }catch(e){}
+ };
+ window.gnRenderArcTeam=function(){
+   if(GN_TIMEVIEW==='career') return origT();
+   var ctx=document.getElementById('teamTotalChart').getContext('2d');
+   var em=document.getElementById('teamTotalEmpty');
+   if(state.A.length===0&&state.B.length===0){ if(chartTeamTotal){ try{chartTeamTotal.destroy();}catch(e){} chartTeamTotal=null; } em.style.display='block'; return; }
+   em.style.display='none';
+   var unit=(MODE==='dollar')?'$':'';
+   function teamSum(players){
+     var D=GNDAILY.days, sums=new Array(D).fill(null);
+     players.forEach(function(p){ var s=seasonSeries(p); for(var k=0;k<D;k++) sums[k]=(sums[k]||0)+s[k]; });
+     return sums;
+   }
+   var datasets=[];
+   if(state.A.length>0) datasets.push(gnArcDataset('Side A receives ('+state.A.length+')', teamSum(state.A), COLOR_A, 3));
+   if(state.B.length>0) datasets.push(gnArcDataset('Side B receives ('+state.B.length+')', teamSum(state.B), COLOR_B||'#C81029', 3));
+   datasets.forEach(function(d){ d.segment={}; d.tension=0.12; });
+   try{ if(chartTeamTotal){chartTeamTotal.destroy();}
+     chartTeamTotal=new Chart(ctx,{type:'line',data:{labels:GNDAILY.dates.slice(),datasets:datasets},options:seasonOptions(unit,10)});
+   }catch(e){}
+ };
+ function addToggle(canvasId){
+   var cv=document.getElementById(canvasId); if(!cv) return;
+   var box=cv.closest('.chart-box'); if(!box) return;
+   var title=box.querySelector('.chart-box-title'); if(!title) return;
+   var sp=document.createElement('span'); sp.className='gn-tv';
+   sp.innerHTML='<button data-v="career" class="on">Career</button><button data-v="season">2026</button>';
+   title.appendChild(sp);
+ }
+ addToggle('playerChart'); addToggle('teamTotalChart');
+ document.querySelectorAll('.gn-tv button').forEach(function(b){
+   b.addEventListener('click',function(){
+     GN_TIMEVIEW=b.dataset.v;
+     document.querySelectorAll('.gn-tv button').forEach(function(x){ x.classList.toggle('on', x.dataset.v===GN_TIMEVIEW); });
+     gnRenderArcPlayer(); gnRenderArcTeam();
+   });
+ });
+})();
+</script>
 </body></html>
