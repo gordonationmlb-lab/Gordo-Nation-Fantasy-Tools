@@ -1,3 +1,11 @@
+GORDO NATION TRADE CALCULATOR — WEEK 18 REFRESH (2026-08-10)
+  Data through Aug 9 (SP138, MP18 complete). GNDAILY 131->138 (565 shapes).
+  Durability: +492 statsapi IL events (Aug 4-10) absorbed; 12 players' Hit% moved.
+  Value refresh: Aug absorption 80%, F=1.361, RAW_PER_DOLLAR=466.63. Identity r=pc*pm*h: 0 violations.
+  GNROS: 408 forms, 197 roles, rn 0.7255. HISTORY snapshot #11. Options: 464 players re-fed.
+  Roster sync: 128 org/level, 19 injury designations, 881 season-FP updates.
+  Service worker: gordo-calc-v51-2026-08-10.
+
 GORDO NATION TRADE CALCULATOR — v50
 Durability / injury system live in values · data current through August 4, 2026
 
