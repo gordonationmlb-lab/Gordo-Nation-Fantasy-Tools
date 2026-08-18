@@ -1,3 +1,15 @@
+RULE 5 SELECTOR ADDED (2026-08-18, second same-day update)
+  NEW: a fourth Options Tracker button — RULE 5 DRAFT (14) — listing the July 14, 2026 Rule 5 class
+  (verified against the transaction log: 14 cross-org AAA->MLB processed moves that day). Each row shows
+  position, drafting club, original club, and a LIVE compliance chip: green "ON MLB ROSTER" when the pick
+  is where the rule requires him; red flags for an illegal demotion (original club may recapture) or a
+  waiver drop (original club may claim). Opening any pick's record shows a navy RULE 5 badge and the
+  restriction: a Rule 5 selection may NOT be demoted from the MLB roster regardless of remaining options —
+  he leaves that roster only via original-manager recapture on an illegal demotion, or off waivers after a
+  drop by the drafting manager. All 14 picks are currently compliant. The class: Headrick, Tolle,
+  Holderman, Palencia, Harrison, Messick, Dingler, Blubaugh, Aranda, Garcia Jr., Diaz, Tucker, Pagan,
+  Buxton. Service worker: gordo-calc-v54-2026-08-18.
+
 GORDO NATION TRADE CALCULATOR — OPTIONS TRACKER HOTFIX + FILTER BUTTONS (2026-08-18, same day as wk19)
   THE BUG (commissioner-reported): Noah Schultz showed options burned May 27 AND May 28 — physically
   impossible (a burn happens when the player hits the AAA roster; the earliest a second burn could follow
