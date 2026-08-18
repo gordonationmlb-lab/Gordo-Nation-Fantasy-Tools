@@ -1,3 +1,22 @@
+GORDO NATION TRADE CALCULATOR — WEEK 19 REFRESH (2026-08-18)
+  Data through Aug 16 (SP145, MP19 complete). GNDAILY 138->145 (569 shapes: 403 rebuilt, 4 new, 162 padded).
+  Value refresh: Aug absorption 80%, F=1.295 (~125.1 team games), RAW_PER_DOLLAR=467.65. Identity r=pc*pm*h: 0 violations.
+  Pace: 1125 updates; pm recomputed for 562 pace-active players (+4 import-pace at 2-1/F=1.228); 659 repriced.
+  Roster sync: 48 org/level changes, 4 drops to FA, 5 rostered stashes bridged to the valuation universe for the
+  first time (Valencia, Baez, Lombard Jr., De Paula + NEW entry "Max Muncy (Ath)" — placeholder valuation, LOW conf,
+  flagged for the next scouting regrade). Injury sync: 236 designation/ir changes (incl. healing stale flags left by
+  earlier passes; their pace multipliers re-engaged per Sec 13).
+  Durability: 28 news-feed IL events (Aug 11-17) absorbed; 19 players' files moved (statsapi spine re-harvest pending
+  next authenticated browser session — news-feed events are placements/transfers only, same per-spell weights).
+  GNROS: 386 forms refreshed (last-30 window via cum-curve recovery; endpoints exact), 474 roles re-fed
+  (30-day [SV,HD,BS] window slid one week: 23/30 carryover + exact Aug 10-16 delta), rn 0.7255->0.7340. hz/coef unchanged.
+  HISTORY snapshot #12 (2026-08-17, compact). Options: 20 events re-fed, burns: Noah Schultz, Bryan Woo, Landen Roupp, Tyron Guerrero, Brandyn Garcia, Braxton Ashcraft. Week 19 trade
+  (Aug 10, Carter Jensen RC->KSS for Liam Hicks KSS->RC) drawn at SP139 on the EKG; other moves pinned at SP145.
+  NEW: TRADE-DEADLINE BANNER pinned under the masthead with a live countdown — offers must be ACCEPTED by
+  Sat Aug 22 12:00 PM (noon) CT so deals are COMPLETED & PROCESSED by ESPN's league deadline Mon Aug 24 noon.
+  The banner auto-advances: countdown -> processing window (Sat noon-Mon noon) -> market closed.
+  Service worker: gordo-calc-v52-2026-08-18.
+
 GORDO NATION TRADE CALCULATOR — WEEK 18 REFRESH (2026-08-10)
   Data through Aug 9 (SP138, MP18 complete). GNDAILY 131->138 (565 shapes).
   Durability: +492 statsapi IL events (Aug 4-10) absorbed; 12 players' Hit% moved.
