@@ -1,3 +1,28 @@
+GORDO NATION TRADE CALCULATOR — OPTIONS TRACKER HOTFIX + FILTER BUTTONS (2026-08-18, same day as wk19)
+  THE BUG (commissioner-reported): Noah Schultz showed options burned May 27 AND May 28 — physically
+  impossible (a burn happens when the player hits the AAA roster; the earliest a second burn could follow
+  is ~4 days later). A full audit against the season ESPN transaction log found THREE ingest defects:
+    1) ESPN double-logs processed moves on consecutive days (306 duplicate mt-244 rows, 17 mt-245);
+       every duplicate was counted — 48 players showed >2 burns (up to 5). Schultz's May 28 was one.
+    2) ESPN drop rows carry the dropping team in the *to* column; the old ingest classified add-vs-drop
+       by which side looked like FA, so ~244 drops were written into the ledger as "Added by ..." events —
+       and some were charged as rule-(b)(3) burns. Drops NEVER burn (Rulebook VI(b)).
+    3) Rows whose from-column is the literal string "None" were silently skipped, so real FA adds/drops
+       vanished — genuine (b)(3) burns were MISSED.
+  THE FIX: OPTIONS_DATA fully REBUILT from the raw transaction log (message-type classification, <=3-day
+  duplicate-row dedupe, preseason rows set roster level but never burn). The 18 Week-19 reconciliation
+  events (Aug 10-16) and the Aug 10 Hicks-Jensen trade events are preserved on top. Result: 477 players
+  tracked (was 468), burns 0:273 / 1:178 / 2:26, ZERO players over the limit, zero impossible transitions,
+  and every count now reproduces from the log. 191 players' burn counts changed. Recovered missed burns:
+  Willi Castro (Aug 6), MacKenzie Gore (Aug 4), JoJo Romero (Jun 27), Casey Mize, Christian Vazquez,
+  Keibert Ruiz, Luke Raley, Matthew Boyd, Sean Newcomb, TJ Rumfield. Bryan Woo stays 2-burned / OUT
+  (as printed in Issue 19); Noah Schultz is 2 (May 27 + Aug 10-16) — also out; Landen Roupp likewise.
+  NEW FEATURE: three filter buttons atop the Options Tracker — 1 OPTION BURNED (178) / 2 OPTIONS
+  BURNED (26) / NON-COMPLIANT >2 (0) — with live counts. Tap a button to list the players (club,
+  burned/left, most recent burn date); tap a player to open their full record. The non-compliant view
+  shows an ALL CLEAR banner while the league is compliant.
+  Service worker: gordo-calc-v53-2026-08-18 (auto-refreshes installed copies).
+
 GORDO NATION TRADE CALCULATOR — WEEK 19 REFRESH (2026-08-18)
   Data through Aug 16 (SP145, MP19 complete). GNDAILY 138->145 (569 shapes: 403 rebuilt, 4 new, 162 padded).
   Value refresh: Aug absorption 80%, F=1.295 (~125.1 team games), RAW_PER_DOLLAR=467.65. Identity r=pc*pm*h: 0 violations.
