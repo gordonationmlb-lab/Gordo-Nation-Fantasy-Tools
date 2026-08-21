@@ -1,3 +1,37 @@
+TIER RESTORE + BUST-OFF REPAIR (2026-08-21)
+  THE BUG (commissioner-reported): "Bust risk OFF" never moved a rostered T4's number, and
+  search chips showed tiers that don't exist ("T9"). One root cause: roster-sync ingest has
+  been writing the ESPN TEAM ID into the tier field `t` for every rostered player (present
+  since at least v45). The 16 ESPN teams are 8 orgs x 2 rosters — MLB clubs 1 C-Town /
+  2 Gray Hotdogs / 3 Dirty Spikes / 4 High Cheddar / 7 Balking Dead / 8 Sunflower Seeds /
+  10 River Cats / 14 MidwestBears, AAA affiliates 5/6/11/9/12/13/15/17 respectively — so a
+  "T9" chip was a High Cheddar AAA stash rendered through the chips' 'T'+t concat (the same
+  concat printed free agents as "TT4"). Downstream, the bust-off fade gates on t==='T3'/'T4',
+  so NO rostered player ever faded: all 57 rostered tool-basis prospects (incl. De Vries,
+  Hagen Smith, Seth Hernandez, Sloan, Rushing) sat at full risk discount in every view.
+  THE FIX (index + mobile, same patch):
+  1) TIER RESTORE at load: the ESPN id moves to a new field p.tid; the true tier is recovered
+     from the notes' "ENGINE ...: Tn" tag (406 of 428) or the engine basis (tool->T4,
+     prod->T3, depth->T5; 22 players, unambiguous). Restored distribution: T1 213 / T2 74 /
+     T3 117 / T4 19 / T5 5; zero non-T1..T5 tiers remain. Chips render the tier directly
+     ("T4", not "TT4"/"T9"). The fade gate, inspector type row + formula sections, T3 phase
+     logic, and career-arc decay/onset all see real tiers again.
+  2) THE 1-YEAR (default) VIEW now answers the switch. It had never consulted FADE_MODE —
+     it read stored RA/Pure, which carry the whole stack (ceiling x maturation 0.3-0.8 by
+     level x Hit%), so the toggle was a no-op on the headline number. Bust-risk OFF at 1
+     year now lifts the bust/Hit% layer only: value shows Pure; maturation and the level
+     discount stay on. Multi-year views unchanged — the fade still phases bust + SP/RP
+     blend + maturation out by peak age (26 H / 27 P). Verified: De Vries 506 -> 675 (1yr)
+     and 4,443 -> 10,378 (10yr cum); vets unmoved (Trout 746/746 and 4,044/4,044).
+  3) STALE BLEND-NOTE OVERSHOOT: prospectBlend()'s notes-regex fallback divided out an
+     "SP/RP/Washout blend" the v29 grade rebuild had already removed from the ceiling chain
+     (pc = tc x matur, verified) — with fade ON the 3 players still carrying the note
+     overshot 2-4x (Sykora's best year printed 2,694 against a 1,548 tool ceiling; now
+     1,455). Fallback removed; eng.bdisc (89 players, verified pc = tc x matur x bdisc)
+     is the only blend still divided out.
+  34/34 harness assertions pass on both files. Service worker: gordo-calc-v55-2026-08-21
+  (auto-refreshes installed copies).
+
 RULE 5 SELECTOR ADDED (2026-08-18, second same-day update)
   NEW: a fourth Options Tracker button — RULE 5 DRAFT (14) — listing the July 14, 2026 Rule 5 class
   (verified against the transaction log: 14 cross-org AAA->MLB processed moves that day). Each row shows

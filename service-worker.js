@@ -1,4 +1,4 @@
-const CACHE = 'gordo-calc-v54-2026-08-18';
+const CACHE = 'gordo-calc-v55-2026-08-21';
 const SHELL = [
   './', 'index.html', 'manifest.json',
   'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'apple-touch-icon.png'
