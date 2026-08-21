@@ -1,3 +1,24 @@
+TRADE-SLOT REHYDRATION (2026-08-21, second same-day update — v50.2)
+  THE BUG (commissioner-reported): Kade Anderson in a trade slot with bust risk OFF and the
+  slider on year 7 priced at 511 while his 10-year trajectory table showed 1,686 for the same
+  year. The trade columns and the inspector were reading two different Kades: picked players
+  are saved to the browser's trade state as full JSON snapshots, so a slot re-loaded after a
+  page refresh holds the player AS OF THE DAY HE WAS ADDED. A snapshot taken before the
+  v50.1 tier restore still carries the ESPN team id in its tier field (Kade: t=9), so the
+  bust-off fade gate never opened on the trade side — it printed the risk-adjusted tj[6]=511
+  — while the inspector always looks up the live, repaired player and faded him to
+  617/0.86/0.4 x 0.94 = 1,686. The same staleness also served old r/pc/tj numbers for any
+  player added before a weekly data refresh.
+  THE FIX (index + mobile): on load, saved trade slots are rehydrated to the LIVE player
+  objects — matched by ESPN id, then name+org, then name; a player no longer in the
+  valuation universe is kept as saved rather than silently dropped. Slots now always price
+  from current data and current tiers. Verified: stale pre-restore snapshot reproduces 511;
+  after rehydration the same slot prices 1,686 (yr-7 single, bust off), 6,725 (yr-7
+  cumulative, bust off), and 511 with bust ON — trade side and trajectory table now agree.
+  8/8 rehydration assertions + 17/17 v50.1 regression assertions pass on both files.
+  Service worker: gordo-calc-v56-2026-08-21 (auto-refreshes installed copies; players
+  already sitting in a trade re-price on the next page load).
+
 TIER RESTORE + BUST-OFF REPAIR (2026-08-21)
   THE BUG (commissioner-reported): "Bust risk OFF" never moved a rostered T4's number, and
   search chips showed tiers that don't exist ("T9"). One root cause: roster-sync ingest has

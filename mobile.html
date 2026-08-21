@@ -905,8 +905,19 @@ $('yearsSlider').addEventListener('input', (e) => {
 
 try {
   const saved = JSON.parse(localStorage.getItem('gn-trade-state') || '{}');
-  if (saved.A && Array.isArray(saved.A)) state.A = saved.A;
-  if (saved.B && Array.isArray(saved.B)) state.B = saved.B;
+  // v50.2: rehydrate saved trade slots to LIVE player objects. The saved state is a JSON
+  // snapshot taken when the player was added, so it goes stale after any data refresh —
+  // and snapshots saved before the v50.1 tier restore still carry the ESPN team id in t,
+  // which kept the bust-off fade gate closed on the trade side while the inspector used
+  // the repaired live object (Kade Anderson: trade said 511 at yr7, trajectory said 1686).
+  const rehydrate = (arr) => arr.map(s => {
+    if (!s || !s.n) return null;
+    let live = (s.eid != null) ? PLAYERS.find(x => x.eid === s.eid) : null;
+    if (!live) live = PLAYERS.find(x => x.n === s.n && x.o === s.o) || PLAYERS.find(x => x.n === s.n);
+    return live || s;
+  }).filter(Boolean);
+  if (saved.A && Array.isArray(saved.A)) state.A = rehydrate(saved.A);
+  if (saved.B && Array.isArray(saved.B)) state.B = rehydrate(saved.B);
   const savedMode = localStorage.getItem('gn-trade-mode');
   if (savedMode === 'dollar') {
     MODE = 'dollar';
