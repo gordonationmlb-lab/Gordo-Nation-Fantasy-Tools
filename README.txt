@@ -1,3 +1,85 @@
+FULL BUG SWEEP (2026-08-22 — v50.4)
+  Commissioner-requested end-to-end audit. Three reviewers read all 2,675 code lines;
+  every valuation path was executed for all 2,123 players x 480 slider/mode combos; all
+  six embedded data blocks were cross-checked against the code that consumes them.
+  NINE DEFECTS FOUND AND FIXED (index + mobile, same patch):
+  1. [HIGH] EKG dollar scale: the Manager EKG divided by GNDAILY.raw (637.32) instead of
+     RAW_PER_DOLLAR (467.65), reading ~27% low vs the adjacent manager bars (River Cats
+     $71.8 vs $97.8) and mixing scales with the flat p.d fallback (217 player-days).
+     Recomputing at 467.65 reproduces the bar totals exactly.
+  2. [HIGH, data] Stale vet trajectories: weekly refreshes reprice r but never rebuilt
+     trajectories — 153 of 807 T1/T2 vets had tj anchored to an old r (scales 0.51-1.88;
+     worst: Zac Gallen r=1134 showing 574 in year 2 — trajectory built when r was 604;
+     also Eovaldi, Springer, Sean Murphy, Treinen among rostered). tj is now re-anchored
+     to current r at load, and the pure track tjp is rebuilt from tj and today's Hit%
+     wherever it disagrees (another 53 vets carried a stale-h pure track that skewed
+     Pure-blend multi-year views). Affects every multi-year and single-year view.
+  3. [MED] Fade-on cumulative dip: with bust risk OFF, moving the years slider 1 -> 2
+     DROPPED 383 prospects' values, because the multi-year floors still used the unlifted
+     RA. All floors (cumulative, single-season, pre-arrival option value) now use the same
+     lifted 1-yr value via a shared liftedRA(); the years slider can never show less at
+     year N than at year 1. All v50.3 headline numbers unchanged.
+  4. [MED] Injury-risk chart legend was BLANK on first paint: the legend filter read the
+     chartInjuryRisk global before Chart.js finished constructing (verified against the
+     exact chart.umd 4.5.0 the page loads). It now uses the filter's own chartData.
+  5. [MED] ROS '26 mode overpriced no-data free agents: an FA with no 2026 form data was
+     imputed form = k x r, landing at the ~98th percentile of real forms — Ryan Pepiot
+     (no 2026 data) projected 443, above EVERY rostered SP (best actual: Cease 415).
+     Imputed form is now capped at the class median, so "no data" can no longer beat
+     "good data". FAs with real form are untouched.
+  6. [LOW] ROS mode's manager chart y-axis claimed "Total RA" while plotting ROS FP
+     (~4x smaller scale); now labeled "Total ROS '26 FP".
+  7. [LOW] The Options Tracker search dropdown never closed on outside clicks (its twin,
+     the Inspector dropdown, did) and sat over the filter buttons; now closes.
+  8. [LOW] Installed (PWA) copies showed permanently blank charts offline because the
+     service worker refused to cache the cross-origin Chart.js bundle while the install
+     tip promised offline use; the CDN bundle is now cached after first online load.
+  9. [LOW] Single-season pre-arrival years now use the same lifted floor as year 1
+     (consistency companion to #3).
+  CHECKED AND CLEAN (verified by execution, no action needed): identity r = pc x pm x h
+  (0 violations, 2,123 players); d = r/467.65 exact for all; tj = tjp x h; option-tracker
+  counts 178/26/0/14 match the data and remaining = max(0, 2 - burns) for all 477; every
+  OPTIONS_DATA and RULE5 key resolves in PLAYERS; all 14 Rule 5 compliance chips evaluate
+  correctly (roster-level parity 0 violations); deadline-banner date math correct for
+  America/Chicago through all three states (countdown -> processing -> closed); Chart.js
+  SRI hash matches the 4.5.0 tarball; no duplicate HTML ids, player names, or eids; RLE
+  roster decode agrees with p.l for every non-FA; all 569 shape arrays are 145 days;
+  GNDAILY day indexing consistent end-to-end; verdict bands and localStorage restores
+  sound; "fade-on exceeds tool ceiling" cases all explained by park/pace factors that
+  legitimately live in the Pure chain (by design, verified).
+  KNOWN QUIRKS LEFT ALONE (documented, not bugs): in ROS mode the Career/2026 line charts
+  still plot RA/$ (now correctly labeled); valueAtSnapshot/gnDailyDollars/gnWindow are
+  currently unreferenced legacy paths (kept consistent anyway); charts require one online
+  load before they work offline.
+  29/29 assertions + 8/8 rehydration regression pass on both files.
+  Service worker: gordo-calc-v58-2026-08-22 (auto-refreshes installed copies).
+
+BUST-OFF 1-YEAR LIFT SCOPED TO SCOUTING BUST (2026-08-21, third same-day update — v50.3)
+  THE BUG (commissioner-reported): Jackson Holliday dropped into a trade slot showed his
+  PURE value (1,428) with the RA/Pure blend slider hard left at 100% RA. Cause: the v50.1
+  rule for "bust risk OFF at 1 year" lifted straight to the stored Pure — but Pure sits
+  above RA for three different reasons (scouting bust in Hit%, the pace multiplier, and
+  durability/IL), and the toggle was erasing all three. Holliday is a T3/Established
+  production player: his Hit% carries ZERO scouting bust ("bust retired"), and his whole
+  RA-Pure gap is pace x0.5 plus a small durability haircut. Every T3/T4 in the universe
+  (1,109 players) was over-lifted the same way whenever bust risk was off — worst cases
+  all Established prod T3s: Skenes printed 2,242 instead of 1,474, Holliday 1,428 for 671,
+  Jared Jones 1,289 for 577, Volpe 1,261 for 593, Woo 2,017 for 1,367.
+  THE FIX (index + mobile): a new bustFreeHit() computes Hit% with only the scouting-bust
+  layer removed — production basis has none (Established/Honeymoon: no lift; Book: the
+  "league adjusts" x0.85 confidence haircut lifts); tool basis removes matrix bust + level
+  proximity (T4) or the phase-adjusted effective bust (T3 tool), capped at the healthy
+  base. The 1-year bust-off value is now RA x (bustFreeHit / Hit%), further capped at
+  max(Pure, RA) so a hot-pace player never prints above the slider's Pure end. Pace,
+  durability history, and current-IL stay priced — they are observed, not scouting risk.
+  The blend slider owns the RA<->Pure axis again.
+  RESULTING 1-YR BUST-OFF PRICES: Holliday/Skenes/Volpe and all Established prod T3s =
+  their RA (toggle inert, correctly); De Vries 649 (was 675), Seth Hernandez 469 (was
+  498), Snelling 768 (was 817), Kade Anderson 580 (was 617); Book-phase examples: Povich
+  213->251, Brady House 329->572. Multi-year fade math untouched (Kade yr-7 single still
+  511/1,686). 24/24 assertions + 8/8 rehydration regression pass on both files.
+  Service worker: gordo-calc-v57-2026-08-21 (auto-refreshes installed copies).
+
 TRADE-SLOT REHYDRATION (2026-08-21, second same-day update — v50.2)
   THE BUG (commissioner-reported): Kade Anderson in a trade slot with bust risk OFF and the
   slider on year 7 priced at 511 while his 10-year trajectory table showed 1,686 for the same
