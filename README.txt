@@ -1,139 +1,71 @@
-FULL BUG SWEEP (2026-08-22 — v50.4)
-  Commissioner-requested end-to-end audit. Three reviewers read all 2,675 code lines;
-  every valuation path was executed for all 2,123 players x 480 slider/mode combos; all
-  six embedded data blocks were cross-checked against the code that consumes them.
-  NINE DEFECTS FOUND AND FIXED (index + mobile, same patch):
-  1. [HIGH] EKG dollar scale: the Manager EKG divided by GNDAILY.raw (637.32) instead of
-     RAW_PER_DOLLAR (467.65), reading ~27% low vs the adjacent manager bars (River Cats
-     $71.8 vs $97.8) and mixing scales with the flat p.d fallback (217 player-days).
-     Recomputing at 467.65 reproduces the bar totals exactly.
-  2. [HIGH, data] Stale vet trajectories: weekly refreshes reprice r but never rebuilt
-     trajectories — 153 of 807 T1/T2 vets had tj anchored to an old r (scales 0.51-1.88;
-     worst: Zac Gallen r=1134 showing 574 in year 2 — trajectory built when r was 604;
-     also Eovaldi, Springer, Sean Murphy, Treinen among rostered). tj is now re-anchored
-     to current r at load, and the pure track tjp is rebuilt from tj and today's Hit%
-     wherever it disagrees (another 53 vets carried a stale-h pure track that skewed
-     Pure-blend multi-year views). Affects every multi-year and single-year view.
-  3. [MED] Fade-on cumulative dip: with bust risk OFF, moving the years slider 1 -> 2
-     DROPPED 383 prospects' values, because the multi-year floors still used the unlifted
-     RA. All floors (cumulative, single-season, pre-arrival option value) now use the same
-     lifted 1-yr value via a shared liftedRA(); the years slider can never show less at
-     year N than at year 1. All v50.3 headline numbers unchanged.
-  4. [MED] Injury-risk chart legend was BLANK on first paint: the legend filter read the
-     chartInjuryRisk global before Chart.js finished constructing (verified against the
-     exact chart.umd 4.5.0 the page loads). It now uses the filter's own chartData.
-  5. [MED] ROS '26 mode overpriced no-data free agents: an FA with no 2026 form data was
-     imputed form = k x r, landing at the ~98th percentile of real forms — Ryan Pepiot
-     (no 2026 data) projected 443, above EVERY rostered SP (best actual: Cease 415).
-     Imputed form is now capped at the class median, so "no data" can no longer beat
-     "good data". FAs with real form are untouched.
-  6. [LOW] ROS mode's manager chart y-axis claimed "Total RA" while plotting ROS FP
-     (~4x smaller scale); now labeled "Total ROS '26 FP".
-  7. [LOW] The Options Tracker search dropdown never closed on outside clicks (its twin,
-     the Inspector dropdown, did) and sat over the filter buttons; now closes.
-  8. [LOW] Installed (PWA) copies showed permanently blank charts offline because the
-     service worker refused to cache the cross-origin Chart.js bundle while the install
-     tip promised offline use; the CDN bundle is now cached after first online load.
-  9. [LOW] Single-season pre-arrival years now use the same lifted floor as year 1
-     (consistency companion to #3).
-  CHECKED AND CLEAN (verified by execution, no action needed): identity r = pc x pm x h
-  (0 violations, 2,123 players); d = r/467.65 exact for all; tj = tjp x h; option-tracker
-  counts 178/26/0/14 match the data and remaining = max(0, 2 - burns) for all 477; every
-  OPTIONS_DATA and RULE5 key resolves in PLAYERS; all 14 Rule 5 compliance chips evaluate
-  correctly (roster-level parity 0 violations); deadline-banner date math correct for
-  America/Chicago through all three states (countdown -> processing -> closed); Chart.js
-  SRI hash matches the 4.5.0 tarball; no duplicate HTML ids, player names, or eids; RLE
-  roster decode agrees with p.l for every non-FA; all 569 shape arrays are 145 days;
-  GNDAILY day indexing consistent end-to-end; verdict bands and localStorage restores
-  sound; "fade-on exceeds tool ceiling" cases all explained by park/pace factors that
-  legitimately live in the Pure chain (by design, verified).
-  KNOWN QUIRKS LEFT ALONE (documented, not bugs): in ROS mode the Career/2026 line charts
-  still plot RA/$ (now correctly labeled); valueAtSnapshot/gnDailyDollars/gnWindow are
-  currently unreferenced legacy paths (kept consistent anyway); charts require one online
-  load before they work offline.
-  29/29 assertions + 8/8 rehydration regression pass on both files.
-  Service worker: gordo-calc-v58-2026-08-22 (auto-refreshes installed copies).
+GORDO NATION TRADE CALCULATOR — WEEK 20 REFRESH (2026-08-24)
+  Data through Aug 23 (SP152, MP20 complete). DEADLINE DEALS PROCESSED.
+  Roster sync: 49 org/level changes, 4 drops to FA, 2 players bridged (Justin Martinez linked;
+    Seth Halvorsen re-pointed from a stale duplicate ESPN id). 0 unbridged.
+  THE DEADLINE: 4 deals / 13 players, accepted before Sat noon and processed Mon morning —
+    RC<->CT (Langford + J. Holliday for Jhoan Duran + R. Anthony), RC<->KSS (Kirby + Webb for
+    G. Williams), RC<->KCG (Bichette for Jarren Duran), HC<->BD (Chapman + Sheehan for Booser +
+    Weathers). Season total 11 manager-to-manager trades. Banner auto-flipped to MARKET CLOSED.
+  Injury sync: 39 designation changes; 79 rostered players carrying a designation.
+  Value refresh: F=1.235 (~131.2 team games), Aug absorption 0.80. 708 pace updates, 507 pace-mult
+    updates (Honeymoon/Book gate honoured), 521 repriced. Identity r=pc*pm*h at 0 violations.
+  ANCHOR RE-FLOATED: RAW_PER_DOLLAR 474.73 -> 475.02, holding the average fantasy-point-scoring
+    player at exactly $1.00 per the commissioner's standing ruling.
+  GNDAILY 145 -> 152 (574 shapes; 5 new, 1 padded). Membership + 7 txn nodes for the week's
+    4 adds / 4 drops / 31 intra-org moves / 14 cross-org legs.
+  GNROS: 372 forms refreshed, 3 new; 113 roles re-fed (23/30 carryover + the exact Aug 17-23
+    [SV,HD,BS] delta); rn 0.7340 -> 0.7473 over 101 rostered RPs.
+  HISTORY snapshot #13 (2026-08-24) for the manager-comparison EKG.
+  OPTIONS TRACKER rebuilt from the processed log: 495 players, burns 0:281 / 1:180 / 2:34,
+    ZERO over the two-option limit.
+  *** PALENCIA — RULE 5 RECAPTURE, NO OPTION CHARGED ***
+    Daniel Palencia was drafted from C-Town by River Cats (Jul 14), released to waivers by River
+    Cats on Aug 22, and reacquired by C-Town onto Clam Shack. Article V(b)(4)(C)(ii) expressly
+    permits the AAA placement, and V(b)(4)(C)(i) excuses the option — per Article VI(d) the ONLY
+    exception to VI(b). COMMISSIONER'S RULING Aug 24, 2026: exemption GRANTED. The election was
+    announced in the league Discord at 9:00 AM CT on Aug 22, four minutes after the 8:56 AM release
+    and well inside the two-day window; ESPN's waiver mechanics completed the transfer at 12:05 PM
+    CT on Aug 24, three hours past the two-day mark. The right was exercised in time — only the
+    platform's processing ran long, the same distinction the league already applies to the trade
+    deadline. Subject to appeal. Palencia stands at 2 burns / 0 remaining and is COMPLIANT.
+    Feed note: ESPN's raw feed stamped the Aug 22 release as coming from Flying Squirrels (AAA);
+    the ESPN transaction view shows River Cats (MLB), which the commissioner confirmed. The ledger
+    follows the transaction view — otherwise the burn never triggers and the exemption would appear
+    unused rather than exercised.
+  Rule 5 selector: Palencia now carries a recaptured flag so the tracker reads a legal terminal
+    state instead of flagging him as missing from the drafting club.
+  Service worker: gordo-calc-v56-2026-08-24.
 
-BUST-OFF 1-YEAR LIFT SCOPED TO SCOUTING BUST (2026-08-21, third same-day update — v50.3)
-  THE BUG (commissioner-reported): Jackson Holliday dropped into a trade slot showed his
-  PURE value (1,428) with the RA/Pure blend slider hard left at 100% RA. Cause: the v50.1
-  rule for "bust risk OFF at 1 year" lifted straight to the stored Pure — but Pure sits
-  above RA for three different reasons (scouting bust in Hit%, the pace multiplier, and
-  durability/IL), and the toggle was erasing all three. Holliday is a T3/Established
-  production player: his Hit% carries ZERO scouting bust ("bust retired"), and his whole
-  RA-Pure gap is pace x0.5 plus a small durability haircut. Every T3/T4 in the universe
-  (1,109 players) was over-lifted the same way whenever bust risk was off — worst cases
-  all Established prod T3s: Skenes printed 2,242 instead of 1,474, Holliday 1,428 for 671,
-  Jared Jones 1,289 for 577, Volpe 1,261 for 593, Woo 2,017 for 1,367.
-  THE FIX (index + mobile): a new bustFreeHit() computes Hit% with only the scouting-bust
-  layer removed — production basis has none (Established/Honeymoon: no lift; Book: the
-  "league adjusts" x0.85 confidence haircut lifts); tool basis removes matrix bust + level
-  proximity (T4) or the phase-adjusted effective bust (T3 tool), capped at the healthy
-  base. The 1-year bust-off value is now RA x (bustFreeHit / Hit%), further capped at
-  max(Pure, RA) so a hot-pace player never prints above the slider's Pure end. Pace,
-  durability history, and current-IL stay priced — they are observed, not scouting risk.
-  The blend slider owns the RA<->Pure axis again.
-  RESULTING 1-YR BUST-OFF PRICES: Holliday/Skenes/Volpe and all Established prod T3s =
-  their RA (toggle inert, correctly); De Vries 649 (was 675), Seth Hernandez 469 (was
-  498), Snelling 768 (was 817), Kade Anderson 580 (was 617); Book-phase examples: Povich
-  213->251, Brady House 329->572. Multi-year fade math untouched (Kade yr-7 single still
-  511/1,686). 24/24 assertions + 8/8 rehydration regression pass on both files.
-  Service worker: gordo-calc-v57-2026-08-21 (auto-refreshes installed copies).
-
-TRADE-SLOT REHYDRATION (2026-08-21, second same-day update — v50.2)
-  THE BUG (commissioner-reported): Kade Anderson in a trade slot with bust risk OFF and the
-  slider on year 7 priced at 511 while his 10-year trajectory table showed 1,686 for the same
-  year. The trade columns and the inspector were reading two different Kades: picked players
-  are saved to the browser's trade state as full JSON snapshots, so a slot re-loaded after a
-  page refresh holds the player AS OF THE DAY HE WAS ADDED. A snapshot taken before the
-  v50.1 tier restore still carries the ESPN team id in its tier field (Kade: t=9), so the
-  bust-off fade gate never opened on the trade side — it printed the risk-adjusted tj[6]=511
-  — while the inspector always looks up the live, repaired player and faded him to
-  617/0.86/0.4 x 0.94 = 1,686. The same staleness also served old r/pc/tj numbers for any
-  player added before a weekly data refresh.
-  THE FIX (index + mobile): on load, saved trade slots are rehydrated to the LIVE player
-  objects — matched by ESPN id, then name+org, then name; a player no longer in the
-  valuation universe is kept as saved rather than silently dropped. Slots now always price
-  from current data and current tiers. Verified: stale pre-restore snapshot reproduces 511;
-  after rehydration the same slot prices 1,686 (yr-7 single, bust off), 6,725 (yr-7
-  cumulative, bust off), and 511 with bust ON — trade side and trajectory table now agree.
-  8/8 rehydration assertions + 17/17 v50.1 regression assertions pass on both files.
-  Service worker: gordo-calc-v56-2026-08-21 (auto-refreshes installed copies; players
-  already sitting in a trade re-price on the next page load).
-
-TIER RESTORE + BUST-OFF REPAIR (2026-08-21)
-  THE BUG (commissioner-reported): "Bust risk OFF" never moved a rostered T4's number, and
-  search chips showed tiers that don't exist ("T9"). One root cause: roster-sync ingest has
-  been writing the ESPN TEAM ID into the tier field `t` for every rostered player (present
-  since at least v45). The 16 ESPN teams are 8 orgs x 2 rosters — MLB clubs 1 C-Town /
-  2 Gray Hotdogs / 3 Dirty Spikes / 4 High Cheddar / 7 Balking Dead / 8 Sunflower Seeds /
-  10 River Cats / 14 MidwestBears, AAA affiliates 5/6/11/9/12/13/15/17 respectively — so a
-  "T9" chip was a High Cheddar AAA stash rendered through the chips' 'T'+t concat (the same
-  concat printed free agents as "TT4"). Downstream, the bust-off fade gates on t==='T3'/'T4',
-  so NO rostered player ever faded: all 57 rostered tool-basis prospects (incl. De Vries,
-  Hagen Smith, Seth Hernandez, Sloan, Rushing) sat at full risk discount in every view.
-  THE FIX (index + mobile, same patch):
-  1) TIER RESTORE at load: the ESPN id moves to a new field p.tid; the true tier is recovered
-     from the notes' "ENGINE ...: Tn" tag (406 of 428) or the engine basis (tool->T4,
-     prod->T3, depth->T5; 22 players, unambiguous). Restored distribution: T1 213 / T2 74 /
-     T3 117 / T4 19 / T5 5; zero non-T1..T5 tiers remain. Chips render the tier directly
-     ("T4", not "TT4"/"T9"). The fade gate, inspector type row + formula sections, T3 phase
-     logic, and career-arc decay/onset all see real tiers again.
-  2) THE 1-YEAR (default) VIEW now answers the switch. It had never consulted FADE_MODE —
-     it read stored RA/Pure, which carry the whole stack (ceiling x maturation 0.3-0.8 by
-     level x Hit%), so the toggle was a no-op on the headline number. Bust-risk OFF at 1
-     year now lifts the bust/Hit% layer only: value shows Pure; maturation and the level
-     discount stay on. Multi-year views unchanged — the fade still phases bust + SP/RP
-     blend + maturation out by peak age (26 H / 27 P). Verified: De Vries 506 -> 675 (1yr)
-     and 4,443 -> 10,378 (10yr cum); vets unmoved (Trout 746/746 and 4,044/4,044).
-  3) STALE BLEND-NOTE OVERSHOOT: prospectBlend()'s notes-regex fallback divided out an
-     "SP/RP/Washout blend" the v29 grade rebuild had already removed from the ceiling chain
-     (pc = tc x matur, verified) — with fade ON the 3 players still carrying the note
-     overshot 2-4x (Sykora's best year printed 2,694 against a 1,548 tool ceiling; now
-     1,455). Fallback removed; eng.bdisc (89 players, verified pc = tc x matur x bdisc)
-     is the only blend still divided out.
-  34/34 harness assertions pass on both files. Service worker: gordo-calc-v55-2026-08-21
-  (auto-refreshes installed copies).
+TARGETED CLASSIFICATION PASS — PHASE / PACE-GATE / MATURATION (2026-08-24)
+  Commissioner-authorised targeted pass; the full FV/tool-grade re-sweep is deferred to the offseason.
+  Last prior classification work was Jun 11-24 (ENGINE/MATRIX/RAMP/SCARCITY/REPHASE) — 9-10 weeks stale.
+  FIX A - PACE-MULTIPLIER GATE RESTORED (91 players). Methodology 13/20.10 holds Honeymoon- and
+    Book-phase T3 at pace-mult 1.00. The gate was applied Jun 15 ("PACE GATE v14") and REGRESSED in a
+    later refresh — players carried a June note saying the gate set them to 1.00 while the live board
+    showed 1.5 or 0.5. Restored, together with the hard short-circuits (on-IL, Pure<300, pace<=50).
+    NOTE: "on the IL" is the four DL designations only — DTD and OUT keep their pace multiplier.
+  FIX B - PHASE CATCH-UP (68 promotions). Phase re-tested against cumulative FP (2025 + 2026-to-date)
+    on the 19.4 boundaries (hitters 150/500, pitchers 250/750). Where the Jun-11 pass recorded a true
+    cumulative it is carried forward plus 2026 growth; otherwise 2026-to-date alone is used, a safe
+    lower bound. The test can only PROMOTE, never demote. Tool-basis phase multiplies the bust
+    (x0.80/x1.15/x1.00 per 20.7); production-basis multiplies Hit% (x1.20/x0.85/x1.00 per 19.4).
+    Additive Hit% modifiers (durability, outlier, IL-stack) measured off each live record and preserved.
+  FIX C - MATURATION EXPIRY (25 released, 3 deferred). Methodology 9: the stage discount expires at
+    Established. Released ONLY where the arithmetic proves the discount is inside Pure; Chandler,
+    Sasaki and Grissom carry other ceiling factors (SP/RP blend, post-hoc re-anchor) so their release
+    is deferred to the offseason sweep rather than guessed.
+  RESULT: 134 players repriced (95 up, 39 down), identity r = pc*pm*h at 0 violations across all 2,123.
+  DOLLAR ANCHOR RE-FLOATED, RAW_PER_DOLLAR 467.65 -> 474.73 (+1.51%), per commissioner's ruling:
+  the average fantasy-point-scoring player must ALWAYS equal $1.00. Holding the old anchor after the
+  reclass left the average player priced at $1.015 — the invariant that defines the scale was broken.
+  A dollar figure is a RELATIVE measure (a player against the field), so a stale anchor is not a
+  harmless scale offset; it misstates every player. 1,361 dollar values restated; relative ordering
+  is unchanged (rescaling is monotone). Note the 20.20 "anchor held" precedent does NOT apply here:
+  that case was a POOL change (adding 720 minor leaguers would have moved the mean by composition
+  alone). This was a VALUE change inside a fixed pool, where the mean moved because real values moved
+  — the two cases resolve opposite ways. Issue 19's printed dollars sit on the old anchor and are
+  ~1.5% high against this board; disclose in the Issue 20 correction log.
+  Service worker: gordo-calc-v55-2026-08-24.
 
 RULE 5 SELECTOR ADDED (2026-08-18, second same-day update)
   NEW: a fourth Options Tracker button — RULE 5 DRAFT (14) — listing the July 14, 2026 Rule 5 class
