@@ -62,7 +62,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;op
   .control-decks,.dual-grid,.charts-grid,.sides{grid-template-columns:1fr 1fr!important;}
 }
 </style>
-</head><body><div class="gn-header"><div class="gn-masthead"><div class="gn-crest" role="img" aria-label="Gordo Nation league crest"></div><div class="gn-mast-c"><div class="kicker">Gordo Nation Dynasty &bull; Official Trade Desk</div><h1>The Trade Calculator</h1><p>16-team dynasty framework — ceiling values, refreshed weekly</p></div><div class="gn-crest" role="img" aria-label="Gordo Nation league crest"></div></div></div>
+</head><body><div class="gn-header"><div class="gn-masthead"><div class="gn-crest" role="img" aria-label="Gordo Nation league crest"></div><div class="gn-mast-c"><div class="kicker">Gordo Nation Dynasty &bull; Official Trade Desk</div><h1>The Trade Calculator</h1><p>16-team dynasty framework — ceiling values, refreshed weekly</p><div class="gn-build-stamp" id="gnBuildStamp" style="margin:4px 0 0;font-family:'Lato',Arial,sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;opacity:.72;">&nbsp;</div></div><div class="gn-crest" role="img" aria-label="Gordo Nation league crest"></div></div></div>
 
 <div id="gnDeadlineBar" style="max-width:1400px;margin:10px auto 0;padding:0 8px;">
  <style>
@@ -2835,6 +2835,37 @@ const GNROS={"coef":{"SP":[89.71,3.044],"RP":[76.03,1.322],"H":[70.76,2.123]},"f
    });
    try{ if(localStorage.getItem('gn-trade-mode')==='ros'){ b.click(); } }catch(e){}
  }
+})();
+</script>
+
+<script>
+/* gn-build-stamp — v50.22. Reads the page's OWN constants at load, so the line can never
+   disagree with the build it is printed on. That disagreement is the thing this exists to
+   prevent: 191 calculator copies on disk plus a Pages deploy, and no way to tell them apart
+   from the screen. */
+(function () {
+  function paint() {
+    var el = document.getElementById('gnBuildStamp');
+    if (!el) return;
+    var bits = [];
+    bits.push(typeof GN_BUILD !== 'undefined' && GN_BUILD ? GN_BUILD : 'BUILD UNKNOWN');
+    if (typeof GN_DATA_THROUGH !== 'undefined' && GN_DATA_THROUGH) {
+      bits.push('data through ' + GN_DATA_THROUGH);
+    }
+    if (typeof RAW_PER_DOLLAR !== 'undefined' && RAW_PER_DOLLAR) {
+      bits.push('$1 = ' + Number(RAW_PER_DOLLAR).toFixed(2) + ' RA');
+    }
+    if (typeof GN_PACE_BASIS !== 'undefined' && GN_PACE_BASIS) {
+      bits.push('pace: ' + GN_PACE_BASIS);
+    }
+    el.textContent = bits.join('  \u00b7  ');
+    el.title = 'Build identity, read from this page\'s own constants at load time.';
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', paint);
+  } else {
+    paint();
+  }
 })();
 </script>
 </body></html>
