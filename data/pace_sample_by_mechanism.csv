@@ -1,0 +1,580 @@
+mechanism,player,org,pos,tier,age,il,appearances,rate_per_app,expected_rate,w,pm_before,pm_after,dollar_before,dollar_after,dollar_delta
+floor released,Hunter Brown,Dirty Spikes,SP,T1,27,ACTIVE,16,41.12,50.82,0.516,0.5,0.911,1.42,2.43,1.01
+floor released,Blake Snell,KC Gray Hotdogs,SP,T2,33,ACTIVE,6,56.83,34.09,0.286,0.5,1.172,0.7,1.55,0.85
+floor released,Carlos Rodon,MidwestBears,SP,T1,33,ACTIVE,13,40.0,42.06,0.464,0.5,0.98,1.01,1.86,0.85
+floor released,Ronald Acuna Jr.,C-Town Liquors,RF,T2,28,ACTIVE,90,7.74,12.17,0.566,0.5,0.815,1.56,2.41,0.85
+floor released,Jackson Holliday,C-Town Liquors,2B,T3,22,ACTIVE,91,5.12,7.73,0.569,0.5,0.827,1.35,2.11,0.76
+floor released,Anthony Volpe,Balking Dead,SS,T3,25,ACTIVE,55,5.09,7.8,0.444,0.5,0.861,1.19,1.94,0.75
+floor released,Jasson Dominguez,FA,LF,T3,23,ACTIVE,55,4.53,4.51,0.444,0.5,1.002,0.75,1.43,0.68
+floor released,Joey Wiemer,FA (WSH),RF,T1,27,ACTIVE,27,6.22,3.79,0.281,0.5,1.163,0.55,1.21,0.66
+floor released,Cade Povich,FA (BAL),SP,T3,26,ACTIVE,7,24.71,19.77,0.318,0.5,1.072,0.63,1.28,0.65
+floor released,Nick Lodolo,FA (was Kansas Sunflower Seeds),SP,T1,28,ACTIVE,17,23.06,35.39,0.531,0.5,0.833,1.06,1.66,0.6
+floor released,Patrick Sandoval,FA,SP,T1,29,ACTIVE,10,26.4,31.3,0.4,0.5,0.944,0.77,1.37,0.6
+floor released,JP Sears,FA (SD),SP,T2,30,ACTIVE,8,19.62,25.97,0.348,0.5,0.924,0.78,1.37,0.59
+floor released,Ronel Blanco,FA (HOU),SP,T2,32,ACTIVE,6,17.0,36.7,0.286,0.5,0.862,0.95,1.54,0.59
+floor released,Grayson Rodriguez,C-Town Liquors,SP,T3,26,ACTIVE,16,22.44,28.74,0.516,0.5,0.898,0.8,1.36,0.56
+floor released,Max Schuemann,FA,2B,T2,28,ACTIVE,36,4.5,3.74,0.343,0.5,1.063,0.56,1.12,0.56
+floor released,Josh Rojas,FA,3B,T2,31,ACTIVE,36,4.36,4.57,0.343,0.5,0.986,0.65,1.21,0.56
+floor released,Nick Castellanos,Balking Dead,RF,T2,34,ACTIVE,39,3.79,5.95,0.361,0.5,0.882,0.83,1.38,0.55
+floor released,Orlando Arcia,FA (MIN),SS,T2,31,ACTIVE,17,3.53,4.77,0.198,0.5,0.954,0.68,1.22,0.54
+floor released,LaMonte Wade Jr.,FA,1B,T2,32,ACTIVE,46,4.33,4.49,0.4,0.5,0.987,0.61,1.14,0.53
+floor released,Alek Thomas,FA (LAD),CF,T1,26,ACTIVE,34,4.26,3.69,0.33,0.5,1.046,0.54,1.06,0.52
+floor released,Michael Lorenzen,FA (COL),SP,T1,34,ACTIVE,11,22.0,20.76,0.423,0.5,1.023,0.57,1.09,0.52
+floor released,Javier Baez,FA (was Balking Dead),SS,T2,33,ACTIVE,50,5.04,4.49,0.42,0.5,1.047,0.53,1.04,0.51
+floor released,Agustin Ramirez,FA,C,T3,24,ACTIVE,56,4.36,8.78,0.509,0.5,0.769,1.13,1.64,0.51
+floor released,Romy Gonzalez,FA (BOS),1B,T1,29,ACTIVE,19,4.32,4.05,0.216,0.5,1.013,0.56,1.07,0.51
+floor released,Noelvi Marte,FA (was KC Gray Hotdogs),3B,T3,24,ACTIVE,60,3.22,5.59,0.465,0.5,0.822,0.92,1.42,0.5
+floor released,Amed Rosario,FA (NYY),3B,T2,30,ACTIVE,81,3.93,5.93,0.54,0.5,0.836,0.84,1.33,0.49
+floor released,Lance McCullers Jr.,FA (was Dirty Spikes),SP,T2,32,ACTIVE,10,22.9,28.91,0.4,0.5,0.925,0.65,1.13,0.48
+floor released,Nolan Gorman,FA (was High Cheddar),3B,T1,26,ACTIVE,73,3.64,5.99,0.514,0.5,0.819,0.85,1.32,0.47
+floor released,Adam Frazier,FA (LAA),2B,T2,34,ACTIVE,57,3.47,5.53,0.452,0.5,0.848,0.75,1.21,0.46
+floor released,Logan Allen,FA (CLE),SP,T1,27,ACTIVE,7,11.0,24.36,0.318,0.5,0.843,0.76,1.21,0.45
+floor released,Brenton Doyle,FA (COL),CF,T2,28,ACTIVE,64,3.23,5.82,0.481,0.5,0.807,0.85,1.29,0.44
+floor released,Jake Meyers,FA (HOU),CF,T1,30,ACTIVE,46,3.59,3.88,0.4,0.5,0.973,0.53,0.97,0.44
+floor released,Tobias Myers,FA (NYM),RP,T1,27,ACTIVE,27,7.22,14.18,0.466,0.5,0.794,0.87,1.31,0.44
+floor released,Chris Bassitt,FA (was MidwestBears),SP,T1,37,ACTIVE,17,20.29,27.45,0.531,0.5,0.875,0.67,1.1,0.43
+floor released,Daniel Palencia,C-Town Liquors,RP,T3,26,ACTIVE,25,7.0,11.63,0.446,0.5,0.84,0.71,1.13,0.42
+floor released,Victor Scott II,FA (STL),CF,T3,25,ACTIVE,60,2.83,4.7,0.465,0.5,0.834,0.73,1.15,0.42
+floor released,Josh Lowe,FA (LAA),RF,T2,28,ACTIVE,93,3.58,5.77,0.574,0.5,0.804,0.8,1.22,0.42
+floor released,Nelson Velazquez,FA (STL),RF,T1,27,ACTIVE,43,3.19,3.34,0.384,0.5,0.984,0.5,0.92,0.42
+floor released,Victor Robles,FA (SEA),RF,T2,29,ACTIVE,49,3.59,5.64,0.415,0.5,0.864,0.67,1.09,0.42
+floor released,German Marquez,FA (SD),SP,T2,31,ACTIVE,13,17.15,37.79,0.464,0.5,0.772,0.92,1.34,0.42
+floor released,Jordan Montgomery,FA,SP,T2,33,ACTIVE,7,10.29,32.39,0.318,0.5,0.805,0.82,1.24,0.42
+floor released,Tyler Ferguson,FA,RP,T1,32,ACTIVE,18,8.39,6.68,0.367,0.5,1.085,0.4,0.82,0.42
+floor released,Matt Wallner,FA (MIN),RF,T1,28,ACTIVE,34,2.82,3.58,0.33,0.5,0.937,0.53,0.94,0.41
+floor released,Austin Hays,FA (CHW),LF,T1,30,ACTIVE,27,3.33,4.67,0.281,0.5,0.928,0.55,0.96,0.41
+floor released,Enrique Hernandez,FA (LAD),1B,T2,34,ACTIVE,25,2.96,4.75,0.266,0.5,0.91,0.56,0.96,0.4
+floor released,Eric Wagaman,FA,1B,T1,27,ACTIVE,25,1.92,4.12,0.266,0.5,0.872,0.61,1.01,0.4
+floor released,Blake Perkins,FA,CF,T2,29,ACTIVE,45,3.22,3.53,0.395,0.5,0.969,0.49,0.89,0.4
+floor released,Jordan Beck,FA (COL),LF,T3,25,ACTIVE,49,2.27,5.06,0.415,0.5,0.793,0.77,1.16,0.39
+floor released,Davis Schneider,FA (TOR),LF,T1,27,ACTIVE,56,2.88,3.19,0.448,0.5,0.96,0.47,0.86,0.39
+floor released,Landon Knack,FA,SP,T1,28,ACTIVE,3,15.0,14.97,0.167,0.5,1.0,0.44,0.83,0.39
+floor released,MJ Melendez,FA (NYM),LF,T1,27,ACTIVE,55,2.67,4.58,0.444,0.5,0.834,0.67,1.05,0.38
+floor released,Santiago Espinal,FA,3B,T2,31,ACTIVE,30,2.4,3.85,0.303,0.5,0.897,0.55,0.93,0.38
+floor released,Max Kepler,FA,LF,T2,33,ACTIVE,41,3.56,4.31,0.373,0.5,0.942,0.49,0.87,0.38
+floor released,Evan Phillips,FA,RP,T2,31,ACTIVE,24,7.38,9.6,0.436,0.5,0.909,0.5,0.87,0.37
+floor released,Connor Wong,FA (BOS),C,T2,30,ACTIVE,67,3.82,5.96,0.554,0.5,0.821,0.67,1.03,0.36
+floor released,Connor Brogdon,FA,RP,T1,31,ACTIVE,15,7.93,5.63,0.326,0.5,1.12,0.32,0.68,0.36
+floor released,Jose Urquidy,FA,SP,T1,30,ACTIVE,10,12.3,25.88,0.4,0.5,0.811,0.7,1.06,0.36
+floor released,Gabriel Arias,FA (CLE),SS,T1,26,ACTIVE,47,2.74,3.16,0.405,0.5,0.952,0.45,0.8,0.35
+floor released,Jake Rogers,FA,C,T2,28,ACTIVE,51,3.37,4.61,0.486,0.5,0.883,0.53,0.88,0.35
+floor released,Trevor Williams,FA,SP,T2,33,ACTIVE,11,16.91,18.33,0.423,0.5,0.97,0.43,0.78,0.35
+floor released,Starling Marte,FA (KC),DH,T2,37,ACTIVE,56,3.2,4.18,0.448,0.5,0.905,0.47,0.81,0.34
+floor released,TJ Friedl,FA (CIN),CF,T1,30,ACTIVE,76,2.64,6.4,0.524,0.5,0.723,0.87,1.19,0.32
+floor released,Bo Naylor,FA (CLE),C,T1,26,ACTIVE,28,1.82,5.46,0.341,0.5,0.795,0.64,0.96,0.32
+floor released,Scott Barlow,FA (ATH),RP,T2,33,ACTIVE,36,6.11,9.74,0.537,0.5,0.82,0.59,0.91,0.32
+floor released,Pavin Smith,FA (ARI),DH,T1,30,ACTIVE,28,3.11,2.34,0.289,0.5,1.085,0.3,0.61,0.31
+floor released,Eric Haase,FA,C,T2,33,ACTIVE,27,2.7,4.07,0.333,0.5,0.899,0.46,0.77,0.31
+floor released,Elias Diaz,FA,C,T2,35,ACTIVE,72,3.56,5.73,0.571,0.5,0.805,0.6,0.91,0.31
+floor released,Eli Morgan,FA,RP,T2,30,ACTIVE,16,5.44,7.72,0.34,0.5,0.909,0.43,0.74,0.31
+floor released,Dietrich Enns,FA,RP,T1,35,ACTIVE,13,7.31,4.78,0.295,0.5,1.141,0.27,0.58,0.31
+floor released,Edgar Quero,FA (CHW),C,T3,23,ACTIVE,63,2.52,4.87,0.538,0.5,0.766,0.65,0.95,0.3
+floor released,Will Benson,FA (CIN),RF,T2,28,ACTIVE,49,1.98,3.43,0.415,0.5,0.842,0.51,0.81,0.3
+floor released,Jose Trevino,FA,C,T2,33,ACTIVE,41,3.46,3.91,0.432,0.5,0.956,0.38,0.68,0.3
+floor released,Jason Foley,FA,RP,T1,30,ACTIVE,17,4.59,8.44,0.354,0.5,0.855,0.5,0.8,0.3
+floor released,Jake Woodford,FA,RP,T2,29,ACTIVE,18,5.83,4.56,0.367,0.5,1.092,0.28,0.57,0.29
+floor released,Mitch Garver,FA (SEA),C,T2,35,ACTIVE,47,3.28,4.35,0.465,0.5,0.897,0.41,0.69,0.28
+floor released,Bennett Sousa,FA,RP,T1,30,ACTIVE,26,5.35,7.25,0.456,0.5,0.892,0.42,0.7,0.28
+floor released,David Fry,FA (CLE),DH,T2,30,ACTIVE,79,2.25,3.67,0.534,0.5,0.815,0.49,0.76,0.27
+floor released,Austin Slater,FA,LF,T2,33,ACTIVE,28,2.21,2.57,0.289,0.5,0.964,0.33,0.59,0.26
+floor released,Cal Raleigh,Kansas Sunflower Seeds,C,T1,29,ACTIVE,109,5.12,14.39,0.669,0.5,0.612,1.61,1.86,0.25
+floor released,Logan O'Hoppe,FA (LAA),C,T1,26,ACTIVE,82,2.96,6.67,0.603,0.5,0.698,0.75,0.98,0.23
+floor released,Rob Refsnyder,FA,RF,T1,35,ACTIVE,53,1.79,2.77,0.434,0.5,0.862,0.36,0.58,0.22
+floor released,Justin Lawrence,FA,RP,T2,31,ACTIVE,37,4.38,8.06,0.544,0.5,0.776,0.46,0.68,0.22
+floor released,Chris Paddack,FA (CIN),SP,T2,30,ACTIVE,14,8.43,29.73,0.483,0.5,0.689,0.7,0.91,0.21
+floor released,Ryan Borucki,FA,RP,T2,32,ACTIVE,21,4.1,4.57,0.404,0.5,0.962,0.25,0.46,0.21
+floor released,Lucas Erceg,FA (was KC Gray Hotdogs),RP,T1,31,ACTIVE,47,4.57,9.34,0.603,0.5,0.723,0.56,0.76,0.2
+floor released,Matt Svanson,FA,RP,T3,26,ACTIVE,41,3.73,9.45,0.569,0.5,0.69,0.62,0.81,0.19
+floor released,Brenan Hanifee,FA,RP,T1,28,ACTIVE,23,3.0,4.82,0.426,0.5,0.855,0.3,0.49,0.19
+floor released,Matt Strahm,FA (KC),RP,T2,34,ACTIVE,41,4.12,10.32,0.569,0.5,0.692,0.61,0.79,0.18
+floor released,Ryan Walker,FA (SF),RP,T2,30,ACTIVE,33,3.09,14.1,0.516,0.5,0.638,0.88,1.06,0.18
+floor released,Justin Topa,MidwestBears,RP,T1,35,ACTIVE,25,2.96,7.79,0.446,0.5,0.751,0.42,0.59,0.17
+floor released,Austin Wells,FA (was High Cheddar),C,T1,26,ACTIVE,107,2.73,6.78,0.665,0.5,0.643,0.77,0.94,0.17
+floor released,Pedro Pages,FA (STL),C,T1,27,ACTIVE,70,1.73,4.5,0.565,0.5,0.687,0.53,0.68,0.15
+floor released,Kodai Senga,FA (NYM),SP,T2,33,ACTIVE,26,11.85,37.15,0.634,0.5,0.611,0.91,1.05,0.14
+floor released,Danny Coulombe,FA,RP,T1,36,ACTIVE,29,2.62,5.87,0.483,0.5,0.759,0.3,0.42,0.12
+floor released,Simeon Woods Richardson,FA (MIN),SP,T3,25,ACTIVE,20,4.85,27.77,0.571,0.5,0.576,0.95,1.04,0.09
+floor released,Carlos Narvaez,FA (BOS),C,T1,27,ACTIVE,82,1.1,5.82,0.603,0.5,0.56,0.68,0.72,0.04
+IL unparked,Zac Gallen,FA (was Balking Dead),SP,T2,30,IL-60,19,12.74,43.52,0.559,1.0,0.644,2.28,1.39,-0.89
+IL unparked,Garrett Crochet,River Cats,SP,T1,27,IL-60,6,33.0,62.94,0.286,1.0,0.878,3.3,2.73,-0.57
+IL unparked,Adolis Garcia,FA (was Kansas Sunflower Seeds),RF,T2,33,IL-60,67,3.19,7.23,0.493,1.0,0.753,1.75,1.24,-0.51
+IL unparked,Spencer Strider,Dirty Spikes,SP,T1,27,IL-60,8,35.0,60.91,0.348,1.0,0.867,2.75,2.25,-0.5
+IL unparked,Reynaldo Lopez,FA (ATL),SP,T2,32,IL-15,24,19.58,33.97,0.615,1.0,0.765,1.78,1.28,-0.5
+IL unparked,Lucas Giolito,FA (SD),SP,T2,31,IL-60,7,9.0,39.3,0.318,1.0,0.779,1.9,1.4,-0.5
+IL unparked,Jack Flaherty,MidwestBears,SP,T2,30,IL-15,19,31.53,46.39,0.559,1.0,0.839,2.31,1.83,-0.48
+IL unparked,Mitch Keller,FA,SP,T2,30,IL-60,22,23.59,36.7,0.595,1.0,0.809,1.97,1.51,-0.46
+IL unparked,Maikel Garcia,C-Town Liquors,3B,T1,26,IL-10,73,6.33,8.93,0.514,1.0,0.865,2.54,2.08,-0.46
+IL unparked,Shane Bieber,FA (TOR),SP,T2,31,IL-15,11,26.91,44.91,0.423,1.0,0.847,2.05,1.64,-0.41
+IL unparked,Edwin Diaz,KC Gray Hotdogs,RP,T1,32,IL-15,16,4.75,15.41,0.34,1.0,0.788,1.45,1.08,-0.37
+IL unparked,Cole Ragans,FA (was Kansas Sunflower Seeds),SP,T1,28,IL-60,8,31.12,47.48,0.348,1.0,0.892,2.27,1.91,-0.36
+IL unparked,Keegan Akin,Balking Dead,RP,T1,31,IL-60,24,3.29,10.51,0.436,1.0,0.73,1.11,0.76,-0.35
+IL unparked,Ke'Bryan Hayes,FA (CIN),3B,T2,29,IL-10,66,2.68,5.14,0.489,1.0,0.789,1.37,1.02,-0.35
+IL unparked,Eric Lauer,FA (LAD),SP,T1,31,IL-15,22,20.41,29.0,0.595,1.0,0.841,1.68,1.33,-0.35
+IL unparked,Yoan Moncada,FA (LAA),3B,T2,31,IL-60,41,1.93,5.88,0.373,1.0,0.774,1.26,0.92,-0.34
+IL unparked,Aaron Judge,High Cheddar,RF,T1,34,IL-60,59,9.0,10.95,0.461,1.0,0.926,2.64,2.31,-0.33
+IL unparked,Masyn Winn,MidwestBears,SS,T3,24,IL-10,120,6.28,7.4,0.635,1.0,0.913,2.27,1.95,-0.32
+IL unparked,Shane McClanahan,High Cheddar,SP,T1,29,IL-15,24,34.88,43.79,0.615,1.0,0.887,1.91,1.6,-0.31
+IL unparked,Willy Adames,MidwestBears,SS,T1,30,IL-10,121,6.33,7.59,0.637,1.0,0.905,2.16,1.85,-0.31
+IL unparked,Brendan Donovan,FA (SEA),2B,T1,29,IL-7,39,4.95,7.21,0.361,1.0,0.898,1.92,1.63,-0.29
+IL unparked,Shawn Armstrong,FA,RP,T1,35,IL-60,38,6.21,11.15,0.551,1.0,0.78,1.11,0.82,-0.29
+IL unparked,Jorge Polanco,FA (NYM),DH,T2,32,IL-60,37,1.68,5.17,0.349,1.0,0.788,1.13,0.84,-0.29
+IL unparked,Brent Rooker,FA (was High Cheddar),DH,T1,31,IL-60,48,5.52,7.35,0.41,1.0,0.908,1.87,1.6,-0.27
+IL unparked,Miguel Andujar,FA (SD),3B,T2,31,IL-10,74,4.42,6.33,0.517,1.0,0.859,1.41,1.14,-0.27
+IL unparked,Will Vest,FA (DET),RP,T1,31,IL-60,27,6.15,10.76,0.466,1.0,0.82,1.19,0.92,-0.27
+IL unparked,Ryan O'Hearn,Balking Dead,1B,T1,32,IL-10,96,8.11,5.49,0.582,1.0,1.25,1.46,1.72,0.26
+IL unparked,Tyler Soderstrom,Kansas Sunflower Seeds,LF,T3,24,IL-60,109,7.36,8.09,0.612,1.0,0.95,2.4,2.15,-0.25
+IL unparked,Nick Pivetta,MidwestBears,SP,T1,33,IL-60,4,38.25,49.03,0.211,1.0,0.958,2.54,2.29,-0.25
+IL unparked,Edward Cabrera,FA (CHC),SP,T1,28,IL-15,15,24.6,30.7,0.5,1.0,0.911,1.79,1.54,-0.25
+IL unparked,Dansby Swanson,Dirty Spikes,SS,T1,32,IL-10,119,8.13,5.87,0.633,1.0,1.219,1.56,1.8,0.24
+IL unparked,Nathan Eovaldi,Balking Dead,SP,T1,36,IL-15,22,43.68,30.33,0.595,1.0,1.235,1.37,1.6,0.23
+IL unparked,Tyler O'Neill,FA (BAL),RF,T2,31,IL-10,83,3.92,5.45,0.546,1.0,0.861,1.22,0.99,-0.23
+IL unparked,Tanner Banks,FA (PHI),RP,T1,34,IL-60,28,3.82,8.1,0.475,1.0,0.774,0.86,0.63,-0.23
+IL unparked,Luis Robert Jr.,FA (NYM),CF,T2,28,IL-10,60,5.42,6.64,0.465,1.0,0.923,1.71,1.49,-0.22
+IL unparked,Justin Sterner,MidwestBears,RP,T1,28,IL-60,46,5.98,8.65,0.597,1.0,0.834,1.01,0.79,-0.22
+IL unparked,Jordan Leasure,FA (CHW),RP,T1,27,IL-60,18,5.89,10.25,0.367,1.0,0.859,1.15,0.93,-0.22
+IL unparked,Devin Williams,MidwestBears,RP,T1,31,IL-15,42,10.45,12.81,0.575,1.0,0.905,1.44,1.23,-0.21
+IL unparked,Ryan Helsley,Balking Dead,RP,T2,31,IL-60,17,10.88,14.76,0.354,1.0,0.916,1.49,1.29,-0.2
+IL unparked,Jacob Wilson,KC Gray Hotdogs,SS,T3,24,IL-60,80,7.22,7.72,0.537,1.0,0.969,2.29,2.09,-0.2
+IL unparked,Patrick Corbin,FA (TOR),SP,T2,36,IL-60,19,18.37,24.73,0.559,1.0,0.871,1.16,0.96,-0.2
+IL unparked,Garrett Cleavinger,High Cheddar,RP,T1,32,IL-15,51,8.69,10.91,0.622,1.0,0.886,1.25,1.05,-0.2
+IL unparked,Jason Adam,FA,RP,T1,34,IL-60,36,8.39,11.16,0.537,1.0,0.88,1.13,0.94,-0.19
+IL unparked,Cole Sands,FA (MIN),RP,T1,28,IL-60,13,4.85,9.65,0.295,1.0,0.868,1.06,0.87,-0.19
+IL unparked,Joe Ryan,Kansas Sunflower Seeds,SP,T1,30,IL-15,23,42.3,43.61,0.605,1.0,0.984,2.52,2.34,-0.18
+IL unparked,Jack Leiter,FA (TEX),SP,T3,26,IL-60,15,30.6,19.94,0.5,1.0,1.24,1.1,1.28,0.18
+IL unparked,Nick Mears,FA,RP,T1,29,IL-60,21,4.38,7.97,0.404,1.0,0.836,0.88,0.7,-0.18
+IL unparked,Xavier Edwards,MidwestBears,2B,T1,26,IL-10,135,7.06,7.36,0.662,1.0,0.976,2.14,1.97,-0.17
+IL unparked,Hunter Greene,River Cats,SP,T3,26,IL-60,5,34.8,40.87,0.25,1.0,0.967,1.99,1.82,-0.17
+IL unparked,Kyle Freeland,FA (COL),SP,T2,33,IL-15,24,21.08,25.55,0.615,1.0,0.903,1.17,1.0,-0.17
+IL unparked,Jeremiah Estrada,KC Gray Hotdogs,RP,T1,27,IL-15,33,9.73,11.38,0.516,1.0,0.933,1.34,1.18,-0.16
+IL unparked,Ben Brown,Kansas Sunflower Seeds,SP,T3,26,IL-60,20,30.3,22.06,0.571,1.0,1.192,1.34,1.5,0.16
+IL unparked,Matt Chapman,MidwestBears,3B,T2,33,IL-60,84,5.61,6.32,0.549,1.0,0.944,1.45,1.29,-0.16
+IL unparked,Kerry Carpenter,FA (DET),RF,T1,28,IL-10,81,4.54,5.18,0.54,1.0,0.94,1.44,1.28,-0.16
+IL unparked,Ryan Thompson,FA (ARI),RP,T1,33,IL-60,46,4.74,6.96,0.597,1.0,0.829,0.75,0.59,-0.16
+IL unparked,Fernando Cruz,FA,RP,T1,36,IL-15,61,8.72,10.15,0.663,1.0,0.916,1.1,0.95,-0.15
+IL unparked,Spencer Steer,Dirty Spikes,1B,T1,28,IL-10,98,6.45,6.67,0.587,1.0,0.983,1.9,1.76,-0.14
+IL unparked,Mike Burrows,FA (HOU),SP,T3,26,IL-60,18,19.39,12.84,0.545,1.0,1.25,0.78,0.92,0.14
+IL unparked,Luke Raley,FA (was Kansas Sunflower Seeds),RF,T2,31,IL-60,93,4.12,4.69,0.574,1.0,0.937,1.2,1.07,-0.13
+IL unparked,Trent Grisham,MidwestBears,CF,T1,29,IL-10,120,6.96,7.05,0.635,1.0,0.992,1.97,1.84,-0.13
+IL unparked,Kris Bubic,FA (KC),SP,T1,28,IL-60,9,38.89,26.52,0.375,1.0,1.157,1.48,1.61,0.13
+IL unparked,Shea Langeliers,MidwestBears,C,T1,28,IL-10,93,7.73,7.93,0.633,1.0,0.986,1.77,1.65,-0.12
+IL unparked,Rhys Hoskins,FA (CLE),1B,T2,33,IL-10,95,4.83,5.16,0.579,1.0,0.967,1.3,1.18,-0.12
+IL unparked,Harrison Bader,FA (SF),CF,T1,32,IL-60,30,3.8,4.63,0.303,1.0,0.951,1.19,1.07,-0.12
+IL unparked,Matt Vierling,FA (DET),CF,T2,29,IL-60,84,4.2,4.66,0.549,1.0,0.952,1.17,1.05,-0.12
+IL unparked,Luis Severino,FA (ATH),SP,T2,32,IL-60,12,32.33,34.79,0.444,1.0,0.972,1.42,1.3,-0.12
+IL unparked,JT Brubaker,FA,RP,T2,32,IL-15,41,7.95,9.49,0.569,1.0,0.917,0.92,0.8,-0.12
+IL unparked,Angel Zerpa,FA,RP,T1,27,IL-60,12,2.92,5.9,0.279,1.0,0.873,0.66,0.54,-0.12
+IL unparked,Sam Hentges,FA,RP,T1,29,IL-15,40,5.72,7.01,0.563,1.0,0.907,0.79,0.67,-0.12
+IL unparked,Robert Garcia,FA (was Kansas Sunflower Seeds),RP,T1,30,IL-60,9,4.22,7.4,0.225,1.0,0.913,0.82,0.71,-0.11
+IL unparked,Phil Maton,MidwestBears,RP,T1,33,IL-60,31,4.87,6.54,0.5,1.0,0.885,0.67,0.56,-0.11
+IL unparked,Carlos Correa,FA (HOU),SS,T1,31,IL-60,32,8.78,5.82,0.317,1.0,1.145,1.3,1.41,0.11
+IL unparked,Joey Bart,FA (PIT),C,T1,29,IL-10,42,3.48,4.21,0.438,1.0,0.932,0.9,0.79,-0.11
+IL unparked,Ron Marinaccio,FA,RP,T2,30,OUT,41,6.0,6.97,0.569,1.0,0.929,0.87,0.76,-0.11
+IL unparked,Willi Castro,River Cats,RF,T2,29,IL-10,119,6.39,5.2,0.633,1.0,1.13,1.45,1.55,0.1
+IL unparked,Jonathan India,FA (KC),2B,T2,29,IL-60,16,7.12,7.31,0.188,1.0,0.996,1.72,1.62,-0.1
+IL unparked,Jake Fraley,FA,RF,T2,31,IL-60,28,2.93,3.94,0.289,1.0,0.934,0.89,0.79,-0.1
+IL unparked,Robert Suarez,River Cats,RP,T1,35,IL-60,31,12.68,12.82,0.5,1.0,0.995,1.37,1.28,-0.09
+IL unparked,Andrew Nardi,FA,RP,T1,27,IL-60,25,7.72,8.96,0.446,1.0,0.945,0.88,0.79,-0.09
+IL unparked,Ceddanne Rafaela,High Cheddar,CF,T3,25,IL-10,133,6.97,6.72,0.658,1.0,1.022,2.05,1.98,-0.07
+IL unparked,Masataka Yoshida,FA (BOS),DH,T2,32,IL-10,87,5.68,5.6,0.558,1.0,1.007,1.4,1.33,-0.07
+IL unparked,Andy Pages,Dirty Spikes,CF,T3,25,IL-10,127,8.09,7.04,0.648,1.0,1.088,2.15,2.21,0.06
+IL unparked,Nolan Schanuel,High Cheddar,1B,T3,24,IL-10,107,7.01,6.63,0.608,1.0,1.031,2.08,2.02,-0.06
+IL unparked,Pete Fairbanks,High Cheddar,RP,T1,32,IL-15,44,11.11,9.07,0.587,1.0,1.119,0.99,1.05,0.06
+IL unparked,Matt Brash,FA,RP,T1,28,IL-60,20,9.3,9.26,0.392,1.0,1.001,1.05,0.99,-0.06
+IL unparked,Kyle Higashioka,FA (TEX),C,T1,36,IL-10,53,3.74,3.98,0.495,1.0,0.972,0.79,0.73,-0.06
+IL unparked,Brad Keller,FA,RP,T1,30,IL-60,32,9.66,9.6,0.508,1.0,1.003,0.88,0.83,-0.05
+IL unparked,Stephen Kolek,FA (KC),SP,T1,29,IL-60,10,25.9,19.67,0.4,1.0,1.114,1.03,1.08,0.05
+IL unparked,Jalen Beeks,FA,RP,T1,32,IL-60,29,6.1,6.34,0.483,1.0,0.984,0.66,0.61,-0.05
+IL unparked,Gavin Sheets,High Cheddar,LF,T1,30,IL-10,122,5.54,5.27,0.639,1.0,1.029,1.5,1.46,-0.04
+IL unparked,Ryne Nelson,FA (ARI),SP,T1,28,IL-60,15,27.0,25.24,0.5,1.0,1.031,1.41,1.37,-0.04
+IL unparked,Kirby Yates,FA (LAA),RP,T2,39,IL-15,44,7.66,6.06,0.587,1.0,1.139,0.52,0.56,0.04
+IL unparked,Mark Leiter Jr.,FA (ATH),RP,T2,35,IL-60,36,8.44,8.38,0.537,1.0,1.004,0.81,0.77,-0.04
+IL unparked,Josh Jung,C-Town Liquors,3B,T1,28,IL-10,92,6.25,5.84,0.571,1.0,1.036,1.5,1.47,-0.03
+IL unparked,Cionel Perez,FA,RP,T2,30,IL-15,36,7.64,7.21,0.537,1.0,1.029,0.82,0.79,-0.03
+IL unparked,Michael Soroka,FA (was High Cheddar),SP,T1,28,IL-15,18,39.56,36.15,0.545,1.0,1.046,1.73,1.71,-0.02
+IL unparked,Giancarlo Stanton,MidwestBears,RF,T2,36,IL-60,24,5.08,3.6,0.258,1.0,1.096,0.7,0.72,0.02
+IL unparked,Nick Kurtz,River Cats,1B,T3,23,IL-60,99,9.24,8.25,0.589,1.0,1.064,2.55,2.57,0.02
+IL unparked,Brandon Woodruff,FA (was River Cats),SP,T2,33,IL-60,9,43.67,36.06,0.375,1.0,1.071,1.49,1.51,0.02
+IL unparked,Wenceel Perez,FA (DET),RF,T1,26,IL-60,53,4.85,4.0,0.434,1.0,1.083,1.07,1.09,0.02
+IL unparked,Adrian Houser,FA (SF),SP,T1,33,IL-60,26,20.5,17.61,0.634,1.0,1.094,0.88,0.9,0.02
+IL unparked,Ramon Laureano,FA,LF,T1,31,IL-60,53,4.98,4.4,0.434,1.0,1.052,0.95,0.94,-0.01
+IL unparked,Anthony Banda,FA (MIN),RP,T1,32,IL-15,39,7.26,6.56,0.557,1.0,1.053,0.73,0.72,-0.01
+IL unparked,Jose Quintana,FA (COL),SP,T2,37,IL-60,9,11.22,10.55,0.375,1.0,1.022,0.4,0.39,-0.01
+IL unparked,Zack Kelly,FA,RP,T2,31,IL-60,17,6.06,5.38,0.354,1.0,1.04,0.63,0.62,-0.01
+IL unparked,Luis Rengifo,FA (was Balking Dead),3B,T1,29,IL-60,95,5.26,4.73,0.579,1.0,1.059,1.2,1.2,0.0
+IL unparked,Justin Slaten,FA (was High Cheddar),RP,T2,28,IL-15,36,8.83,7.87,0.537,1.0,1.059,0.89,0.89,0.0
+IL unparked,Byron Buxton,FA,CF,T1,32,IL-10,93,8.19,7.31,0.574,1.0,1.063,1.95,1.95,0.0
+re-priced down,Cristian Javier,FA (HOU),SP,T2,29,ACTIVE,14,17.29,41.64,0.483,1.0,0.746,2.05,1.44,-0.61
+re-priced down,Tyler Wells,FA (BAL),SP,T2,31,ACTIVE,55,13.49,19.7,0.786,1.264,0.777,1.34,0.78,-0.56
+re-priced down,Jose Suarez,FA,SP,T1,28,ACTIVE,45,6.89,20.27,0.75,1.0,0.554,1.17,0.61,-0.56
+re-priced down,Chad Patrick,FA (MIL),SP,T1,27,ACTIVE,49,15.24,25.33,0.766,1.011,0.726,1.6,1.08,-0.52
+re-priced down,Hunter Goodman,Dirty Spikes,C,T1,26,ACTIVE,123,7.12,9.63,0.695,1.0,0.837,2.25,1.78,-0.47
+re-priced down,Tony Santillan,FA (CIN),RP,T1,29,ACTIVE,40,5.38,11.75,0.563,1.0,0.725,1.43,0.98,-0.45
+re-priced down,James Outman,FA,CF,T2,29,ACTIVE,71,2.27,5.13,0.507,1.0,0.745,1.49,1.05,-0.44
+re-priced down,Bailey Falter,FA,SP,T1,29,ACTIVE,5,-11.4,19.27,0.25,1.0,0.642,1.11,0.67,-0.44
+re-priced down,Luis Gil,FA (NYY),SP,T1,28,ACTIVE,5,11.6,35.67,0.25,1.0,0.848,2.11,1.68,-0.43
+re-priced down,Yordan Alvarez,High Cheddar,LF,T2,29,ACTIVE,142,10.15,8.01,0.673,1.293,1.163,2.73,2.31,-0.42
+re-priced down,Juan Soto,River Cats,RF,T1,27,ACTIVE,92,9.1,10.76,0.571,1.0,0.921,3.07,2.66,-0.41
+re-priced down,Shohei Ohtani,Kansas Sunflower Seeds,DH,T1,31,DTD,129,15.58,11.49,0.652,1.258,1.209,4.21,3.81,-0.4
+re-priced down,Ben Rice,C-Town Liquors,DH,T1,27,ACTIVE,137,8.93,6.11,0.665,1.427,1.277,2.59,2.19,-0.4
+re-priced down,Wilyer Abreu,Kansas Sunflower Seeds,RF,T1,27,ACTIVE,140,7.33,4.93,0.67,1.478,1.294,2.17,1.79,-0.38
+re-priced down,Ryan McMahon,FA (NYY),3B,T1,31,ACTIVE,104,3.02,5.1,0.601,1.0,0.779,1.45,1.07,-0.38
+re-priced down,Will Smith,Balking Dead,C,T1,31,ACTIVE,58,5.64,8.44,0.518,1.0,0.845,1.79,1.42,-0.37
+re-priced down,Shane Smith,FA (CHW),SP,T3,26,ACTIVE,3,1.67,29.96,0.167,1.0,0.858,1.96,1.59,-0.37
+re-priced down,Otto Lopez,Dirty Spikes,SS,T1,27,ACTIVE,140,8.24,6.38,0.67,1.296,1.175,2.46,2.1,-0.36
+re-priced down,Lenyn Sosa,FA (TOR),2B,T1,26,ACTIVE,39,3.41,6.43,0.361,1.0,0.847,1.81,1.45,-0.36
+re-priced down,Christopher Morel,FA (MIA),LF,T1,27,ACTIVE,30,0.8,4.59,0.303,1.0,0.775,1.34,0.98,-0.36
+re-priced down,Sal Frelick,MidwestBears,RF,T1,26,ACTIVE,97,5.33,6.98,0.584,1.0,0.876,2.03,1.68,-0.35
+re-priced down,Luis Medina,FA (ATH),SP,T1,27,ACTIVE,49,11.41,16.21,0.766,1.165,0.796,0.99,0.64,-0.35
+re-priced down,Taijuan Walker,FA (LAA),SP,T2,33,ACTIVE,5,1.0,24.15,0.25,1.0,0.784,1.35,1.0,-0.35
+re-priced down,Rafael Devers,MidwestBears,DH,T1,29,ACTIVE,144,8.65,7.63,0.676,1.182,1.082,2.51,2.17,-0.34
+re-priced down,Yusei Kikuchi,FA (LAA),SP,T1,35,ACTIVE,10,27.0,38.58,0.4,1.0,0.892,2.05,1.72,-0.33
+re-priced down,Mason Fluharty,FA (TOR),RP,T3,24,ACTIVE,75,7.32,6.39,0.708,1.388,1.092,1.28,0.95,-0.33
+re-priced down,Jesus Luzardo,KC Gray Hotdogs,SP,T1,28,ACTIVE,28,57.04,44.12,0.651,1.218,1.172,3.35,3.04,-0.31
+re-priced down,Drew Rasmussen,MidwestBears,SP,T1,31,ACTIVE,27,50.11,31.55,0.643,1.425,1.341,2.72,2.41,-0.31
+re-priced down,Aaron Ashby,Dirty Spikes,RP,T1,28,ACTIVE,67,12.72,10.57,0.684,1.308,1.125,1.61,1.31,-0.3
+re-priced down,Luis Arraez,High Cheddar,DH,T1,29,ACTIVE,135,8.36,6.18,0.662,1.309,1.21,2.31,2.01,-0.3
+re-priced down,Spencer Arrighetti,FA (was KC Gray Hotdogs),SP,T3,26,ACTIVE,21,27.38,33.51,0.583,1.0,0.904,1.99,1.69,-0.3
+re-priced down,Yandy Diaz,MidwestBears,DH,T1,34,ACTIVE,138,8.33,6.67,0.667,1.242,1.15,2.36,2.06,-0.3
+re-priced down,Adrian Morejon,Dirty Spikes,RP,T1,27,ACTIVE,66,12.74,10.97,0.68,1.25,1.099,1.73,1.43,-0.3
+re-priced down,Jeffrey Springs,FA (ATH),SP,T1,33,ACTIVE,26,19.23,27.52,0.634,1.0,0.828,1.35,1.05,-0.3
+re-priced down,Mark Vientos,FA (was High Cheddar),3B,T1,26,ACTIVE,78,4.83,6.31,0.531,1.0,0.888,1.8,1.51,-0.29
+re-priced down,Cristopher Sanchez,MidwestBears,SP,T1,29,ACTIVE,29,57.1,50.97,0.659,1.104,1.071,3.4,3.11,-0.29
+re-priced down,William Contreras,River Cats,C,T1,28,ACTIVE,132,7.52,10.83,0.71,0.872,0.805,2.21,1.92,-0.29
+re-priced down,Dylan Lee,Balking Dead,RP,T1,31,ACTIVE,66,11.77,9.75,0.68,1.295,1.127,1.57,1.29,-0.28
+re-priced down,Randy Arozarena,Dirty Spikes,LF,T1,31,ACTIVE,136,8.07,6.3,0.663,1.253,1.168,2.25,1.98,-0.27
+re-priced down,Travis d'Arnaud,FA,C,T2,37,ACTIVE,27,1.48,5.44,0.333,1.0,0.782,1.01,0.74,-0.27
+re-priced down,Yariel Rodriguez,FA,RP,T1,28,DTD,10,0.2,8.37,0.244,1.0,0.786,1.05,0.78,-0.27
+re-priced down,Michael Busch,Balking Dead,1B,T1,28,ACTIVE,142,7.6,7.13,0.673,1.102,1.04,2.34,2.08,-0.26
+re-priced down,Matt Olson,Dirty Spikes,1B,T1,32,ACTIVE,143,9.24,9.5,0.675,1.022,0.984,2.77,2.51,-0.26
+re-priced down,Pete Alonso,MidwestBears,1B,T1,31,ACTIVE,144,9.14,9.62,0.676,1.006,0.97,2.82,2.56,-0.26
+re-priced down,Jonathan Aranda,KC Gray Hotdogs,1B,T1,28,ACTIVE,139,7.76,4.69,0.668,1.5,1.393,2.09,1.83,-0.26
+re-priced down,Jake McCarthy,KC Gray Hotdogs,LF,T2,28,ACTIVE,127,8.28,5.19,0.648,1.44,1.346,2.22,1.96,-0.26
+re-priced down,Josh Smith,FA (was Balking Dead),SS,T1,28,ACTIVE,61,3.97,5.28,0.469,1.0,0.895,1.54,1.3,-0.24
+re-priced down,Riley Greene,Dirty Spikes,LF,T3,25,ACTIVE,122,6.8,7.49,0.639,1.0,0.947,2.29,2.05,-0.24
+re-priced down,Drake Baldwin,KC Gray Hotdogs,C,T3,25,ACTIVE,120,7.66,8.78,0.69,0.982,0.921,2.07,1.83,-0.24
+re-priced down,Cade Smith,KC Gray Hotdogs,RP,T3,26,ACTIVE,60,17.53,14.59,0.659,1.181,1.12,2.28,2.04,-0.24
+re-priced down,Mason Miller,River Cats,RP,T1,27,ACTIVE,57,21.09,15.16,0.648,1.289,1.228,2.33,2.09,-0.24
+re-priced down,Braydon Fisher,FA (TOR),RP,T3,25,ACTIVE,69,8.12,7.51,0.69,1.217,1.05,1.27,1.03,-0.24
+re-priced down,Alex Bregman,Dirty Spikes,3B,T2,32,ACTIVE,141,8.43,7.97,0.671,1.087,1.035,2.25,2.02,-0.23
+re-priced down,Dylan Cease,River Cats,SP,T1,30,ACTIVE,26,65.81,43.45,0.634,1.316,1.294,3.19,2.96,-0.23
+re-priced down,Michael Harris II,Kansas Sunflower Seeds,CF,T3,25,ACTIVE,137,7.39,6.38,0.665,1.149,1.094,2.17,1.95,-0.22
+re-priced down,Abner Uribe,C-Town Liquors,RP,T3,26,ACTIVE,52,11.62,13.61,0.627,1.0,0.917,1.66,1.44,-0.22
+re-priced down,Danny Jansen,FA (TEX),C,T1,31,ACTIVE,52,2.81,4.64,0.491,1.0,0.825,0.98,0.76,-0.22
+re-priced down,Brendon Little,FA (TOR),RP,T1,29,ACTIVE,24,5.25,8.79,0.436,1.0,0.842,1.09,0.87,-0.22
+re-priced down,Chandler Simpson,Kansas Sunflower Seeds,CF,T3,25,ACTIVE,133,5.95,4.46,0.658,1.276,1.199,1.78,1.57,-0.21
+re-priced down,Kevin Kelly,River Cats,RP,T1,28,ACTIVE,63,11.16,9.0,0.67,1.271,1.145,1.41,1.2,-0.21
+re-priced down,Ha-Seong Kim,FA (ATL),SS,T2,30,ACTIVE,35,1.6,3.86,0.337,1.0,0.823,0.94,0.73,-0.21
+re-priced down,Brandon Marsh,Kansas Sunflower Seeds,LF,T1,28,ACTIVE,135,5.76,4.36,0.662,1.279,1.19,1.63,1.43,-0.2
+re-priced down,Manny Machado,Kansas Sunflower Seeds,3B,T1,33,ACTIVE,139,6.88,6.14,0.668,1.131,1.073,1.93,1.73,-0.2
+re-priced down,Brock Burke,Kansas Sunflower Seeds,RP,T2,29,ACTIVE,71,8.93,10.03,0.696,1.048,0.931,1.24,1.04,-0.2
+re-priced down,Sean Murphy,Dirty Spikes,C,T2,31,ACTIVE,20,3.9,6.63,0.27,1.0,0.9,1.26,1.07,-0.19
+re-priced down,Michael Wacha,Kansas Sunflower Seeds,SP,T2,34,ACTIVE,28,41.43,29.88,0.651,1.299,1.227,1.76,1.57,-0.19
+re-priced down,Michael McGreevy,FA (was Kansas Sunflower Seeds),SP,T3,25,ACTIVE,27,27.67,16.21,0.643,1.5,1.409,1.67,1.48,-0.19
+re-priced down,Juan Mejia,FA (COL),RP,T3,25,ACTIVE,57,5.77,7.69,0.648,1.0,0.855,0.97,0.78,-0.19
+re-priced down,Connor Joe,FA,RF,T2,33,ACTIVE,18,1.22,3.86,0.207,1.0,0.873,1.1,0.91,-0.19
+re-priced down,Sonny Gray,Balking Dead,SP,T1,36,ACTIVE,26,44.81,25.94,0.634,1.488,1.415,1.77,1.59,-0.18
+re-priced down,Nico Hoerner,Dirty Spikes,2B,T1,29,ACTIVE,141,7.52,7.61,0.671,1.022,0.993,2.26,2.08,-0.18
+re-priced down,Brandon Lowe,KC Gray Hotdogs,2B,T1,31,ACTIVE,134,8.21,6.67,0.66,1.192,1.137,1.88,1.7,-0.18
+re-priced down,Jared Koenig,MidwestBears,RP,T1,32,ACTIVE,9,1.0,7.01,0.225,1.0,0.826,0.82,0.64,-0.18
+re-priced down,MacKenzie Gore,Kansas Sunflower Seeds,SP,T1,27,ACTIVE,30,35.97,35.67,0.667,1.034,1.005,2.2,2.02,-0.18
+re-priced down,Lourdes Gurriel Jr.,FA (ARI),LF,T1,32,ACTIVE,47,4.43,5.57,0.405,1.0,0.925,1.42,1.24,-0.18
+re-priced down,George Soriano,Kansas Sunflower Seeds,RP,T1,27,ACTIVE,64,8.06,5.37,0.674,1.5,1.304,1.01,0.83,-0.18
+re-priced down,Landen Roupp,FA,SP,T1,27,ACTIVE,27,32.89,18.67,0.643,1.5,1.441,1.75,1.58,-0.17
+re-priced down,Tanner Scott,High Cheddar,RP,T2,31,ACTIVE,62,12.74,11.65,0.667,1.117,1.056,1.58,1.41,-0.17
+re-priced down,Fernando Tatis Jr.,River Cats,RF,T1,27,ACTIVE,141,7.81,8.1,0.671,0.999,0.978,2.16,1.99,-0.17
+re-priced down,Dustin May,Dirty Spikes,SP,T1,28,ACTIVE,27,29.93,19.88,0.643,1.355,1.292,1.68,1.51,-0.17
+re-priced down,Colton Gordon,FA,SP,T1,27,ACTIVE,4,2.75,13.64,0.211,1.0,0.849,0.85,0.68,-0.17
+re-priced down,Tyler Rogers,Balking Dead,RP,T1,35,ACTIVE,66,8.09,7.34,0.68,1.191,1.063,1.02,0.86,-0.16
+re-priced down,Max Fried,Dirty Spikes,SP,T1,32,ACTIVE,17,43.18,44.06,0.531,1.0,0.99,2.51,2.35,-0.16
+re-priced down,Christian Walker,KC Gray Hotdogs,1B,T1,35,ACTIVE,138,7.54,7.16,0.667,1.061,1.031,2.02,1.86,-0.16
+re-priced down,Jacob Webb,Kansas Sunflower Seeds,RP,T1,32,ACTIVE,61,9.62,7.4,0.663,1.29,1.18,1.15,0.99,-0.16
+re-priced down,Jose Soriano,Kansas Sunflower Seeds,SP,T1,27,ACTIVE,28,38.54,33.03,0.651,1.109,1.098,2.28,2.13,-0.15
+re-priced down,Tyler Alexander,FA (TEX),RP,T2,31,ACTIVE,65,7.91,6.97,0.677,1.205,1.082,0.97,0.82,-0.15
+re-priced down,Slade Cecconi,FA (CLE),SP,T1,27,ACTIVE,24,21.38,23.42,0.615,1.0,0.952,1.43,1.28,-0.15
+re-priced down,Hoby Milner,FA (CHC),RP,T1,35,ACTIVE,40,4.58,6.63,0.563,1.0,0.843,0.73,0.58,-0.15
+re-priced down,Brennan Bernardino,FA,RP,T1,34,ACTIVE,67,6.36,5.09,0.684,1.356,1.154,0.79,0.64,-0.15
+re-priced down,Ian Happ,MidwestBears,LF,T1,31,DTD,138,6.29,6.18,0.667,1.029,1.01,1.81,1.68,-0.13
+re-priced down,Carlos Carrasco,FA,SP,T2,39,ACTIVE,8,3.25,11.79,0.348,1.0,0.773,0.49,0.36,-0.13
+re-priced down,Tristan Beck,FA,RP,T1,30,ACTIVE,11,2.36,6.07,0.262,1.0,0.856,0.71,0.58,-0.13
+re-priced down,Jeff McNeil,MidwestBears,2B,T2,34,ACTIVE,127,6.2,4.46,0.648,1.27,1.228,1.47,1.35,-0.12
+re-priced down,Trea Turner,Balking Dead,SS,T1,33,ACTIVE,138,6.59,6.83,0.667,0.982,0.979,1.83,1.72,-0.11
+re-priced down,J.P. Crawford,MidwestBears,SS,T1,31,ACTIVE,98,5.72,5.89,0.587,1.0,0.985,1.53,1.42,-0.11
+re-priced down,Trevor Megill,River Cats,RP,T1,32,ACTIVE,55,14.73,10.75,0.64,1.23,1.213,1.59,1.48,-0.11
+re-priced down,Jo Adell,C-Town Liquors,CF,T1,27,ACTIVE,141,5.75,6.23,0.671,0.962,0.953,1.78,1.67,-0.11
+re-priced down,Matt Festa,FA (CLE),RP,T1,33,ACTIVE,61,7.89,6.6,0.663,1.192,1.116,0.95,0.84,-0.11
+re-priced down,Randy Vasquez,FA,SP,T1,27,ACTIVE,27,22.85,17.03,0.643,1.219,1.198,1.27,1.17,-0.1
+re-priced down,David Bednar,MidwestBears,RP,T1,31,ACTIVE,57,15.14,12.79,0.648,1.112,1.107,1.73,1.63,-0.1
+re-priced down,Brandon Nimmo,MidwestBears,LF,T1,33,ACTIVE,138,5.64,5.8,0.667,0.99,0.984,1.6,1.5,-0.1
+re-priced down,Bryan Hudson,FA (CHW),RP,T2,29,ACTIVE,62,8.82,8.44,0.667,1.072,1.027,1.1,1.0,-0.1
+re-priced down,Enyel De Los Santos,FA,RP,T2,30,ACTIVE,62,8.32,8.16,0.667,1.049,1.012,1.04,0.95,-0.09
+re-priced down,Jeff Hoffman,River Cats,RP,T1,33,ACTIVE,63,10.97,12.31,0.67,0.942,0.934,1.4,1.31,-0.09
+re-priced down,Grant Holmes,FA (ATL),SP,T1,30,ACTIVE,27,28.52,22.64,0.643,1.151,1.15,1.57,1.48,-0.09
+re-priced down,Kevin Ginkel,Kansas Sunflower Seeds,RP,T2,32,ACTIVE,65,8.11,9.12,0.677,0.967,0.932,0.98,0.89,-0.09
+re-priced down,Paul Blackburn,KC Gray Hotdogs,RP,T2,32,ACTIVE,55,11.93,6.76,0.64,1.5,1.439,0.98,0.89,-0.09
+re-priced down,Eduard Bazardo,Kansas Sunflower Seeds,RP,T1,30,ACTIVE,66,8.44,10.65,0.68,0.884,0.873,1.17,1.09,-0.08
+re-priced down,Jason Alexander,FA,SP,T1,33,ACTIVE,4,8.25,12.06,0.211,1.0,0.94,0.7,0.62,-0.08
+re-priced down,Calvin Faucher,FA (was MidwestBears),RP,T1,30,ACTIVE,61,8.43,8.46,0.663,1.011,0.998,1.06,0.99,-0.07
+re-priced down,Ramon Urias,FA,3B,T1,32,ACTIVE,33,4.09,4.23,0.324,1.0,0.99,1.14,1.07,-0.07
+re-priced down,Beau Brieske,FA,RP,T1,28,ACTIVE,11,6.45,6.85,0.262,1.0,0.986,0.8,0.74,-0.06
+re-priced down,Seranthony Dominguez,FA (was Dirty Spikes),RP,T1,31,ACTIVE,59,8.51,8.0,0.656,1.041,1.038,0.83,0.78,-0.05
+re-priced down,Caleb Thielbar,FA (CHC),RP,T2,39,ACTIVE,52,7.52,4.76,0.627,1.331,1.326,0.65,0.61,-0.04
+re-priced up,Bryce Miller,KC Gray Hotdogs,SP,T1,27,ACTIVE,18,37.61,43.52,0.545,0.581,0.933,1.48,2.24,0.76
+re-priced up,Thomas Saggese,FA (STL),2B,T3,24,ACTIVE,37,6.05,3.68,0.349,0.503,1.202,0.61,1.37,0.76
+re-priced up,Dean Kremer,FA (BAL),SP,T1,30,ACTIVE,13,28.31,28.09,0.464,0.505,1.003,0.82,1.53,0.71
+re-priced up,Jared Jones,C-Town Liquors,SP,T3,24,ACTIVE,17,34.88,33.96,0.531,0.64,1.013,1.31,1.96,0.65
+re-priced up,Hayden Wesneski,Dirty Spikes,SP,T1,28,ACTIVE,7,40.43,15.36,0.318,0.67,1.467,0.56,1.16,0.6
+re-priced up,Tommy Edman,High Cheddar,2B,T2,31,ACTIVE,65,7.34,5.89,0.485,0.636,1.107,0.91,1.49,0.58
+re-priced up,Wyatt Langford,C-Town Liquors,LF,T3,24,ACTIVE,92,7.1,7.95,0.571,0.644,0.945,1.5,2.08,0.58
+re-priced up,Matthew Boyd,FA (CHC),SP,T1,35,ACTIVE,18,33.56,36.7,0.545,0.608,0.958,1.2,1.78,0.58
+re-priced up,Albert Suarez,FA,RP,T1,28,ACTIVE,27,11.74,11.12,0.466,0.527,1.023,0.68,1.25,0.57
+re-priced up,Alejandro Kirk,FA (was Kansas Sunflower Seeds),C,T1,27,ACTIVE,65,6.09,8.32,0.546,0.501,0.868,0.88,1.44,0.56
+re-priced up,Gleyber Torres,Kansas Sunflower Seeds,2B,T1,29,ACTIVE,84,7.87,7.77,0.549,0.663,1.006,1.31,1.87,0.56
+re-priced up,Clay Holmes,FA (NYM),SP,T1,33,ACTIVE,15,36.27,27.85,0.5,0.703,1.136,1.08,1.64,0.56
+re-priced up,Tarik Skubal,KC Gray Hotdogs,SP,T1,29,ACTIVE,22,57.36,58.67,0.595,0.765,0.988,2.5,3.05,0.55
+re-priced up,Corey Seager,Kansas Sunflower Seeds,SS,T2,32,ACTIVE,83,7.01,7.29,0.546,0.629,0.982,1.11,1.63,0.52
+re-priced up,Yainer Diaz,High Cheddar,C,T1,27,ACTIVE,77,5.58,8.91,0.588,0.507,0.803,1.03,1.54,0.51
+re-priced up,Brad Lord,FA (was KC Gray Hotdogs),RP,T3,26,ACTIVE,35,15.74,13.05,0.53,0.733,1.099,1.24,1.75,0.51
+re-priced up,Ryan Fernandez,FA (STL),RP,T1,28,ACTIVE,17,11.47,6.69,0.354,0.537,1.228,0.44,0.95,0.51
+re-priced up,Jake Irvin,FA (WSH),SP,T2,29,ACTIVE,18,25.78,29.55,0.545,0.586,0.937,0.99,1.49,0.5
+re-priced up,Lars Nootbaar,Balking Dead,LF,T1,28,ACTIVE,73,5.33,5.05,0.514,0.61,1.025,0.81,1.29,0.48
+re-priced up,Bailey Ober,MidwestBears,SP,T2,30,ACTIVE,22,28.36,39.3,0.595,0.591,0.851,1.34,1.82,0.48
+re-priced up,Christian Encarnacion-Strand,FA,1B,T1,26,ACTIVE,42,6.07,2.76,0.378,0.712,1.409,0.54,1.01,0.47
+re-priced up,Francisco Lindor,Kansas Sunflower Seeds,SS,T1,32,ACTIVE,85,7.53,6.47,0.552,0.754,1.081,1.3,1.76,0.46
+re-priced up,Jake Cronenworth,FA (SD),2B,T2,32,ACTIVE,90,4.91,6.36,0.566,0.56,0.884,0.95,1.41,0.46
+re-priced up,Steven Matz,FA,RP,T2,35,ACTIVE,29,10.97,10.99,0.483,0.534,0.999,0.58,1.02,0.44
+re-priced up,Mookie Betts,High Cheddar,SS,T1,33,ACTIVE,106,8.14,9.4,0.606,0.708,0.927,1.81,2.24,0.43
+re-priced up,Oneil Cruz,KC Gray Hotdogs,CF,T1,27,ACTIVE,80,8.38,5.67,0.537,0.882,1.231,1.38,1.81,0.43
+re-priced up,Nicky Lopez,FA,3B,T2,31,ACTIVE,80,4.06,4.69,0.537,0.558,0.935,0.75,1.18,0.43
+re-priced up,Gerrit Cole,Dirty Spikes,SP,T1,35,ACTIVE,19,45.84,39.73,0.559,0.778,1.077,1.35,1.77,0.42
+re-priced up,Vinnie Pasquantino,C-Town Liquors,1B,T1,28,ACTIVE,97,8.24,7.77,0.584,0.78,1.031,1.73,2.15,0.42
+re-priced up,Adley Rutschman,C-Town Liquors,C,T2,28,ACTIVE,85,6.8,10.25,0.612,0.575,0.815,1.23,1.65,0.42
+re-priced up,Brayan Bello,FA (BOS),SP,T1,27,ACTIVE,22,18.73,30.06,0.595,0.524,0.798,0.96,1.38,0.42
+re-priced up,Jordan Romano,FA,RP,T2,33,ACTIVE,32,9.5,10.49,0.508,0.534,0.957,0.59,1.0,0.41
+re-priced up,Carmen Mlodzinski,Balking Dead,RP,T3,27,ACTIVE,32,20.56,10.18,0.508,1.069,1.466,1.37,1.77,0.4
+re-priced up,Logan Webb,Kansas Sunflower Seeds,SP,T1,29,ACTIVE,25,35.08,48.3,0.625,0.661,0.846,1.89,2.28,0.39
+re-priced up,Luis Castillo,FA (SEA),SP,T1,33,ACTIVE,26,22.27,41.67,0.634,0.529,0.734,1.26,1.65,0.39
+re-priced up,Heliot Ramos,Kansas Sunflower Seeds,LF,T1,26,ACTIVE,98,4.68,5.82,0.587,0.622,0.897,1.05,1.43,0.38
+re-priced up,Griffin Jax,MidwestBears,RP,T1,31,ACTIVE,30,22.7,13.5,0.492,1.0,1.302,1.64,2.02,0.38
+re-priced up,Edmundo Sosa,FA (PHI),2B,T1,30,ACTIVE,74,5.19,3.74,0.517,0.78,1.18,0.85,1.21,0.36
+re-priced up,Esteury Ruiz,FA (MIA),LF,T1,27,ACTIVE,85,3.95,4.39,0.552,0.607,0.951,0.73,1.09,0.36
+re-priced up,Kyle Manzardo,FA (was Balking Dead),DH,T3,25,ACTIVE,102,4.95,5.79,0.596,0.678,0.922,1.22,1.57,0.35
+re-priced up,James McCann,FA,C,T2,36,ACTIVE,42,5.24,3.59,0.438,0.616,1.181,0.42,0.76,0.34
+re-priced up,Jackson Chourio,River Cats,CF,T3,22,ACTIVE,109,8.46,8.17,0.612,0.848,1.02,2.42,2.75,0.33
+re-priced up,Paul Goldschmidt,FA (was KC Gray Hotdogs),1B,T2,38,ACTIVE,98,6.87,6.39,0.587,0.797,1.039,1.34,1.65,0.31
+re-priced up,Alex Call,FA (LAD),RF,T1,31,ACTIVE,71,3.79,3.06,0.507,0.682,1.108,0.6,0.91,0.31
+re-priced up,Nick Allen,FA,SS,T1,27,ACTIVE,58,3.9,2.33,0.457,0.742,1.276,0.49,0.8,0.31
+re-priced up,Jesus Sanchez,Dirty Spikes,RF,T1,28,ACTIVE,96,3.83,4.51,0.582,0.641,0.922,0.82,1.12,0.3
+re-priced up,Bryan Woo,KC Gray Hotdogs,SP,T3,26,ACTIVE,27,43.85,58.22,0.643,0.728,0.857,2.78,3.08,0.3
+re-priced up,Andrew Vaughn,FA (was KC Gray Hotdogs),1B,T2,28,ACTIVE,96,6.2,5.46,0.582,0.821,1.071,1.31,1.61,0.3
+re-priced up,Daniel Schneemann,FA,2B,T1,28,ACTIVE,87,3.68,3.73,0.558,0.669,0.993,0.74,1.04,0.3
+re-priced up,Zach McKinstry,FA (DET),3B,T1,31,ACTIVE,113,4.23,6.39,0.621,0.596,0.811,1.09,1.39,0.3
+re-priced up,Zack Littell,FA (WSH),SP,T1,30,ACTIVE,26,16.77,30.91,0.634,0.536,0.739,1.0,1.3,0.3
+re-priced up,Brandon Eisert,FA,RP,T1,28,ACTIVE,34,6.94,7.01,0.523,0.604,0.995,0.53,0.83,0.3
+re-priced up,Jose Ramirez,High Cheddar,3B,T1,33,ACTIVE,108,7.75,8.02,0.61,0.791,0.982,1.73,2.02,0.29
+re-priced up,Edouard Julien,FA (COL),1B,T1,27,ACTIVE,87,4.22,3.86,0.558,0.73,1.047,0.84,1.13,0.29
+re-priced up,Brandon Pfaadt,KC Gray Hotdogs,SP,T1,27,ACTIVE,26,25.85,37.52,0.634,0.653,0.822,1.53,1.82,0.29
+re-priced up,Nate Pearson,FA,RP,T2,29,ACTIVE,33,9.52,7.26,0.516,0.749,1.144,0.66,0.95,0.29
+re-priced up,Marcell Ozuna,FA (PIT),DH,T2,35,ACTIVE,69,3.96,3.01,0.5,0.699,1.141,0.54,0.82,0.28
+re-priced up,Ryan Feltner,FA (COL),SP,T2,29,ACTIVE,22,17.05,23.73,0.595,0.589,0.849,0.78,1.06,0.28
+re-priced up,Caleb Ferguson,FA,RP,T1,29,ACTIVE,35,5.66,7.0,0.53,0.524,0.908,0.45,0.73,0.28
+re-priced up,Tyler Glasnow,Balking Dead,SP,T2,32,ACTIVE,10,56.8,34.94,0.4,1.0,1.225,1.69,1.96,0.27
+re-priced up,Jorge Mateo,FA (ATL),SS,T2,31,ACTIVE,76,4.33,3.34,0.524,0.753,1.14,0.64,0.91,0.27
+re-priced up,Jonah Heim,FA,C,T2,31,ACTIVE,92,5.05,7.77,0.63,0.605,0.802,1.08,1.35,0.27
+re-priced up,Freddy Peralta,Balking Dead,SP,T1,30,ACTIVE,28,29.96,46.88,0.651,0.653,0.789,1.85,2.11,0.26
+re-priced up,Jeremy Pena,Dirty Spikes,SS,T1,28,ACTIVE,93,8.63,5.81,0.574,1.015,1.251,1.61,1.87,0.26
+re-priced up,Casey Mize,KC Gray Hotdogs,SP,T1,29,ACTIVE,22,34.09,30.52,0.595,0.86,1.063,1.51,1.77,0.26
+re-priced up,Vladimir Guerrero Jr.,C-Town Liquors,1B,T1,27,ACTIVE,129,7.22,10.55,0.652,0.685,0.815,2.15,2.41,0.26
+re-priced up,Jake Bird,FA,RP,T1,30,ACTIVE,44,5.91,8.69,0.587,0.549,0.831,0.59,0.85,0.26
+re-priced up,Francisco Alvarez,FA (was Balking Dead),C,T3,24,ACTIVE,99,3.64,7.09,0.647,0.528,0.716,0.88,1.13,0.25
+re-priced up,Ryan Yarbrough,FA (NYY),RP,T2,34,ACTIVE,32,10.28,7.1,0.508,0.795,1.205,0.58,0.83,0.25
+re-priced up,Josh Hader,High Cheddar,RP,T1,32,ACTIVE,40,18.07,11.85,0.563,1.015,1.266,1.33,1.57,0.24
+re-priced up,Marcus Semien,FA (NYM),2B,T2,35,ACTIVE,123,5.32,7.98,0.641,0.643,0.808,1.29,1.53,0.24
+re-priced up,Connor Norby,FA (MIA),3B,T1,26,ACTIVE,88,4.31,3.45,0.561,0.827,1.126,0.85,1.09,0.24
+re-priced up,Freddy Fermin,FA (SD),C,T1,31,ACTIVE,75,2.85,4.18,0.581,0.53,0.834,0.48,0.72,0.24
+re-priced up,Lane Thomas,FA (KC),CF,T2,30,ACTIVE,115,4.47,6.21,0.625,0.648,0.842,1.07,1.31,0.24
+re-priced up,A.J. Minter,FA (NYM),RP,T2,32,ACTIVE,38,8.84,9.16,0.551,0.65,0.983,0.57,0.81,0.24
+re-priced up,Alex Lange,FA,RP,T3,30,ACTIVE,53,6.85,12.29,0.631,0.543,0.749,0.78,1.02,0.24
+re-priced up,Julio Rodriguez,C-Town Liquors,CF,T3,25,ACTIVE,133,6.22,9.68,0.658,0.665,0.788,1.97,2.2,0.23
+re-priced up,Teoscar Hernandez,Balking Dead,RF,T1,33,ACTIVE,107,5.59,5.92,0.608,0.769,0.97,1.21,1.44,0.23
+re-priced up,Cody Bellinger,High Cheddar,CF,T1,30,ACTIVE,116,7.59,8.66,0.627,0.773,0.93,1.7,1.93,0.23
+re-priced up,Bobby Witt Jr.,C-Town Liquors,SS,T1,26,ACTIVE,125,9.02,11.19,0.644,0.768,0.888,2.5,2.73,0.23
+re-priced up,Colton Cowser,C-Town Liquors,LF,T1,26,ACTIVE,121,3.58,5.86,0.637,0.59,0.777,0.95,1.18,0.23
+re-priced up,Nathaniel Lowe,FA (CIN),1B,T2,30,ACTIVE,108,5.73,5.94,0.61,0.79,0.981,1.34,1.57,0.23
+re-priced up,Keibert Ruiz,Dirty Spikes,C,T1,27,ACTIVE,90,6.64,8.04,0.625,0.726,0.902,1.28,1.5,0.22
+re-priced up,Kyle Isbel,FA (KC),CF,T1,29,ACTIVE,83,3.67,2.86,0.546,0.806,1.139,0.66,0.88,0.22
+re-priced up,Trent Thornton,FA,RP,T2,32,ACTIVE,45,6.07,9.37,0.592,0.537,0.812,0.51,0.73,0.22
+re-priced up,Emmet Sheehan,High Cheddar,SP,T3,26,ACTIVE,20,32.2,20.8,0.571,1.057,1.282,1.44,1.65,0.21
+re-priced up,Angel Martinez,Dirty Spikes,CF,T3,24,ACTIVE,93,6.02,3.98,0.574,1.031,1.265,1.31,1.52,0.21
+re-priced up,Dennis Santana,FA (was Kansas Sunflower Seeds),RP,T1,30,ACTIVE,50,5.02,8.78,0.617,0.528,0.762,0.58,0.79,0.21
+re-priced up,Miguel Rojas,FA (LAD),2B,T2,37,ACTIVE,88,3.69,3.29,0.561,0.753,1.061,0.62,0.83,0.21
+re-priced up,Javier Assad,FA (CHC),SP,T1,28,ACTIVE,23,22.65,24.61,0.605,0.754,0.957,1.1,1.31,0.21
+re-priced up,Ryan Gusto,FA (MIA),SP,T1,27,ACTIVE,20,20.0,16.67,0.571,0.841,1.103,0.87,1.08,0.21
+re-priced up,Luis Campusano,FA (SD),DH,T1,27,ACTIVE,58,5.33,2.1,0.457,1.072,1.5,0.64,0.85,0.21
+re-priced up,Nathan Lukes,FA (TOR),RF,T1,31,ACTIVE,106,5.23,5.12,0.606,0.816,1.011,1.19,1.39,0.2
+re-priced up,Eli White,FA (ATL),RF,T1,32,ACTIVE,86,3.93,3.02,0.555,0.841,1.151,0.71,0.91,0.2
+re-priced up,Merrill Kelly,FA (ARI),SP,T1,37,ACTIVE,26,21.23,31.79,0.634,0.636,0.81,0.98,1.18,0.2
+re-priced up,Griffin Canning,FA (SD),SP,T2,30,ACTIVE,25,16.08,23.55,0.625,0.627,0.822,0.82,1.02,0.2
+re-priced up,Tyler Heineman,FA,C,T1,35,ACTIVE,62,2.11,2.7,0.534,0.507,0.895,0.29,0.49,0.2
+re-priced up,Miguel Amaya,FA (CHC),C,T1,27,ACTIVE,71,4.55,3.85,0.568,0.807,1.093,0.67,0.86,0.19
+re-priced up,Joey Ortiz,FA (MIL),SS,T1,27,ACTIVE,107,5.26,5.08,0.608,0.834,1.02,1.23,1.42,0.19
+re-priced up,Jared Triolo,FA (PIT),SS,T1,28,ACTIVE,99,4.21,3.83,0.589,0.82,1.053,0.92,1.11,0.19
+re-priced up,Austin Riley,Dirty Spikes,3B,T2,29,ACTIVE,141,4.48,8.51,0.671,0.592,0.714,1.33,1.51,0.18
+re-priced up,Lawrence Butler,Dirty Spikes,RF,T3,25,ACTIVE,132,4.82,7.34,0.657,0.674,0.797,1.54,1.72,0.18
+re-priced up,Patrick Bailey,FA (CLE),C,T1,27,ACTIVE,93,3.31,5.22,0.633,0.597,0.792,0.71,0.89,0.18
+re-priced up,Michael Conforto,FA (CHC),LF,T2,33,ACTIVE,97,4.6,3.97,0.584,0.844,1.084,0.87,1.05,0.18
+re-priced up,Luis Torrens,FA (NYM),C,T2,29,ACTIVE,80,4.96,4.88,0.597,0.785,1.009,0.82,1.0,0.18
+re-priced up,Seth Lugo,FA (KC),SP,T2,36,ACTIVE,29,24.41,41.06,0.659,0.633,0.76,1.36,1.54,0.18
+re-priced up,Victor Vodnik,FA (COL),RP,T1,27,ACTIVE,45,5.62,7.25,0.592,0.624,0.88,0.56,0.74,0.18
+re-priced up,Pierce Johnson,FA (CIN),RP,T1,35,ACTIVE,49,5.76,8.9,0.613,0.575,0.805,0.57,0.75,0.18
+re-priced up,Luke Weaver,Balking Dead,RP,T1,32,ACTIVE,52,10.62,12.94,0.627,0.739,0.899,1.12,1.29,0.17
+re-priced up,Bryan King,FA,RP,T1,29,ACTIVE,52,7.02,10.12,0.627,0.64,0.827,0.81,0.98,0.17
+re-priced up,Mickey Moniak,High Cheddar,RF,T1,28,ACTIVE,103,6.78,5.34,0.599,0.965,1.144,1.47,1.64,0.17
+re-priced up,Camilo Doval,FA (NYY),RP,T1,28,ACTIVE,60,6.73,13.25,0.659,0.557,0.708,0.88,1.05,0.17
+re-priced up,Tyrone Taylor,FA,CF,T2,32,ACTIVE,82,5.78,2.92,0.543,1.174,1.478,0.89,1.06,0.17
+re-priced up,Jordan Hicks,FA,RP,T2,29,ACTIVE,46,7.78,8.72,0.597,0.716,0.942,0.68,0.85,0.17
+re-priced up,Andres Gimenez,FA (was High Cheddar),2B,T1,27,ACTIVE,127,5.17,6.95,0.648,0.724,0.85,1.43,1.59,0.16
+re-priced up,Ryan Jeffers,Kansas Sunflower Seeds,C,T1,29,ACTIVE,79,8.7,6.21,0.594,1.031,1.213,1.4,1.56,0.16
+re-priced up,Tyler Mahle,Dirty Spikes,SP,T2,31,ACTIVE,24,34.83,34.48,0.615,0.849,1.006,1.37,1.53,0.16
+re-priced up,George Kirby,Kansas Sunflower Seeds,SP,T1,28,ACTIVE,27,33.81,41.15,0.643,0.785,0.897,2.02,2.17,0.15
+re-priced up,Ezequiel Tovar,FA (COL),SS,T3,24,ACTIVE,129,4.54,6.28,0.652,0.718,0.838,1.41,1.56,0.15
+re-priced up,Eugenio Suarez,High Cheddar,3B,T2,34,ACTIVE,110,5.05,4.77,0.615,0.871,1.032,1.13,1.27,0.14
+re-priced up,Walker Buehler,FA (SD),SP,T2,31,ACTIVE,28,27.5,39.27,0.651,0.706,0.824,1.38,1.52,0.14
+re-priced up,Miles Mikolas,FA (WSH),SP,T2,37,ACTIVE,25,11.88,18.0,0.625,0.609,0.809,0.52,0.66,0.14
+re-priced up,Paul Skenes,High Cheddar,SP,T3,24,ACTIVE,29,44.21,59.07,0.659,0.77,0.851,3.09,3.22,0.13
+re-priced up,Emilio Pagan,KC Gray Hotdogs,RP,T2,35,ACTIVE,39,12.79,7.37,0.557,1.115,1.369,0.83,0.96,0.13
+re-priced up,Kyle Finnegan,FA (DET),RP,T1,34,ACTIVE,60,5.58,10.41,0.659,0.583,0.725,0.71,0.84,0.13
+re-priced up,Andrew Abbott,FA (CIN),SP,T1,27,ACTIVE,29,25.41,37.06,0.659,0.714,0.814,1.65,1.78,0.13
+re-priced up,Yoshinobu Yamamoto,High Cheddar,SP,T1,27,ACTIVE,25,55.96,49.24,0.625,0.978,1.077,2.84,2.96,0.12
+re-priced up,Jarren Duran,River Cats,LF,T1,29,ACTIVE,135,5.5,7.98,0.662,0.717,0.815,1.67,1.79,0.12
+re-priced up,Matt McLain,MidwestBears,2B,T1,26,ACTIVE,115,5.77,5.71,0.625,0.87,1.007,1.34,1.46,0.12
+re-priced up,Jakob Junis,Kansas Sunflower Seeds,RP,T2,33,ACTIVE,46,9.61,9.15,0.597,0.825,1.027,0.74,0.86,0.12
+re-priced up,Dylan Crews,FA (WSH),RF,T3,24,ACTIVE,90,5.6,2.81,0.566,1.288,1.5,1.18,1.3,0.12
+re-priced up,Janson Junk,FA (MIA),SP,T1,30,ACTIVE,22,24.45,18.67,0.595,0.99,1.166,1.09,1.21,0.12
+re-priced up,Ketel Marte,Balking Dead,2B,T1,32,ACTIVE,123,8.68,8.64,0.641,1.0,1.003,2.19,2.08,-0.11
+re-priced up,Brett Baty,Balking Dead,3B,T1,26,ACTIVE,123,4.26,5.06,0.641,0.786,0.909,1.18,1.29,0.11
+re-priced up,Bryson Stott,Balking Dead,2B,T1,28,ACTIVE,136,6.99,7.08,0.663,0.989,0.993,2.08,1.97,-0.11
+re-priced up,Jung Hoo Lee,MidwestBears,CF,T1,27,ACTIVE,131,6.76,6.12,0.655,1.059,1.062,1.89,1.78,-0.11
+re-priced up,Jacob Lopez,FA (ATH),SP,T1,28,ACTIVE,23,27.43,21.61,0.605,1.003,1.147,1.35,1.46,0.11
+re-priced up,Randal Grichuk,FA,RF,T2,34,ACTIVE,98,4.52,3.17,0.587,1.026,1.225,0.89,1.0,0.11
+re-priced up,Jimmy Herget,FA,RP,T2,32,ACTIVE,46,5.07,5.47,0.597,0.739,0.96,0.46,0.57,0.11
+re-priced up,Framber Valdez,Kansas Sunflower Seeds,SP,T1,32,ACTIVE,28,28.64,36.79,0.651,0.774,0.87,1.66,1.76,0.1
+re-priced up,Zack Wheeler,Kansas Sunflower Seeds,SP,T1,36,ACTIVE,24,52.12,42.36,0.615,1.012,1.128,2.11,2.21,0.1
+re-priced up,Christian Yelich,Kansas Sunflower Seeds,DH,T2,34,ACTIVE,102,6.57,4.47,0.596,1.093,1.252,1.19,1.29,0.1
+re-priced up,Gunnar Henderson,Kansas Sunflower Seeds,SS,T3,25,ACTIVE,143,6.97,10.83,0.675,0.709,0.784,2.35,2.45,0.1
+re-priced up,Leody Taveras,FA (BAL),CF,T1,27,ACTIVE,122,4.79,5.36,0.639,0.821,0.938,1.31,1.41,0.1
+re-priced up,Aaron Civale,FA (ATH),SP,T2,31,ACTIVE,28,19.61,27.15,0.651,0.725,0.837,1.14,1.24,0.1
+re-priced up,Taylor Ward,Balking Dead,LF,T1,32,ACTIVE,134,5.28,7.23,0.66,0.748,0.84,1.54,1.63,0.09
+re-priced up,Ranger Suarez,Balking Dead,SP,T1,30,ACTIVE,25,36.76,33.64,0.625,0.944,1.052,1.88,1.97,0.09
+re-priced up,Aaron Nola,Balking Dead,SP,T2,33,ACTIVE,29,34.38,34.79,0.659,0.985,0.993,1.84,1.75,-0.09
+re-priced up,Freddie Freeman,Kansas Sunflower Seeds,1B,T1,36,ACTIVE,138,8.22,9.21,0.667,0.916,0.935,2.25,2.16,-0.09
+re-priced up,David Hamilton,FA (MIL),2B,T2,28,ACTIVE,104,4.85,3.53,0.601,1.045,1.201,1.07,1.16,0.09
+re-priced up,Noah Cameron,River Cats,SP,T3,26,ACTIVE,27,36.78,30.84,0.643,1.095,1.111,2.21,2.12,-0.09
+re-priced up,Matthew Liberatore,FA (STL),SP,T3,26,ACTIVE,28,27.5,24.94,0.651,1.054,1.06,1.72,1.63,-0.09
+re-priced up,David Peterson,FA (NYM),SP,T1,30,ACTIVE,28,22.07,29.09,0.651,0.756,0.859,1.33,1.42,0.09
+re-priced up,Gabe Speier,FA (SEA),RP,T2,31,ACTIVE,46,8.33,6.96,0.597,0.926,1.106,0.77,0.86,0.09
+re-priced up,Erick Fedde,FA (CHW),SP,T2,33,ACTIVE,30,21.03,32.79,0.667,0.695,0.785,1.33,1.42,0.09
+re-priced up,Nick Martinez,Balking Dead,SP,T1,35,ACTIVE,27,34.63,28.61,0.643,1.11,1.122,1.79,1.71,-0.08
+re-priced up,Michael King,River Cats,SP,T2,31,ACTIVE,29,39.28,41.21,0.659,0.954,0.972,2.19,2.11,-0.08
+re-priced up,Bryan Abreu,Kansas Sunflower Seeds,RP,T1,29,ACTIVE,58,10.31,13.62,0.652,0.758,0.858,1.29,1.37,0.08
+re-priced up,Kyle Stowers,KC Gray Hotdogs,RF,T1,28,ACTIVE,106,6.5,5.38,0.606,1.0,1.114,1.56,1.64,0.08
+re-priced up,Seiya Suzuki,MidwestBears,RF,T1,31,ACTIVE,126,8.57,7.28,0.646,1.082,1.103,2.24,2.16,-0.08
+re-priced up,Junior Caminero,River Cats,3B,T3,22,ACTIVE,143,8.24,10.65,0.675,0.833,0.863,3.17,3.09,-0.08
+re-priced up,Paul Sewald,FA,RP,T2,36,ACTIVE,53,10.28,11.15,0.631,0.833,0.956,0.98,1.06,0.08
+re-priced up,JJ Bleday,C-Town Liquors,LF,T2,28,ACTIVE,115,6.74,5.86,0.625,0.976,1.085,1.7,1.78,0.08
+re-priced up,Robbie Ray,Kansas Sunflower Seeds,SP,T2,34,ACTIVE,28,32.93,40.79,0.651,0.799,0.887,1.64,1.72,0.08
+re-priced up,Spencer Horwitz,FA (PIT),1B,T1,28,ACTIVE,101,6.63,4.01,0.594,1.207,1.351,1.41,1.49,0.08
+re-priced up,Myles Straw,FA (TOR),CF,T2,31,ACTIVE,122,3.93,4.48,0.639,0.81,0.93,1.06,1.14,0.08
+re-priced up,Martin Perez,FA (ATL),SP,T2,35,ACTIVE,27,26.37,30.85,0.643,0.813,0.916,1.23,1.31,0.08
+re-priced up,Tomoyuki Sugano,FA (COL),SP,T1,36,ACTIVE,25,20.76,20.7,0.625,0.875,1.002,1.0,1.08,0.08
+re-priced up,Andrew Kittredge,FA (BAL),RP,T1,36,ACTIVE,50,7.66,7.99,0.617,0.819,0.977,0.64,0.72,0.08
+re-priced up,Cole Sulser,High Cheddar,RP,T2,36,ACTIVE,42,9.17,6.65,0.575,1.0,1.196,0.65,0.73,0.08
+re-priced up,Josh Naylor,KC Gray Hotdogs,1B,T1,29,ACTIVE,134,6.98,7.32,0.66,0.946,0.972,2.02,1.95,-0.07
+re-priced up,Brady Singer,MidwestBears,SP,T1,30,ACTIVE,28,24.14,30.09,0.651,0.794,0.884,1.41,1.48,0.07
+re-priced up,Alec Bohm,MidwestBears,3B,T1,29,ACTIVE,135,6.57,6.86,0.662,0.956,0.975,1.83,1.76,-0.07
+re-priced up,Tyler Stephenson,FA,C,T2,29,ACTIVE,112,4.87,7.74,0.675,0.693,0.775,1.17,1.24,0.07
+re-priced up,Hunter Gaddis,River Cats,RP,T1,28,ACTIVE,58,8.76,11.6,0.652,0.756,0.856,1.08,1.15,0.07
+re-priced up,Isiah Kiner-Falefa,FA (BOS),SS,T2,31,ACTIVE,46,5.83,4.29,0.4,1.0,1.129,1.13,1.2,0.07
+re-priced up,Cedric Mullins,FA (TB),CF,T1,31,ACTIVE,122,5.48,5.69,0.639,0.879,0.979,1.36,1.43,0.07
+re-priced up,Mike Yastrzemski,FA (ATL),RF,T1,35,ACTIVE,121,3.98,4.34,0.637,0.833,0.951,0.85,0.92,0.07
+re-priced up,John Schreiber,FA (KC),RP,T1,32,ACTIVE,58,5.84,8.54,0.652,0.695,0.815,0.66,0.73,0.07
+re-priced up,Tyler Kinley,Balking Dead,RP,T1,35,ACTIVE,55,6.98,8.28,0.64,0.795,0.91,0.75,0.81,0.06
+re-priced up,JoJo Romero,Kansas Sunflower Seeds,RP,T1,29,ACTIVE,48,8.52,6.71,0.608,1.0,1.148,0.82,0.88,0.06
+re-priced up,Roman Anthony,River Cats,RF,T3,22,ACTIVE,38,4.79,3.44,0.355,1.0,1.125,1.12,1.18,0.06
+re-priced up,Daulton Varsho,Kansas Sunflower Seeds,CF,T2,29,ACTIVE,124,4.89,5.29,0.642,0.859,0.956,1.17,1.23,0.06
+re-priced up,Ernie Clement,River Cats,3B,T1,30,ACTIVE,140,6.16,7.35,0.67,0.878,0.903,1.88,1.82,-0.06
+re-priced up,Andres Munoz,River Cats,RP,T1,27,ACTIVE,55,13.78,14.72,0.64,0.872,0.963,1.53,1.59,0.06
+re-priced up,Victor Caratini,FA (MIN),C,T1,32,ACTIVE,95,4.63,4.88,0.638,0.86,0.971,0.94,1.0,0.06
+re-priced up,Shane Baz,FA (BAL),SP,T1,27,ACTIVE,28,34.04,32.91,0.651,0.995,1.02,2.04,1.98,-0.06
+re-priced up,Yennier Cano,FA (was Dirty Spikes),RP,T2,32,ACTIVE,61,6.72,10.1,0.663,0.708,0.8,0.86,0.92,0.06
+re-priced up,Jonny DeLuca,FA (TB),CF,T1,27,ACTIVE,90,5.53,2.69,0.566,1.326,1.5,0.93,0.99,0.06
+re-priced up,Corbin Carroll,Dirty Spikes,RF,T3,25,ACTIVE,140,7.54,10.37,0.67,0.773,0.835,2.45,2.5,0.05
+re-priced up,Jack Dreyer,Dirty Spikes,RP,T3,27,ACTIVE,60,9.67,10.26,0.659,0.948,0.966,1.2,1.15,-0.05
+re-priced up,Daniel Lynch IV,FA,RP,T2,29,ACTIVE,52,8.46,8.21,0.627,0.903,1.018,0.83,0.88,0.05
+re-priced up,Garrett Whitlock,High Cheddar,RP,T1,30,ACTIVE,48,12.65,11.99,0.608,1.0,1.03,1.43,1.38,-0.05
+re-priced up,Kyle Tucker,River Cats,RF,T1,29,ACTIVE,134,6.69,8.31,0.66,0.814,0.884,1.82,1.87,0.05
+re-priced up,Chris Sale,MidwestBears,SP,T2,37,ACTIVE,25,61.2,50.85,0.625,1.029,1.115,2.68,2.73,0.05
+re-priced up,Kyle Bradish,MidwestBears,SP,T1,29,ACTIVE,28,31.89,37.27,0.651,0.84,0.915,1.64,1.69,0.05
+re-priced up,Alex Vesia,MidwestBears,RP,T1,30,ACTIVE,64,8.89,11.38,0.674,0.85,0.867,1.18,1.13,-0.05
+re-priced up,Tyler Freeman,FA (COL),RF,T1,27,ACTIVE,78,4.82,4.0,0.531,1.0,1.098,1.11,1.16,0.05
+re-priced up,Trevor Rogers,River Cats,SP,T1,28,ACTIVE,26,35.38,33.88,0.634,0.939,1.025,1.71,1.76,0.05
+re-priced up,Tyler Holton,FA (DET),RP,T2,30,ACTIVE,62,7.89,11.72,0.667,0.726,0.804,1.06,1.11,0.05
+re-priced up,Tim Herrin,FA (CLE),RP,T2,29,ACTIVE,59,6.68,9.01,0.656,0.755,0.847,0.83,0.88,0.05
+re-priced up,Bryan De La Cruz,FA,LF,T2,29,ACTIVE,21,4.95,4.53,0.233,1.0,1.02,1.32,1.27,-0.05
+re-priced up,Yuki Matsui,High Cheddar,RP,T1,30,ACTIVE,44,12.05,6.6,0.587,1.303,1.435,1.05,1.09,0.04
+re-priced up,Sandy Alcantara,High Cheddar,SP,T2,30,ACTIVE,30,38.4,46.85,0.667,0.86,0.892,2.11,2.07,-0.04
+re-priced up,Logan Gilbert,High Cheddar,SP,T1,29,ACTIVE,28,47.36,48.52,0.651,0.944,0.986,2.71,2.67,-0.04
+re-priced up,Shota Imanaga,KC Gray Hotdogs,SP,T2,32,ACTIVE,28,40.14,40.55,0.651,0.956,0.994,2.21,2.17,-0.04
+re-priced up,Spencer Torkelson,Kansas Sunflower Seeds,1B,T1,26,ACTIVE,140,6.26,7.74,0.67,0.851,0.885,1.96,1.92,-0.04
+re-priced up,Carson Kelly,FA (CHC),C,T1,31,ACTIVE,102,6.21,5.98,0.654,0.991,1.022,1.36,1.32,-0.04
+re-priced up,Jazz Chisholm Jr.,C-Town Liquors,2B,T1,28,ACTIVE,133,6.49,6.95,0.658,0.922,0.96,1.87,1.83,-0.04
+re-priced up,Trevor Story,FA (BOS),SS,T2,33,ACTIVE,48,4.6,4.39,0.41,1.0,1.018,0.98,0.94,-0.04
+re-priced up,Colt Keith,FA (DET),DH,T3,24,ACTIVE,130,4.3,4.97,0.653,0.844,0.921,1.34,1.38,0.04
+re-priced up,Ty France,High Cheddar,1B,T2,31,ACTIVE,113,7.75,4.96,0.621,1.269,1.314,1.76,1.72,-0.04
+re-priced up,Brant Hurter,FA (DET),RP,T1,27,ACTIVE,21,8.29,8.1,0.404,1.0,1.008,0.96,0.92,-0.04
+re-priced up,Grant Anderson,FA (MIL),RP,T1,29,ACTIVE,52,8.21,7.53,0.627,0.951,1.051,0.89,0.93,0.04
+re-priced up,Brent Suter,FA,RP,T1,36,ACTIVE,49,10.63,5.97,0.613,1.408,1.43,0.93,0.89,-0.04
+re-priced up,Casey Legumina,FA,RP,T1,29,ACTIVE,49,8.2,4.59,0.613,1.412,1.434,0.81,0.77,-0.04
+re-priced up,Trevor Larnach,Balking Dead,DH,T1,29,ACTIVE,117,5.81,4.81,0.629,1.036,1.119,1.45,1.48,0.03
+re-priced up,George Springer,Dirty Spikes,RF,T2,36,ACTIVE,110,6.53,3.86,0.615,1.332,1.383,1.18,1.15,-0.03
+re-priced up,Jose Ferrer,FA,RP,T3,26,ACTIVE,65,6.37,10.13,0.677,0.713,0.774,0.95,0.98,0.03
+re-priced up,Kenley Jansen,High Cheddar,RP,T2,38,ACTIVE,43,10.23,5.34,0.581,1.335,1.479,0.73,0.76,0.03
+re-priced up,Salvador Perez,Kansas Sunflower Seeds,DH,T1,36,ACTIVE,134,5.45,5.95,0.66,0.913,0.95,1.38,1.35,-0.03
+re-priced up,Kevin Gausman,MidwestBears,SP,T1,35,ACTIVE,29,38.0,42.94,0.659,0.893,0.932,2.16,2.13,-0.03
+re-priced up,J.T. Realmuto,MidwestBears,C,T2,35,ACTIVE,106,5.0,5.49,0.662,0.913,0.947,0.98,0.95,-0.03
+re-priced up,Jhoan Duran,River Cats,RP,T1,28,ACTIVE,54,15.78,13.29,0.635,1.061,1.107,1.64,1.61,-0.03
+re-priced up,Andrew Benintendi,FA (CHW),LF,T2,31,ACTIVE,126,5.8,6.16,0.646,0.886,0.967,1.34,1.37,0.03
+re-priced up,Zebby Matthews,FA (MIN),SP,T3,26,ACTIVE,20,32.7,14.98,0.571,1.449,1.5,1.42,1.39,-0.03
+re-priced up,Colin Rea,FA (CHC),SP,T1,35,ACTIVE,30,22.03,27.06,0.667,0.855,0.889,1.31,1.28,-0.03
+re-priced up,Taylor Rogers,FA (MIN),RP,T2,35,ACTIVE,58,5.67,7.28,0.652,0.778,0.871,0.62,0.65,0.03
+re-priced up,John King,FA (was Kansas Sunflower Seeds),RP,T2,31,ACTIVE,50,6.38,5.41,0.617,0.983,1.099,0.62,0.65,0.03
+re-priced up,Kyle Teel,FA (CHW),C,T3,24,ACTIVE,22,5.32,4.79,0.289,1.0,1.029,1.14,1.11,-0.03
+re-priced up,Taylor Walls,FA (TB),SS,T2,29,ACTIVE,114,5.16,3.27,0.623,1.289,1.323,1.07,1.04,-0.03
+re-priced up,Cal Quantrill,FA,SP,T2,31,ACTIVE,29,22.34,24.79,0.659,0.908,0.942,1.27,1.24,-0.03
+re-priced up,Elvis Alvarado,FA,RP,T1,27,ACTIVE,47,9.7,5.1,0.603,1.441,1.489,0.93,0.9,-0.03
+re-priced up,Blake Treinen,Balking Dead,RP,T2,38,ACTIVE,30,7.5,6.91,0.492,1.0,1.038,0.61,0.59,-0.02
+re-priced up,Will Warren,Dirty Spikes,SP,T3,27,ACTIVE,28,32.14,35.76,0.651,0.878,0.941,1.96,1.98,0.02
+re-priced up,Bryce Elder,Dirty Spikes,SP,T1,27,ACTIVE,26,32.88,29.61,0.634,0.993,1.063,1.83,1.85,0.02
+re-priced up,Geraldo Perdomo,High Cheddar,SS,T1,26,DTD,139,7.54,9.86,0.668,0.804,0.859,2.36,2.38,0.02
+re-priced up,Jose Caballero,Kansas Sunflower Seeds,SS,T1,29,ACTIVE,120,5.31,4.23,0.635,1.098,1.146,1.32,1.3,-0.02
+re-priced up,Tanner Bibee,MidwestBears,SP,T1,27,ACTIVE,29,31.86,38.91,0.659,0.834,0.893,2.03,2.05,0.02
+re-priced up,Steven Kwan,MidwestBears,LF,T1,28,ACTIVE,133,6.2,6.68,0.658,0.917,0.957,1.74,1.72,-0.02
+re-priced up,Jackson Merrill,River Cats,CF,T3,23,ACTIVE,139,6.61,8.6,0.668,0.807,0.861,2.22,2.24,0.02
+re-priced up,Graham Ashcraft,FA (was C-Town Liquors),RP,T1,28,ACTIVE,27,10.44,9.68,0.466,1.0,1.033,1.03,1.01,-0.02
+re-priced up,Orion Kerkering,Kansas Sunflower Seeds,RP,T3,25,ACTIVE,60,8.23,9.34,0.659,0.894,0.93,1.13,1.11,-0.02
+re-priced up,Jake Mangum,FA (PIT),LF,T1,30,ACTIVE,115,5.23,3.67,0.625,1.185,1.239,1.24,1.22,-0.02
+re-priced up,Isaac Collins,FA (KC),LF,T1,28,ACTIVE,127,4.5,4.62,0.648,0.918,0.984,1.26,1.28,0.02
+re-priced up,Jose Alvarado,FA (PHI),RP,T2,31,ACTIVE,58,7.12,8.18,0.652,0.858,0.924,0.85,0.87,0.02
+re-priced up,Sean Newcomb,FA (was River Cats),RP,T2,33,ACTIVE,52,13.48,11.34,0.627,1.027,1.107,1.12,1.14,0.02
+re-priced up,Greg Weissert,FA (BOS),RP,T1,31,ACTIVE,57,7.32,7.01,0.648,0.991,1.025,0.86,0.84,-0.02
+re-priced up,Jonathan Loaisiga,FA (ARI),RP,T2,31,ACTIVE,60,7.63,8.31,0.659,0.927,0.952,0.77,0.75,-0.02
+re-priced up,Sam Moll,FA,RP,T2,34,ACTIVE,65,5.02,6.63,0.677,0.836,0.851,0.62,0.6,-0.02
+re-priced up,Raisel Iglesias,Dirty Spikes,RP,T1,36,ACTIVE,52,13.85,11.59,0.627,1.032,1.11,1.33,1.34,0.01
+re-priced up,Kyle Schwarber,KC Gray Hotdogs,DH,T1,33,ACTIVE,137,8.09,9.95,0.665,0.837,0.888,2.37,2.38,0.01
+re-priced up,Isaac Paredes,MidwestBears,3B,T1,27,ACTIVE,137,7.36,8.99,0.665,0.843,0.892,2.14,2.13,-0.01
+re-priced up,Bo Bichette,KC Gray Hotdogs,SS,T1,28,ACTIVE,141,6.46,8.73,0.671,0.791,0.843,1.8,1.81,0.01
+re-priced up,Elly De La Cruz,C-Town Liquors,SS,T3,24,ACTIVE,124,8.3,7.76,0.642,0.978,1.04,2.43,2.44,0.01
+re-priced up,Matt Shaw,FA (CHC),3B,T3,24,ACTIVE,60,5.58,4.94,0.465,1.0,1.054,1.55,1.54,-0.01
+re-priced up,Wandy Peralta,FA,RP,T1,34,ACTIVE,59,5.78,6.51,0.656,0.884,0.933,0.68,0.67,-0.01
+re-priced up,Jacob Young,C-Town Liquors,CF,T1,26,ACTIVE,119,5.91,4.87,0.633,1.055,1.121,1.5,1.5,0.0
+re-priced up,Tim Hill,FA (NYY),RP,T1,36,ACTIVE,61,4.57,5.87,0.663,0.813,0.868,0.56,0.56,0.0
+re-priced up,Jovani Moran,FA (BOS),RP,T2,29,ACTIVE,45,10.67,5.63,0.592,1.378,1.476,0.95,0.95,0.0

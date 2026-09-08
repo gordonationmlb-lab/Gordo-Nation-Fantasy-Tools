@@ -1,0 +1,31 @@
+{
+ "live_build": "v50.21",
+ "RAW_baseline": 497.17,
+ "RAW_scenarioB": 532.3,
+ "RAW_scenarioC": 527.08,
+ "ROLE_GAMES": {
+  "SP": 33,
+  "RP": 68,
+  "C": 121,
+  "POS": 154
+ },
+ "K_SHRINK": {
+  "SP": 15,
+  "RP": 31,
+  "C": 54,
+  "POS": 69
+ },
+ "MIN_APP": {
+  "SP": 3,
+  "RP": 8,
+  "C": 15,
+  "POS": 15
+ },
+ "ABSORB": 0.9,
+ "TEAM_GAMES": 143.0,
+ "movers_scenarioC": 579,
+ "invariants": {
+  "B": "ALL CLEAR",
+  "C": "ALL CLEAR"
+ }
+}
