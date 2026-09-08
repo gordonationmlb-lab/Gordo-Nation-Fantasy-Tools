@@ -15,8 +15,9 @@ fix depends on.
 | **1** | [Pace multiplier re-based on rate](docs/fix-1-pace-multiplier-rate-based.md) | the `pm` field, and `r` / `tjp` / `tj` / `RAW_PER_DOLLAR` / `d` downstream | 579 multipliers |
 | **2** | [Ceiling-fade release cap](docs/fix-2-ceiling-fade-release-cap.md) | the `fadeAdjustedTj` JavaScript only | 11 prospects, in the "Bust risk off" view |
 
-Both were prototyped read-only against the live v50.21 board before any code was written. Neither
-has been applied to a shipped build.
+**Both were applied to the live build on 8 September 2026** — all four HTML copies (index and
+mobile, in the build folder and the distribution folder) — and shipped as
+`GordoNation_Calculator_v50.22`. Verification below was run against that build.
 
 **Neither fix is blocked.** Fix 1's one prerequisite — the §13.1 season-roll λ refit — was
 completed on 8 September 2026. λ holds at **0.40**; see [the λ section](#the-λ-refit-done).
@@ -77,16 +78,28 @@ data/        the prototype's own output, kept as evidence. Point-in-time snapsho
 Both appliers take `--calc` and print a full report without writing anything. Add `--apply` to
 write, or `--out` to write elsewhere. Each refuses to run twice.
 
+**A calculator build is a directory, not a file.** A `calc/` folder ships `index.html` *and*
+`mobile.html` — each a complete ~6.3 MB standalone app with its own copy of every function — and
+the distributed `GordoNation_Calculator_vNN/` folder holds a second pair. Four independent files,
+four independent copies of any bug. `apply_fade_cap.py` takes `--calc-dir` and patches every HTML
+in a directory that carries the function, then bumps the service worker's cache name.
+
 ```bash
-CALC=path/to/GN_v50.22_.../calc/index.html
+CALC=path/to/GN_v50.22_.../calc
 
-python3 patches/apply_pace_rate.py --calc "$CALC"            # read the report first
-python3 patches/apply_pace_rate.py --calc "$CALC" --apply
-python3 patches/apply_fade_cap.py  --calc "$CALC" --apply
+python3 patches/apply_fade_cap.py --calc-dir "$CALC"            # read the report first
+python3 patches/apply_fade_cap.py --calc-dir "$CALC" --apply
+python3 patches/apply_fade_cap.py --calc-dir path/to/GordoNation_Calculator_vNN --apply
 
-python3 verify/verify_patched_build.py --calc "$CALC" \
+python3 patches/apply_pace_rate.py --calc-dir "$CALC" --apply
+
+python3 verify/verify_patched_build.py --calc "$CALC/index.html" \
         --baseline path/to/v50.21/calc/index.html
 ```
+
+Then repackage the distribution zip from the patched folder, or league members keep downloading
+the unpatched build. **Patch one file, check another, and a working fix looks broken** — that is
+exactly how the ceiling-fade fix appeared not to work on first delivery.
 
 ### Paths
 

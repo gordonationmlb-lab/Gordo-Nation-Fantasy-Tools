@@ -1,8 +1,8 @@
 # Fix 2 — the ceiling-fade release cap
 
-Status: **prototyped and verified, not shipped.** No prerequisites.
-Touches the `fadeAdjustedTj` JavaScript only. Found from a single question: *why are Travis
-Sykora's seasons 5–10 all above his ceiling?*
+Status: **APPLIED to the v50.21 build, 8 September 2026** — all four HTML copies plus the
+distribution zip. No prerequisites. Touches the `fadeAdjustedTj` JavaScript only. Found from a
+single question: *why are Travis Sykora's seasons 5–10 all above his ceiling?*
 
 ## Two things were happening, and only one is a bug
 
@@ -146,6 +146,17 @@ Cheddar, $28.36 → $25.42).
   divided by a discount cannot reproduce `eng.tc` exactly. Total effect across all 267: **$0.46**.
 - Every material change is a *reduction of an over-release*. Nothing gains.
 - **Population invariant**: 11 players over their cap before, **0** after.
+
+## Applying it — four files, not one
+
+A build is a directory. `calc/` holds `index.html` and `mobile.html`, each a complete standalone
+app with its own `fadeAdjustedTj`; the distributed `GordoNation_Calculator_vNN/` folder holds a
+second pair. All four are separate inodes — no hard links — so patching one changes nothing about
+the others. `apply_fade_cap.py --calc-dir` handles a whole directory and bumps
+`service-worker.js`'s cache name; run it once per directory, then repackage the distribution zip.
+
+The service worker serves HTML **network-first**, so a stale shell is not what makes a fix look
+dead here. The cache bump is hygiene. The genuine trap is the second HTML file.
 
 ## What is deliberately not changed
 

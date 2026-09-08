@@ -30,8 +30,14 @@ PRECEDENCE (methodology 13, v12)
   7  minimum appearances (SP 3, RP 8, C 15, POS 15)
   There is NO on-the-IL clause.
 
-    python3 apply_pace_rate.py --calc path/to/index.html
-    python3 apply_pace_rate.py --calc IN --out OUT --apply
+A CALCULATOR BUILD IS NOT ONE FILE. A calc/ directory ships index.html AND mobile.html, each a
+complete standalone app carrying its own copy of the PLAYERS array. --calc-dir patches every HTML
+in a directory and asserts they land on the SAME RAW_PER_DOLLAR, which they must, since the
+player data is identical and RAW is recomputed from it.
+
+    python3 apply_pace_rate.py --calc-dir path/to/calc            # report only
+    python3 apply_pace_rate.py --calc-dir path/to/calc --apply
+    python3 apply_pace_rate.py --calc path/to/index.html --apply   # one file
 """
 import argparse, collections, io, json, os, re, shutil, sys
 
@@ -152,18 +158,17 @@ def new_pm(p, absorb):
     return pm, 'rate-based: %.1f vs %.1f per appearance, w %.2f' % (rate, exp_rate, w)
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--calc', required=True)
-    ap.add_argument('--out')
-    ap.add_argument('--apply', action='store_true')
-    a = ap.parse_args()
-
-    src = io.open(a.calc, encoding='utf-8').read()
-    print('FIX 1 — rate-based pace multiplier')
-    print('  source: %s  (%.1f MB)' % (a.calc, len(src) / 1048576.0))
+def patch_one(path, out_path, apply_it, quiet=False):
+    """Returns the new RAW, or None if skipped. Never writes on an invariant failure."""
+    src = io.open(path, encoding='utf-8').read()
+    print('\n  %s  (%.1f MB)' % (path, len(src) / 1048576.0))
     if 'GN_PACE_BASIS' in src:
-        sys.exit('  already patched (GN_PACE_BASIS present) — nothing to do')
+        print('     already patched — skipped')
+        return None
+    if 'const PLAYERS' not in src:
+        print('     no PLAYERS array — skipped')
+        return None
+    a = argparse.Namespace(calc=path, out=out_path, apply=apply_it)
 
     P, p0, p1 = fl(src, 'const PLAYERS', '[')
     m = re.search(r'RAW_PER_DOLLAR\s*=\s*([0-9.]+)', src)
@@ -172,10 +177,8 @@ def main():
     month = int(dt.group(2)) if dt else 9
     absorb = ABSORB_TABLE.get(month, 0.90)
     stamp = '%s-%s-%s' % (dt.group(1), dt.group(2), dt.group(3)) if dt else 'unknown'
-    print('  players %d   RAW %.2f   data through %s   absorption %.2f (month %d)'
-          % (len(P), raw0, stamp, absorb, month))
-    print('  ROLE_GAMES %s' % ROLE_GAMES)
-    print('  k          %s' % K_SHRINK)
+    print('     players %d   RAW %.2f   through %s   absorption %.2f'
+          % (len(P), raw0, stamp, absorb))
 
     reasons = collections.Counter()
     reported = []
@@ -204,15 +207,14 @@ def main():
         if p.get('r') is not None:
             p['d'] = round(p['r'] / raw1, 2)
 
-    print('\n  DISPOSITION')
-    for k, n in reasons.most_common():
-        print('    %-52s %5d' % (k, n))
-    print('\n  RAW_PER_DOLLAR %.2f -> %.2f  (%+.2f%%)' % (raw0, raw1, 100 * (raw1 / raw0 - 1)))
-    print('  eligible-but-unpriceable, reported per 13(5): %d' % len(reported))
-    for n in reported[:8]:
-        print('     %s' % n)
-    if len(reported) > 8:
-        print('     ...and %d more' % (len(reported) - 8))
+    if not quiet:
+        print('     DISPOSITION')
+        for k, n in reasons.most_common():
+            print('       %-50s %5d' % (k, n))
+    print('     RAW_PER_DOLLAR %.2f -> %.2f  (%+.2f%%)' % (raw0, raw1, 100 * (raw1 / raw0 - 1)))
+    if not quiet:
+        print('     eligible-but-unpriceable, reported per 13(5): %d  %s'
+              % (len(reported), ', '.join(reported[:4])))
 
     # ---- invariants, before anything is written
     v = []
@@ -234,11 +236,12 @@ def main():
             elif basis(p) == 'tool': v.append('gate leak, tool basis: %s' % p['n'])
             elif growth_missing(p): v.append('gate leak, no growth factor: %s' % p['n'])
             elif (p.get('gp') or 0) < MIN_APP[grp(p)]: v.append('gate leak, appearances: %s' % p['n'])
-    print('\n  INVARIANTS  %s' % ('ALL CLEAR' if not v else '%d VIOLATIONS' % len(v)))
+    print('     INVARIANTS  %s' % ('ALL CLEAR' if not v else '%d VIOLATIONS' % len(v)))
     for x in v[:8]:
-        print('     %s' % x)
+        print('        %s' % x)
     if v:
-        sys.exit('  refusing to write a build that violates its own invariants')
+        print('     REFUSING TO WRITE a build that violates its own invariants')
+        return None
 
     body = json.dumps(P, ensure_ascii=False, separators=(',', ':'))
     out = src[:p0] + body + src[p1:]
@@ -248,22 +251,64 @@ def main():
                      "GN_BUILD = '%s'\n  const GN_PACE_BASIS = 'rate';  // v50.22: pm compares "
                      "rate to rate; see methodology 13" % BUILD, 1)
 
-    print('  build stamp -> %s   +%d bytes' % (BUILD, len(out) - len(src)))
-    dst = a.out or a.calc
-    if not a.apply:
-        print('\n  DRY RUN — nothing written. Re-run with --apply.')
-        print('  would write: %s' % dst)
-        return
-    if dst == a.calc:
-        bak = a.calc + '.pre-fix1'
+    print('     build stamp -> %s   +%d bytes' % (BUILD, len(out) - len(src)))
+    dst = out_path or path
+    if not apply_it:
+        print('     DRY RUN — not written')
+        return raw1
+    if dst == path:
+        bak = path + '.pre-fix1'
         if not os.path.exists(bak):
-            shutil.copy2(a.calc, bak)
-            print('  backup: %s' % os.path.basename(bak))
-    with io.open(dst, 'w', encoding='utf-8') as f:
-        f.write(out)
-    print('  wrote %s (%.1f MB)' % (dst, os.path.getsize(dst) / 1048576.0))
-    print('\n  now run:  python3 verify/verify_patched_build.py --calc <build>')
-    print('  REMINDER: methodology 13.1 lambda must be refitted before the season roll.')
+            shutil.copy2(path, bak)
+            print('     backup: %s' % os.path.basename(bak))
+    with io.open(dst, 'w', encoding='utf-8') as fh:
+        fh.write(out)
+    print('     wrote %s' % dst)
+    return raw1
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    g = ap.add_mutually_exclusive_group(required=True)
+    g.add_argument('--calc', help='a single calculator HTML file')
+    g.add_argument('--calc-dir', help='a calc directory — patches EVERY html carrying a '
+                                      'PLAYERS array')
+    ap.add_argument('--out', help='single-file mode only')
+    ap.add_argument('--apply', action='store_true')
+    a = ap.parse_args()
+
+    print('FIX 1 — rate-based pace multiplier')
+    print('  ROLE_GAMES %s' % ROLE_GAMES)
+    print('  k          %s' % K_SHRINK)
+    if a.calc:
+        r = patch_one(a.calc, a.out, a.apply)
+        if not a.apply:
+            print('\n  DRY RUN — nothing written. Re-run with --apply.')
+        sys.exit(0 if r else 1)
+
+    d = a.calc_dir.rstrip('/')
+    htmls = sorted(f for f in os.listdir(d) if f.endswith('.html'))
+    print('  directory: %s' % d)
+    print('  html files present: %s' % (', '.join(htmls) or 'none'))
+    raws = {}
+    for i, f in enumerate(htmls):
+        r = patch_one(os.path.join(d, f), None, a.apply, quiet=(i > 0))
+        if r:
+            raws[f] = r
+    print('\n  %d of %d html files %s'
+          % (len(raws), len(htmls), 'patched' if a.apply else 'would be patched'))
+    if len(set(round(v, 2) for v in raws.values())) > 1:
+        sys.exit('  RAW DISAGREES ACROSS COPIES: %s — the player data is not identical between '
+                 'them, investigate before shipping' % raws)
+    if raws:
+        print('  every copy lands on RAW %.2f — consistent' % list(raws.values())[0])
+    if a.apply:
+        print('\n  verify: python3 verify_patched_build.py --calc %s'
+              % os.path.join(d, 'index.html'))
+        print('  NOTE: the §13.1 λ was refitted 2026-09-08 and holds at 0.40, but the v50.20')
+        print('  season-roll DRY RUN must still be re-run before the roll is executed.')
+    else:
+        print('  DRY RUN — nothing written. Re-run with --apply.')
 
 
 if __name__ == '__main__':

@@ -19,9 +19,16 @@ Edits the calculator's fadeAdjustedTj path in place. Two changes, both additive:
 The default risk-adjusted view is untouched: it reads the stored tj array and never enters this
 function.
 
-    python3 apply_fade_cap.py --calc path/to/index.html            # report only
-    python3 apply_fade_cap.py --calc path/to/index.html --apply    # write it
-    python3 apply_fade_cap.py --calc IN --out OUT --apply          # write elsewhere
+A CALCULATOR BUILD IS NOT ONE FILE. A calc/ directory ships index.html AND mobile.html, each a
+complete ~6.3 MB standalone app with its own copy of fadeAdjustedTj, and the distributed
+GordoNation_Calculator_vNN/ folder holds a second pair. Four independent files, four independent
+copies of the bug. Patching one and checking another is a good way to conclude a working fix is
+broken, so --calc-dir patches every HTML in a directory that carries the function, and bumps the
+service worker's cache name so clients re-fetch.
+
+    python3 apply_fade_cap.py --calc-dir path/to/calc            # report only
+    python3 apply_fade_cap.py --calc-dir path/to/calc --apply    # patch every copy in it
+    python3 apply_fade_cap.py --calc path/to/index.html --apply  # one file
 """
 import argparse, io, os, re, shutil, sys
 
@@ -78,34 +85,30 @@ NEW_RET = ('  let fadedPure = (player.tjp[yearIdx] / bd / mat) * bdFaded * matFa
 MARK = 'v50.22 FIX 2'
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--calc', required=True, help='calculator index.html to patch')
-    ap.add_argument('--out', help='write here instead of in place')
-    ap.add_argument('--apply', action='store_true')
-    a = ap.parse_args()
-
-    src = io.open(a.calc, encoding='utf-8').read()
-    print('FIX 2 — ceiling-fade release cap')
-    print('  source: %s  (%.1f MB)' % (a.calc, len(src) / 1048576.0))
-
+def patch_one(path, out_path, apply_it):
+    """Returns True if written (or would be), False if skipped. Never writes on a problem."""
+    src = io.open(path, encoding='utf-8').read()
+    print('\n  %s  (%.1f MB)' % (path, len(src) / 1048576.0))
     if MARK in src:
-        sys.exit('  already patched (found the %r marker) — nothing to do' % MARK)
+        print('     already patched — skipped')
+        return False
+    if ANCHOR_FUNCS not in src:
+        print('     no fadeAdjustedTj in this file — skipped')
+        return False
 
     problems = []
     for label, needle in (('fadeAdjustedTj definition', ANCHOR_FUNCS),
                           ('the prospectBlend call', OLD_BD),
                           ('the fadedPure return', OLD_RET)):
         n = src.count(needle)
-        print('  %-28s found %d time(s)' % (label, n))
         if n != 1:
             problems.append('%s appears %d times, expected exactly 1' % (label, n))
     for fn in ('function prospectBlend', 'function healthyBaseJS', 'GN_LADDER'):
         if fn not in src:
             problems.append('missing prerequisite: %s' % fn)
     if problems:
-        for p in problems: print('  BLOCKED: %s' % p)
-        sys.exit(1)
+        for p in problems: print('     BLOCKED: %s' % p)
+        return False
 
     out = src.replace(ANCHOR_FUNCS, NEW_FUNCS.strip() + '\n\n' + ANCHOR_FUNCS, 1)
     out = out.replace(OLD_BD, NEW_BD, 1)
@@ -115,23 +118,82 @@ def main():
                'blendInCeiling(player)', 'gnReleaseCap(player)'):
         assert fn in out, fn
     assert out.count('prospectBlend(player)') >= 1, 'prospectBlend must still be reachable'
-    print('  edits staged: +%d bytes, 3 sites' % (len(out) - len(src)))
-
-    dst = a.out or a.calc
-    if not a.apply:
-        print('\n  DRY RUN — nothing written. Re-run with --apply.')
-        print('  would write: %s' % dst)
-        return
-
-    if dst == a.calc:
-        bak = a.calc + '.pre-fix2'
+    print('     3 sites patched, +%d bytes' % (len(out) - len(src)))
+    if not apply_it:
+        print('     DRY RUN — not written')
+        return True
+    dst = out_path or path
+    if dst == path:
+        bak = path + '.pre-fix2'
         if not os.path.exists(bak):
-            shutil.copy2(a.calc, bak)
-            print('  backup: %s' % os.path.basename(bak))
-    with io.open(dst, 'w', encoding='utf-8') as f:
-        f.write(out)
-    print('  wrote %s (%.1f MB)' % (dst, os.path.getsize(dst) / 1048576.0))
-    print('\n  now run:  python3 verify/verify_fade_anchor.py')
+            shutil.copy2(path, bak)
+            print('     backup: %s' % os.path.basename(bak))
+    with io.open(dst, 'w', encoding='utf-8') as fh:
+        fh.write(out)
+    print('     wrote %s' % dst)
+    return True
+
+
+def bump_service_worker(path, apply_it):
+    """A new build must not be served out of the old cache. Pages are network-first in this
+    service worker, so this is hygiene rather than the fix — but a stale shell is one more way a
+    live fix can look dead, which is worth removing from the list."""
+    src = io.open(path, encoding='utf-8').read()
+    m = re.search(r"const CACHE = '([^']+)'", src)
+    if not m:
+        print('\n  %s — no CACHE constant, skipped' % path)
+        return
+    old = m.group(1)
+    if old.endswith('-fix2'):
+        print('\n  %s — cache already bumped (%s)' % (path, old))
+        return
+    new = old + '-fix2'
+    print('\n  %s' % path)
+    print('     cache %s -> %s' % (old, new))
+    if not apply_it:
+        print('     DRY RUN — not written')
+        return
+    bak = path + '.pre-fix2'
+    if not os.path.exists(bak):
+        shutil.copy2(path, bak)
+    io.open(path, 'w', encoding='utf-8').write(src.replace("'" + old + "'", "'" + new + "'", 1))
+    print('     wrote')
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    g = ap.add_mutually_exclusive_group(required=True)
+    g.add_argument('--calc', help='a single calculator HTML file')
+    g.add_argument('--calc-dir', help='a calc directory — patches EVERY html in it that carries '
+                                      'the function, and bumps service-worker.js')
+    ap.add_argument('--out', help='single-file mode only: write here instead of in place')
+    ap.add_argument('--apply', action='store_true')
+    a = ap.parse_args()
+
+    print('FIX 2 — ceiling-fade release cap')
+    if a.calc:
+        ok = patch_one(a.calc, a.out, a.apply)
+        if not a.apply:
+            print('\n  DRY RUN — nothing written. Re-run with --apply.')
+        sys.exit(0 if ok else 1)
+
+    d = a.calc_dir.rstrip('/')
+    htmls = sorted(f for f in os.listdir(d) if f.endswith('.html'))
+    print('  directory: %s' % d)
+    print('  html files present: %s' % (', '.join(htmls) or 'none'))
+    if not htmls:
+        sys.exit('  nothing to patch')
+    n = sum(1 for f in htmls if patch_one(os.path.join(d, f), None, a.apply))
+    sw = os.path.join(d, 'service-worker.js')
+    if os.path.exists(sw):
+        bump_service_worker(sw, a.apply)
+    print('\n  %d of %d html files %s'
+          % (n, len(htmls), 'patched' if a.apply else 'would be patched'))
+    if a.apply:
+        print('  verify: python3 verify_fade_anchor.py   (GN_CALC=%s)'
+              % os.path.join(d, 'index.html'))
+    else:
+        print('  DRY RUN — nothing written. Re-run with --apply.')
 
 
 if __name__ == '__main__':

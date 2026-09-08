@@ -1,8 +1,9 @@
 # Changelog
 
-## v50.22 — unreleased
+## v50.22 — released 2026-09-08
 
-Two independent fixes. Neither has been applied to a shipped build.
+Two independent fixes, both applied to all four HTML copies and shipped as
+`GordoNation_Calculator_v50.22`. `RAW_PER_DOLLAR` 497.17 → 527.08.
 
 ### Changed
 
@@ -22,6 +23,13 @@ Two independent fixes. Neither has been applied to a shipped build.
 - **Ceiling-fade release is capped.** `fadeAdjustedTj` no longer divides out a blend factor that
   the stored ceiling does not contain, and the release is hard-capped at
   `max(pc, eng.tc × eng.sc) × pm`. See `docs/fix-2-ceiling-fade-release-cap.md`.
+
+### Applying
+
+- Both appliers gained `--calc-dir`, which patches every HTML in a calc directory and bumps
+  the service worker's cache name. A build ships `index.html` and `mobile.html` as two complete
+  apps, and the distributed folder holds a second pair — four independent copies of the function.
+  Patching one and checking another makes a working fix look broken.
 
 ### Added
 

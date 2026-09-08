@@ -1,7 +1,8 @@
 # Fix 1 — the pace multiplier, re-based on rate
 
-Status: **prototyped and verified, not shipped. No open prerequisites** — the §13.1 λ was refitted
-on 8 September 2026 and holds at 0.40 (see the README).
+Status: **APPLIED to the live build, 8 September 2026** (shipped as v50.22). The §13.1 λ was
+refitted the same day and holds at 0.40. The v50.20 season-roll dry run still needs re-running
+before the roll is executed — see the README.
 Methodology sections affected: §13, §13.1, §20.4, new §20.33.
 
 ## The defect
