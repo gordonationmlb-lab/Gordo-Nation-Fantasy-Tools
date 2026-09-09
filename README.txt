@@ -1,12 +1,12 @@
-GORDO NATION TRADE CALCULATOR — v50.21  WEEK 22 DATA BUILD (2026-09-07)
+GORDO NATION TRADE CALCULATOR — v50.22  WEEK 22 DATA BUILD (2026-09-07)
   First build past the postseason line. Data window moves to Week 22: scoringPeriod 166, matchup
   period 21 — PLAYOFF ROUND 1 — complete (SP153-166, Aug 24 - Sep 6). F = 162/143 = 1.1329;
   September absorption 0.90. No framework change; Methodology v11 still stands.
-  Service worker: gordo-calc-v70-2026-09-07.  GN_BUILD v50.21, GN_DATA_THROUGH 2026-09-06.
+  Service worker: gordo-calc-v71-2026-09-08-v50.22.  GN_BUILD v50.22, GN_DATA_THROUGH 2026-09-06.
 
-  Run with update_calc_weekly_v50.21.py (the v50.20 weekly template, one substantive change —
-  see BRIDGE below), then update_options_v50.21.py, stamp_v50.21.py and
-  resync_ceiling_workbook_v50.21.py. Acceptance: verify_calc_v50.21.py, FAIL 0.
+  Run with update_calc_weekly.py (the v50.20 weekly template, one substantive change —
+  see BRIDGE below), then update_options.py, stamp.py and
+  resync_ceiling_workbook_v50.21.py. Acceptance: verify_calc.py, FAIL 0.
 
 ================================================================================
 THE BRIDGE DECISION — why RAW barely moved
@@ -33,7 +33,7 @@ THE BRIDGE DECISION — why RAW barely moved
   689 board players still carry no ESPN id, unchanged in kind from prior weeks.
 
 ================================================================================
-ENGINE DATA (update_calc_weekly_v50.21.py, report in refresh_report_2026-09-06.json)
+ENGINE DATA (update_calc_weekly.py, report in refresh_report_2026-09-06.json)
   Board RA 762,833 -> 767,057 (+4,224): 290 up, 225 down. Invariants: ALL CLEAR.
   515 records repriced, 792 fantasy-point updates, 327 pace-multiplier changes.
 
@@ -84,7 +84,7 @@ ENGINE DATA (update_calc_weekly_v50.21.py, report in refresh_report_2026-09-06.j
   last two weeks — both finalists are being paid for what they already had.
 
 ================================================================================
-OPTIONS TRACKER (update_options_v50.21.py)
+OPTIONS TRACKER (update_options.py)
   495 -> 502 players, 1,079 -> 1,115 events, 248 -> 250 burns, 34 still out of options.
 
   The weekly template does not touch OPTIONS_DATA — options are a function of the league ACTIVITY
@@ -136,7 +136,7 @@ THE OTHER THREE TOOLS
                     projection for someone who has stopped playing. They read identically in v50.20.
 
 ================================================================================
-CHROME (stamp_v50.21.py)
+CHROME (stamp.py)
   Three hand-written prose stamps are not touched by the template and were still reading v50.20:
   the Trade Desk footer ("as of August 30, 2026 (Week 21 data...)"), the mode line ("v50.20 · data
   through Aug 30, 2026") and the options ledger note. All three now read the Week 22 window. Each
@@ -159,16 +159,18 @@ WORKBOOK (resync_ceiling_workbook_v50.21.py)
   refuses to write if any phase change runs backward.
 
   Column 19 "Options Remaining" now carries the live ledger instead of the blanks it held.
-  2_Org_Rankings recomputed (River Cats 54,120 still first, KC Gray Hotdogs 48,085 second).
+  2_Org_Rankings recomputed (River Cats 54,630 still first, KC Gray Hotdogs 49,986 second).
   Sheets 3-12 re-stamped [NOT REFRESHED WK22] — they are unchanged and now say so honestly.
 
-  IT IS NOT WRITTEN AT THE LEAGUE ROOT, ON PURPOSE. The root
-  Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED.xlsx is a HARD LINK to
-  2026/GN_v50.19_wk21_2026-08-31/Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED.xlsx — one inode,
-  two names — and writes on this share land in the existing inode rather than replacing the
-  directory entry (verified: mv over an existing file changed both names). Saving over the root
-  path would therefore have silently rewritten the archived v50.19 snapshot and destroyed the
-  ability to reproduce that build. v50.21 ships as
+  IT IS NOT WRITTEN AT THE LEAGUE ROOT, ON PURPOSE — but not for the reason this note used to
+  give. It claimed the root Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED.xlsx was a HARD LINK to
+  the v50.19 archive copy, and cited "mv over an existing file changed both names" as proof. Both
+  halves are wrong, measured 8 Sep 2026: the two paths are separate inodes (60387901 and
+  73601710) holding identical content, and mv/rename BREAKS a link rather than writing through it.
+  The real mechanism runs the other way — openpyxl save() truncates in place and PRESERVES the
+  inode, so it rewrites every hard link to its target. The root file does carry a second link, to
+  a Claude session upload cache outside the league tree. The script now refuses to save over any
+  path with a link count above 1, so the hazard is enforced rather than described. v50.21 ships as
       2026/GN_v50.21_wk22_2026-09-07/Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED.xlsx
       Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED_v50.21.xlsx   (league root)
   and the root UNIFIED file still holds v50.19 values. Swapping it in is a decision to make
