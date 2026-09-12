@@ -260,6 +260,12 @@ body, html { background: transparent; }
 .player-row .name { font-weight: 500; }
 .player-row .meta { color: var(--color-text-secondary, #6e6d68); font-size: 11px; }
 .player-row .ra { font-variant-numeric: tabular-nums; font-weight: 500; min-width: 56px; text-align: right; }
+/* SA-2: the roster-badge column is auto-sized, so a long ESPN squad name ("Kansas Sunflower Seeds", 128px)
+   left the player's name 47px wide on a 375px phone and the row 173px tall. Cap and ellipsize it; the full
+   name stays in the title. SA-6: .sr-only is the visually hidden live region that sits after the sides. */
+.player-row .roster { min-width: 0; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 480px) { .player-row .roster { max-width: 84px; } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .remove-btn { background: transparent; border: none; color: var(--color-text-secondary, #6e6d68); cursor: pointer; font-size: 16px; padding: 0; width: 24px; height: 24px; border-radius: 4px; }
 .remove-btn:hover { background: #fbe9e7; color: #c62828; }
 .verdict { background: var(--color-background-primary, #fff); border-radius: var(--border-radius-lg, 12px); border: 0.5px solid var(--color-border-tertiary, rgba(0,0,0,.15)); padding: 12px 16px; display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; }
@@ -284,13 +290,11 @@ body, html { background: transparent; }
 .toggle button:last-child { border-right: none; }
 .toggle button.active { background: #2f4f4f; color: #fff; }
 .empty-hint { font-size: 12px; color: var(--color-text-tertiary, #9c9b96); text-align: center; padding: 16px 8px; font-style: italic; }
-.slider-bar { background: var(--color-background-primary, #fff); border: 0.5px solid var(--color-border-tertiary, rgba(0,0,0,.15)); border-radius: var(--border-radius-md, 8px); padding: 8px 14px; margin-bottom: 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
-.slider-label { font-size: 12px; color: var(--color-text-secondary, #6e6d68); }
-.slider-label.left { text-align: right; }
-.slider-readout { font-size: 12px; font-weight: 500; color: var(--color-text-primary, #1a1a1a); min-width: 110px; text-align: center; }
 .slider-input { width: 100%; -webkit-appearance: none; appearance: none; height: 5px; background: linear-gradient(to right, #2f4f4f, #7fa3a3); border-radius: 4px; outline: none; }
 .slider-input::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #2f4f4f; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 0 0.5px rgba(0,0,0,.2); }
 .slider-input::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #2f4f4f; cursor: pointer; border: 2px solid #fff; }
+/* SL-5: Firefox paints its default track even with appearance:none; keep only the gradient above. Not verified here (no Firefox on the build Mac). */
+.slider-input::-moz-range-track { background: transparent; border: 0; height: 5px; }
 .charts-section { margin-top: 16px; }
 .charts-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
 .charts-title { font-size: 14px; font-weight: 500; }
@@ -376,7 +380,7 @@ body, html { background: transparent; }
 .toggle button{background:var(--nl-paper);color:var(--nl-navy);font-weight:700;border-right:1px solid var(--nl-line);}
 .toggle button.active{background:var(--nl-navy);color:#fff;}
 .mgr-pos-select,.filters select,.picker-row select,.picker-row input,.inspector-search{background:var(--nl-paper);border:1px solid var(--nl-line);color:var(--nl-ink);}
-.ctrl-label,.slider-label,.slider-readout,.ctrl-readout{font-family:var(--font-display);}
+.ctrl-label,.ctrl-readout{font-family:var(--font-display);}
 .ctrl-label{color:var(--nl-navy);text-transform:uppercase;letter-spacing:.05em;font-weight:700;}
 .slider-readout{color:var(--nl-navy);font-weight:700;}
 /* sliders */
@@ -477,13 +481,13 @@ body, html { background: transparent; }
     <div class="side ctrl-deck">
       <div class="side-h"><span class="side-label">Sliders</span></div>
       <div class="ctrl-row">
-        <span class="ctrl-label">RA / Pure blend</span>
-        <input type="range" class="slider-input" id="blendSlider" min="0" max="100" step="1" value="0">
-        <span class="ctrl-readout" id="blendReadout">100% RA / 0% Pure</span>
+        <label class="ctrl-label" for="blendSlider">RA / Pure blend</label>
+        <input type="range" class="slider-input" id="blendSlider" min="0" max="100" step="1" value="0" aria-valuetext="100% RA">
+        <span class="ctrl-readout" id="blendReadout">100% RA</span>
       </div>
       <div class="ctrl-row">
-        <span class="ctrl-label">Career years</span>
-        <input type="range" class="slider-input" id="yearsSlider" min="1" max="10" step="1" value="1">
+        <label class="ctrl-label" for="yearsSlider">Career years</label>
+        <input type="range" class="slider-input" id="yearsSlider" min="1" max="10" step="1" value="1" aria-valuetext="1 year (single peak season)">
         <span class="ctrl-readout" id="yearsReadout">1 year (single peak season)</span>
       </div>
     </div>
@@ -496,17 +500,17 @@ body, html { background: transparent; }
         <span class="side-total" id="totalA">0</span>
       </div>
       <div class="filters">
-        <select id="orgA"><option value="">All orgs</option></select>
-        <select id="posA"><option value="">All positions</option></select>
+        <select id="orgA" aria-label="Side A: organization filter"><option value="">All orgs</option></select>
+        <select id="posA" aria-label="Side A: position filter"><option value="">All positions</option></select>
       </div>
       <div class="picker-row dropdown">
-        <input type="text" id="searchA" placeholder="Search player or filter, then click" autocomplete="off">
-        <select id="sortA">
+        <input type="text" id="searchA" placeholder="Search player or filter, then click" autocomplete="off" aria-label="Side A: search players to add">
+        <select id="sortA" aria-label="Side A: sort results">
           <option value="value">Sort: Value</option>
           <option value="name">Sort: Name</option>
           <option value="age">Sort: Age</option>
         </select>
-        <div class="results" id="resultsA"></div>
+        <div class="results" id="resultsA" aria-label="Side A search results"></div>
       </div>
       <div class="picked" id="pickedA"><div class="empty-hint">No players selected</div></div>
     </div>
@@ -517,28 +521,30 @@ body, html { background: transparent; }
         <span class="side-total" id="totalB">0</span>
       </div>
       <div class="filters">
-        <select id="orgB"><option value="">All orgs</option></select>
-        <select id="posB"><option value="">All positions</option></select>
+        <select id="orgB" aria-label="Side B: organization filter"><option value="">All orgs</option></select>
+        <select id="posB" aria-label="Side B: position filter"><option value="">All positions</option></select>
       </div>
       <div class="picker-row dropdown">
-        <input type="text" id="searchB" placeholder="Search player or filter, then click" autocomplete="off">
-        <select id="sortB">
+        <input type="text" id="searchB" placeholder="Search player or filter, then click" autocomplete="off" aria-label="Side B: search players to add">
+        <select id="sortB" aria-label="Side B: sort results">
           <option value="value">Sort: Value</option>
           <option value="name">Sort: Name</option>
           <option value="age">Sort: Age</option>
         </select>
-        <div class="results" id="resultsB"></div>
+        <div class="results" id="resultsB" aria-label="Side B search results"></div>
       </div>
       <div class="picked" id="pickedB"><div class="empty-hint">No players selected</div></div>
     </div>
   </div>
+
+  <div id="gnStatus" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
   <div class="verdict">
     <div class="verdict-side">
       <div class="verdict-num" id="vTotalA">0</div>
       <div class="verdict-label">Side A receives</div>
     </div>
-    <div class="verdict-mid">
+    <div class="verdict-mid" role="status" aria-live="polite" aria-atomic="true">
       <div class="verdict-tag tag-empty" id="vTag">Pick players</div>
       <div class="delta" id="vDelta">-</div>
     </div>
@@ -549,7 +555,7 @@ body, html { background: transparent; }
   </div>
 
   <div class="legend">
-    Top slider: RA-to-Pure blend (0% = single-year Risk-Adj, 100% = single-year Pure Ceiling). Bottom slider: Career years (1-10). At 1, it shows the single-season value. At 10, it shows expected RA summed across the next 10 seasons (career value). Combine the two for "5-year career value at 30% Pure blend" etc.
+    Top slider: RA-to-Pure blend (0% = single-year Risk-Adj, 100% = single-year Pure Ceiling on the same pace basis the Pure trajectory uses). Bottom slider: Career years (1-10). At 1, it shows the single-season value. At 10, it shows expected RA summed across the next 10 seasons (career value); in Single season mode it shows the engine's own year-10 trajectory, with no floor under a year a player has aged out of. Combine the two for "5-year career value at 30% Pure blend" etc. Verdict: the percentage is of the LARGER side — under 5% reads as fair, 5 to 15% a slight edge, above 15% a clear win. A gap worth less than five cents of value is called even rather than graded.
   </div>
 
   <div class="charts-section">
@@ -559,24 +565,24 @@ body, html { background: transparent; }
     <div class="charts-grid">
       <div class="chart-box">
         <div class="chart-box-title">Player value over time</div>
-        <div class="chart-canvas-wrap"><canvas id="playerChart"></canvas></div>
+        <div class="chart-canvas-wrap"><canvas id="playerChart" role="img" aria-label="Player value over time. Pick players on either side to plot their value.">Player value over time. Pick players on either side to plot their value.</canvas></div>
         <div class="no-data-msg" id="playerChartEmpty">Pick players on either side to see history</div>
       </div>
       <div class="chart-box">
         <div class="chart-box-title">Team total over time</div>
-        <div class="chart-canvas-wrap"><canvas id="teamTotalChart"></canvas></div>
+        <div class="chart-canvas-wrap"><canvas id="teamTotalChart" role="img" aria-label="Team total over time. Pick players on either side to plot side totals.">Team total over time. Pick players on either side to plot side totals.</canvas></div>
         <div class="no-data-msg" id="teamTotalEmpty">Pick players on either side to see team totals</div>
       </div>
       <div class="chart-box">
         <div class="chart-box-title">Trade comparison — stacked by player</div>
-        <div class="chart-canvas-wrap"><canvas id="stackedBarChart"></canvas></div>
-        <div class="no-data-msg" id="stackedBarEmpty">Pick players on both sides to compare</div>
+        <div class="chart-canvas-wrap"><canvas id="stackedBarChart" role="img" aria-label="Trade comparison, stacked by player. Pick players on either side to compare.">Trade comparison, stacked by player. Pick players on either side to compare.</canvas></div>
+        <div class="no-data-msg" id="stackedBarEmpty">Pick players on either side to compare</div>
       </div>
       <div class="chart-box">
         <div class="chart-box-title">Injury risk assessment — stacked by player</div>
-        <div class="chart-canvas-wrap"><canvas id="injuryRiskChart"></canvas></div>
+        <div class="chart-canvas-wrap"><canvas id="injuryRiskChart" role="img" aria-label="Injury risk assessment, stacked by player. Pick players to see the breakdown.">Injury risk assessment, stacked by player. Pick players to see the breakdown.</canvas></div>
         <div class="no-data-msg" id="injuryRiskEmpty">Pick players to see injury risk breakdown</div>
-        <div class="history-note">Each colored segment is one player's stacked IL penalty. Green=0 (no risk), Yellow=−0.01 to −0.04 (low), Orange=−0.05 to −0.09 (moderate), Red=−0.10 to −0.14 (high), Purple=−0.15+ (extreme). Bar height = total team injury risk.</div>
+        <div class="history-note">Each colored segment is one player's stacked IL penalty. Yellow=−0.01 to −0.04 (low), Orange=−0.05 to −0.09 (moderate), Red=−0.10 to −0.14 (high), Purple=−0.15+ (extreme). Players with no IL penalty are left off the chart entirely. Bar height = total team injury risk.</div>
       </div>
       <div class="chart-box full">
         <div class="chart-box-title-row">
@@ -588,7 +594,7 @@ body, html { background: transparent; }
               <button data-level="aaa">AAA roster</button>
               <button data-level="optimized">22-Man (fieldable)</button><button data-level="keeper30">30-Man (keeper)</button><button data-level="opt30">30-Man (fieldable)</button>
             </div>
-            <select id="mgrPosFilter" class="mgr-pos-select">
+            <select id="mgrPosFilter" class="mgr-pos-select" aria-label="Manager comparison: filter by position">
               <option value="">All positions</option>
               <option value="C">C</option>
               <option value="1B">1B</option>
@@ -605,14 +611,20 @@ body, html { background: transparent; }
               <option value="RP">RP</option>
               <option value="P">All pitchers (SP+RP)</option>
             </select>
+            <!-- MC-4: the depth chart and the season line were reachable only by clicking a bar on a
+                 canvas that takes no focus. This select drives the same two panels from the keyboard;
+                 renderDepth keeps it in step when a bar is clicked instead. -->
+            <select id="mgrDepthPick" class="mgr-pos-select" aria-label="Manager comparison: open a manager's depth chart and season line">
+              <option value="">Depth chart: choose a manager</option>
+            </select>
           </div>
         </div>
-        <div class="chart-canvas-wrap" style="height: 280px"><canvas id="mgrChart"></canvas></div>
-        <div id="mgrEkgWrap" style="display:none;margin-top:14px;border-top:1px dashed #c9bd93;padding-top:10px"><div class="chart-box-title" style="font-size:13px;margin-bottom:4px">Value over season <span id="mgrEkgOrg" style="color:#888;font-weight:400;font-size:11px"></span></div><div class="chart-canvas-wrap" style="height:200px"><canvas id="mgrEkgChart"></canvas></div></div>
+        <div class="chart-canvas-wrap" style="height: 280px"><canvas id="mgrChart" role="img" aria-label="Manager comparison, eight organizations side by side.">Manager comparison, eight organizations side by side.</canvas></div>
+        <div id="mgrEkgWrap" style="display:none;margin-top:14px;border-top:1px dashed #c9bd93;padding-top:10px"><div class="chart-box-title" style="font-size:13px;margin-bottom:4px">Value over season <span id="mgrEkgOrg" style="color:#888;font-weight:400;font-size:11px"></span></div><div class="chart-canvas-wrap" style="height:200px"><canvas id="mgrEkgChart" role="img" aria-label="Value over season for the selected manager.">Value over season for the selected manager.</canvas></div></div>
         <div id="mgrDepthWrap" style="margin-top:14px;border-top:1px dashed #c9bd93;padding-top:10px">
           <div class="chart-box-title" style="font-size:13px;margin-bottom:4px">Depth chart <span id="mgrDepthOrg" style="color:#888;font-weight:400;font-size:11px"></span></div>
           <div class="history-note" style="margin:0 0 8px">Click any manager's bar above to open its depth chart for the current setting. Players appear under every position they're eligible for; <strong>*</strong> = secondary/tertiary eligibility. Header = position and total eligible value.</div>
-          <div id="mgrDepthEmpty" class="no-data-msg">Click a manager's bar above to open its depth chart.</div>
+          <div id="mgrDepthEmpty" class="no-data-msg">Click a manager's bar above, or use the depth-chart menu, to open its depth chart.</div>
           <div id="mgrDepthGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px"></div>
         </div>
       </div>
@@ -624,9 +636,9 @@ body, html { background: transparent; }
   <div class="inspector-section">
     <div class="inspector-box">
       <div class="inspector-header">
-        <div class="inspector-title">Player Inspector — formula breakdown</div>
+        <h3 class="inspector-title" style="margin:0">Player Inspector — formula breakdown</h3>
         <div class="inspector-search-wrap">
-          <input type="text" class="inspector-search" id="inspectorSearch" placeholder="Search any player..." autocomplete="off">
+          <input type="text" class="inspector-search" id="inspectorSearch" placeholder="Search any player..." autocomplete="off" aria-label="Player inspector: search any player">
           <div class="inspector-results" id="inspectorResults"></div>
         </div>
       </div>
@@ -639,9 +651,9 @@ body, html { background: transparent; }
   <div class="inspector-section">
     <div class="inspector-box">
       <div class="inspector-header">
-        <div class="inspector-title">Options Tracker — 2026 AAA options</div>
+        <h3 class="inspector-title" style="margin:0">Options Tracker — 2026 AAA options</h3>
         <div class="inspector-search-wrap">
-          <input type="text" class="inspector-search" id="optionsSearch" placeholder="Search any player..." autocomplete="off">
+          <input type="text" class="inspector-search" id="optionsSearch" placeholder="Search any player..." autocomplete="off" aria-label="Options tracker: search any player">
           <div class="inspector-results" id="optionsResults"></div>
         </div>
       </div>
@@ -675,6 +687,9 @@ body, html { background: transparent; }
           .opt-fl-row{display:flex;align-items:baseline;gap:10px;padding:7px 12px;font-size:12.5px;cursor:pointer;
             border-bottom:1px solid var(--color-border,#eceae5);}
           .opt-fl-row:last-child{border-bottom:none;}
+          /* OT-1: the list is a listbox now -- one tab stop, arrow keys inside it. */
+          .opt-fl-row[aria-selected="true"]{background:var(--color-bg-subtle,#f5f4f0);box-shadow:inset 3px 0 0 #13274F;}
+          .opt-fl-scroll:focus-visible{outline:2px solid #C9A227;outline-offset:-2px;}
           .opt-fl-row:hover{background:var(--color-bg-subtle,#f5f4f0);}
           .opt-fl-row .m{color:#6e6d68;font-size:11px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
           .opt-fl-row .s{font-size:11px;font-weight:600;white-space:nowrap;}
@@ -682,10 +697,10 @@ body, html { background: transparent; }
         
 </style>
         <div class="opt-filter-bar" role="group" aria-label="Filter players by options burned">
-          <button type="button" class="opt-filter-btn opt-fb-1" id="optFilt1">1 OPTION BURNED <span class="cnt" id="optCnt1">&ndash;</span></button>
-          <button type="button" class="opt-filter-btn opt-fb-2" id="optFilt2">2 OPTIONS BURNED <span class="cnt" id="optCnt2">&ndash;</span></button>
-          <button type="button" class="opt-filter-btn opt-fb-nc" id="optFiltNC">NON-COMPLIANT (&gt;2) <span class="cnt" id="optCntNC">&ndash;</span></button>
-          <button type="button" class="opt-filter-btn opt-fb-r5" id="optFiltR5">RULE 5 DRAFT <span class="cnt" id="optCntR5">&ndash;</span></button>
+          <button type="button" class="opt-filter-btn opt-fb-1" id="optFilt1" aria-pressed="false" aria-expanded="false" aria-controls="optFilterList">1 OPTION BURNED <span class="cnt" id="optCnt1">&ndash;</span></button>
+          <button type="button" class="opt-filter-btn opt-fb-2" id="optFilt2" aria-pressed="false" aria-expanded="false" aria-controls="optFilterList">2 OPTIONS BURNED <span class="cnt" id="optCnt2">&ndash;</span></button>
+          <button type="button" class="opt-filter-btn opt-fb-nc" id="optFiltNC" aria-pressed="false" aria-expanded="false" aria-controls="optFilterList">NON-COMPLIANT (&gt;2) <span class="cnt" id="optCntNC">&ndash;</span></button>
+          <button type="button" class="opt-filter-btn opt-fb-r5" id="optFiltR5" aria-pressed="false" aria-expanded="false" aria-controls="optFilterList">RULE 5 DRAFT <span class="cnt" id="optCntR5">&ndash;</span></button>
         </div>
         <div id="optFilterList"></div>
         <div class="opt-filter-note">Ledger rebuilt from the full ESPN transaction log through the Aug 24 deadline processing, extended from the league activity feed through Sep 6 &middot; parse verified against the Aug 19&ndash;24 overlap &middot; tap a button to list players, tap a player to open their record.</div>
@@ -758,15 +773,22 @@ const orgList = [...new Set(PLAYERS.map(p => p.o))].sort();
 const posList = [...new Set(PLAYERS.map(p => p.p).filter(Boolean))].sort();
 (function(){var _pc=document.getElementById("playerCount");if(_pc)_pc.textContent=PLAYERS.length.toLocaleString();})();
 
+// SL-6: the Pure end of the single-year blend. r already carries the pace multiplier (r = pc x h x
+// pm, exact for every one of the 96 players this inverted) and so do BOTH engine trajectories (tj
+// and tjp: median ratio to pc x h x pm and to pc x pm is 0.953 either way). The bare ceiling here
+// was the only pace-free number in the blend, which is why sliding toward "Pure" LOWERED 96
+// players (Ohtani 2010 -> 1769, Aranda 966 -> 722). gnReleaseCap already applies pm to the ceiling
+// the same way. The "Pure NNNN" badges keep showing the stored ceiling field.
+function gnPure(p) { return (p.pc || 0) * (p.pm || 1); }
 // Single-year blended raw value
 function blendedRaw(p) {
   const b = BLEND / 100;
-  return (1 - b) * p.r + b * p.pc;
+  return (1 - b) * p.r + b * gnPure(p);
 }
 
 // Career value: sum trajectory for first N years
 // At YEARS=1, use blended single-year value (so blend slider still works)
-// At YEARS>1, use trajectory (which is RA-based only — Pure blend doesn't apply to multi-year)
+// At YEARS>1, blend the engine's RA trajectory (tj) with its Pure trajectory (tjp) year by year
 
 // Healthy base lookup by age + role (matches engine.py)
 function healthyBaseJS(age, role) {
@@ -934,15 +956,24 @@ function getValue(p) {
     if (p.tj && p.tjp && p.tj.length > idx && p.tjp.length > idx) {
       const tjVal = fadeAdjustedTj(p, idx);
       const tjpVal = p.tjp[idx];
-      // Detect pre-arrival year for prospects: trajectory value is 0/near-zero but player has value
-      const isPreArrival = (tjVal < 5 && tjpVal < 5 && p.pc > 0);
+      // SL-7: a pre-arrival year is one where the trajectory is still OFF and turns ON later. The
+      // old test (both trajectories under 5, ceiling above 0) could not tell that from a trajectory
+      // that has already run OUT: at year 10 it fired for 178 players, 128 of them T1/T2 veterans
+      // aged 30+, and not one true pre-arrival case exists in this build (no trajectory starts at
+      // zero and turns on later). Mike Trout at year 10, age 44, read 795 -- his full current
+      // value -- off a trajectory of 2, and doubled between year 9 and year 10.
+      const laterOn = p.tj.slice(idx + 1).some(v => v >= 5) || p.tjp.slice(idx + 1).some(v => v >= 5);
+      const isPreArrival = (tjVal < 5 && tjpVal < 5 && p.pc > 0 && laterOn);
       if (isPreArrival) {
-        // Show full peak value — prospect's "option value" while still developing
-        raw = (1 - b) * p.r + b * p.pc;
+        // full peak value -- the prospect's option value while still developing
+        raw = (1 - b) * p.r + b * gnPure(p);
       } else {
+        // SL-8: the flat half-of-current floor is gone. On this build it never bound for a player
+        // aged 31 or younger in the year shown, and only bound once his own trajectory had fallen
+        // below half of its year-1 value: it propped up decline-tail years (1,124 of 2,078 players
+        // at year 10, 233 of them by 5x or more) and nothing else. The trajectories already carry
+        // the pace multiplier, so there is no pace gap for a floor to cover.
         raw = (1 - b) * tjVal + b * tjpVal;
-        const floor = (1 - b) * p.r + b * p.pc;
-        raw = Math.max(raw, floor * 0.5);  // softer floor for actual on-MLB years
       }
     } else {
       raw = blendedRaw(p);
@@ -953,7 +984,7 @@ function getValue(p) {
       for (let i = 0; i < YEARS; i++) {
         trajSum += (1 - b) * fadeAdjustedTj(p, i) + b * p.tjp[i];
       }
-      const floor = (1 - b) * p.r + b * p.pc;
+      const floor = (1 - b) * p.r + b * gnPure(p);
       raw = Math.max(trajSum, floor);
     } else if (p.tj && p.tj.length >= YEARS) {
       const trajSum = p.tj.slice(0, YEARS).reduce((s, v) => s + v, 0);
@@ -968,13 +999,40 @@ function getValue(p) {
 
 function fmtValue(v) {
   if (MODE === 'dollar') return '$' + v.toFixed(2);
-  return String(Math.round(v));
+  // SA-8: the side totals printed 17110 beside a manager panel printing 17,110
+  return Math.round(v).toLocaleString();
 }
 
+// SA-4: the org menu was the raw org strings -- 49 entries, 41 of them free-agent variants, with no
+// way to see all 1,709 free agents at once ("FA" alone is 504 of them) and two MLB clubs spelled two
+// ways in the pull (CWS/CHW, WAS/WSH). Grouped now: league teams, one all-free-agents entry, then FA
+// by MLB club with the duplicate spellings folded onto the dominant one, then the dropped-by-a-team
+// entries. The alias lives here and in gnOrgMatch only; the records keep the spelling they came with.
+const GN_ORG_ALIAS = { 'FA (CHW)': 'FA (CWS)', 'FA (WAS)': 'FA (WSH)' };
+function gnOrgKey(o) { o = (o || '') + ''; return GN_ORG_ALIAS[o] || o; }
+function gnOrgMatch(p, org) {
+  const o = (p.o || '') + '';
+  if (org === '__FA__') return o.indexOf('FA') === 0;
+  return gnOrgKey(o) === org;
+}
 function populateFilters() {
+  const keys = [...new Set(PLAYERS.map(p => gnOrgKey(p.o)))].sort();
+  const teams = keys.filter(o => o.indexOf('FA') !== 0);
+  const faClub = (keys.indexOf('FA') !== -1 ? ['FA'] : []).concat(keys.filter(o => /^FA \((?!was )/.test(o)));
+  const faWas = keys.filter(o => o.indexOf('FA (was ') === 0);
+  const faAll = PLAYERS.filter(p => ((p.o || '') + '').indexOf('FA') === 0).length;
   ['orgA','orgB'].forEach(id => {
     const sel = $(id);
-    orgList.forEach(o => { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; sel.appendChild(opt); });
+    const group = (label, list, text) => {
+      if (!list.length) return;
+      const g = document.createElement('optgroup'); g.label = label;
+      list.forEach(o => { const opt = document.createElement('option'); opt.value = o; opt.textContent = text ? text(o) : o; g.appendChild(opt); });
+      sel.appendChild(g);
+    };
+    group('League teams', teams);
+    const fa = document.createElement('option'); fa.value = '__FA__'; fa.textContent = 'All free agents (' + faAll.toLocaleString() + ')'; sel.appendChild(fa);
+    group('Free agents by MLB club', faClub, o => o === 'FA' ? 'FA — no club listed' : o.replace(/^FA \((.*)\)$/, 'FA — $1'));
+    group('Dropped by a league team', faWas, o => o.replace(/^FA \(was (.*)\)$/, 'FA — was $1'));
   });
   ['posA','posB'].forEach(id => {
     const sel = $(id);
@@ -1006,10 +1064,32 @@ const _GN_FOLD = Object.create(null);
 function gnFold(s) {
   s = (s == null) ? '' : String(s);
   let f = _GN_FOLD[s];
-  if (f === undefined) f = _GN_FOLD[s] = s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  // SA-7: fold punctuation as well as accents. Apostrophes and periods drop out ("ohearn" reaches
+  // O'Hearn, "guerrero jr" reaches Guerrero Jr.), hyphens become spaces ("encarnacion strand" reaches
+  // Encarnacion-Strand) and runs of space collapse. 8 names carry an apostrophe and 23 a hyphen.
+  if (f === undefined) f = _GN_FOLD[s] = s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/[’'.]/g, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
   return f;
 }
 
+// SL-1: the slider and toggle handlers re-rendered BOTH results lists on every tick, and
+// renderResults adds the open class whenever a query or filter is set -- so a list the user had
+// closed came back (61 rows over the Side A card) on an arrow key, and flashed open during a
+// mouse drag until the release click closed it again. A closed list is rebuilt the next time its
+// input is focused, so refreshing only the open ones loses nothing.
+// SA-8: identity for the "already picked" checks -- the ESPN id when the record has one, name+org
+// otherwise. They compared bare names, which is safe on this build (no two records share one) but
+// would hide two different players behind each other the first time it happened.
+function gnPKey(p) { return p.eid != null ? 'e' + p.eid : (p.n + '|' + (p.o || '')); }
+function gnSideOf(p) {
+  const k = gnPKey(p);
+  if (state.A.some(x => gnPKey(x) === k)) return 'A';
+  if (state.B.some(x => gnPKey(x) === k)) return 'B';
+  return null;
+}
+function gnRefreshOpenResults() {
+  ['A','B'].forEach(s => { const box = $('results' + s); if (box && box.classList.contains('open')) renderResults(s); });
+}
 function renderResults(side) {
   const q = gnFold($('search'+side).value.trim());
   const org = $('org'+side).value;
@@ -1018,11 +1098,22 @@ function renderResults(side) {
   const box = $('results'+side);
   const CAP = 60;   // v50.22 CORE-4: the row cap now lives in two slice paths; keep them one number
   if (!q && !org && !pos) { box.classList.remove('open'); box.innerHTML=''; return; }
-  let list = PLAYERS.filter(p => {
-    if (state.A.some(x => x.n === p.n) || state.B.some(x => x.n === p.n)) return false;   // v50.20: a player can only be received once
-    if (q && !gnFold(p.n).includes(q)) return false;
-    if (org && p.o !== org) return false;
+  // SA-7: every typed word must appear somewhere in the folded name, so "rodriguez julio" finds
+  // Julio Rodriguez. SA-4: the org value may be the grouped all-free-agents token or an aliased club.
+  const qTokens = q ? q.split(' ') : [];
+  const matches = p => {
+    if (qTokens.length) { const fn = gnFold(p.n); for (const t of qTokens) if (fn.indexOf(t) === -1) return false; }
+    if (org && !gnOrgMatch(p, org)) return false;
     if (pos && p.p !== pos) return false;
+    return true;
+  };
+  // v50.20: a player can only be received once. SA-5: the ones this hides are kept, so an empty list
+  // can say where the player went instead of "No matches".
+  const held = [];
+  let list = PLAYERS.filter(p => {
+    if (!matches(p)) return false;
+    const on = gnSideOf(p);
+    if (on) { held.push({ p: p, side: on }); return false; }
     return true;
   });
   const total = list.length;
@@ -1052,7 +1143,10 @@ function renderResults(side) {
       '<div><div>' + _iesc(r.p.n) + '</div><div class="meta">' + _iesc(r.p.p) + ' | age ' + (r.p.a||'-') + ' | ' + _iesc(rosterBadge(r.p)) + ' | ' + _iesc(r.p.t) + (r.p.ph ? ' ' + _iesc(r.p.ph) : '') + '</div></div>' +
       '<div class="ra">' + fmtValue(r.v) + '</div>' +
     '</div>'
-  ).join('') || '<div class="result-item meta">No matches</div>';
+  ).join('') || (held.length
+    // SA-5: a searched player who already sits on a side read as "No matches", as if he did not exist
+    ? held.slice(0, 3).map(h => '<div class="result-item meta" role="presentation" style="cursor:default;">' + _iesc(h.p.n) + ' is already on Side ' + h.side + '</div>').join('')
+    : '<div class="result-item meta" role="presentation" style="cursor:default;">No matches</div>');
   // v50.22 CORE-3: the cap is 60 and the 60th row used to be just another player, with nothing
   // saying the other 441 existed. Under Sort: Value those 60 really are the top 60; under
   // Sort: Name they are Aaron Civale through Briggs McKenzie and the rest of the alphabet is
@@ -1065,7 +1159,7 @@ function renderResults(side) {
                : sort === 'name'  ? 'First ' + rows.length + ' A-Z'
                : sort === 'age'   ? 'Youngest ' + rows.length
                :                    'First ' + rows.length;
-    box.insertAdjacentHTML('afterbegin', '<div class="result-item meta" style="cursor:default;">' +
+    box.insertAdjacentHTML('afterbegin', '<div class="result-item meta" role="presentation" style="cursor:default;">' +
       kept + ' of ' + total + ' matches · narrow the search to see the rest</div>');
   }
   box.classList.add('open');
@@ -1085,6 +1179,7 @@ function addPlayer(side, player) {
   renderPicked(side);
   renderVerdict();
   gnSaveState();
+  gnAnnounce(player.n + ' added to Side ' + side + '. Side ' + side + ' total ' + $('total'+side).textContent + '.');
 }
 // v50.20: persist only identity keys; the full player object used to be stored and then restored verbatim,
 // so after every weekly refresh a returning user saw last week's values until they pressed Clear.
@@ -1096,16 +1191,30 @@ function gnResolveSaved(arr){
   (Array.isArray(arr) ? arr : []).forEach(s => {
     if (!s) return;
     const live = PLAYERS.find(p => (s.eid != null && p.eid === s.eid)) || PLAYERS.find(p => p.n === s.n);
-    if (live && !seen.has(live.n)) { seen.add(live.n); out.push(live); }
+    if (live && !seen.has(gnPKey(live))) { seen.add(gnPKey(live)); out.push(live); }
   });
   return out;
 }
 
-function removePlayer(side, idx) {
+// SA-6: a visually hidden polite live region. Nothing on the page announced an add or a removal;
+// the total changed silently. Cleared and refilled a tick later so a repeated message re-announces.
+function gnAnnounce(msg) { const el = $('gnStatus'); if (!el) return; el.textContent = ''; setTimeout(() => { el.textContent = msg; }, 30); }
+function removePlayer(side, idx, viaKeyboard) {
+  const gone = state[side][idx];
   state[side].splice(idx, 1);
   renderPicked(side);
   renderVerdict();
   gnSaveState();
+  if (gone) gnAnnounce(gone.n + ' removed from Side ' + side + '. Side ' + side + ' total ' + $('total'+side).textContent + '.');
+  // SA-3: renderPicked rebuilt the list, so the button that had focus is gone and focus fell to
+  // <body>; a keyboard user lost their place after every removal. Land on the button now in the same
+  // slot (or the last one) and, with the side empty, on its search box -- keyboard removals only, so
+  // a tap on a phone does not raise the keyboard. Focus that survived (Safari leaves it in the text
+  // box on a mouse click) is left alone.
+  if (document.activeElement && document.activeElement !== document.body) return;
+  const btns = $('picked'+side).querySelectorAll('.remove-btn');
+  if (btns.length) btns[Math.min(idx, btns.length - 1)].focus();
+  else if (viaKeyboard) $('search'+side).focus();
 }
 
 function renderPicked(side) {
@@ -1116,16 +1225,37 @@ function renderPicked(side) {
       '<div><div class="name">' + _iesc(p.n) + '</div>' +
         '<div class="meta">' + _iesc(p.p) + ' | age ' + (p.a||'-') + ' | ' + _iesc(p.t) + (p.ph ? ' ' + _iesc(p.ph) : '') + ' | Pure ' + Math.round(p.pc) + ' | Hit% ' + (p.h ? (p.h*100).toFixed(0) + '%' : '-') + '</div>' +
       '</div>' +
-      '<div class="meta">' + _iesc(rosterBadge(p)) + '</div>' +
+      '<div class="meta roster" title="' + _iesc(rosterBadge(p)) + '">' + _iesc(rosterBadge(p)) + '</div>' +
       '<div class="ra">' + fmtValue(getValue(p)) + '</div>' +
-      '<button class="remove-btn" data-side="' + side + '" data-i="' + i + '" aria-label="Remove">x</button>' +
+      '<button class="remove-btn" data-side="' + side + '" data-i="' + i + '" aria-label="Remove ' + _iesc(p.n) + ' from Side ' + side + '">x</button>' +
     '</div>'
   ).join('');
   [...box.querySelectorAll('.remove-btn')].forEach(btn => {
-    btn.addEventListener('click', () => removePlayer(btn.dataset.side, parseInt(btn.dataset.i)));
+    btn.addEventListener('click', (e) => removePlayer(btn.dataset.side, parseInt(btn.dataset.i), e.detail === 0));
   });
 }
 
+// V-2: the box printed rounded totals but graded the exact sums, so two sides shown as 62 and 62
+// carried a verdict line reading "Side A +0 (0.1%)". Round ONCE, to the precision the mode prints,
+// and let every number below come from that -- displayed totals, the gap, the percentage, the tag.
+function gnDisplayRound(v) { return MODE === 'dollar' ? Math.round(v * 100) / 100 : Math.round(v); }
+// V-1: grading was percentage-only, so two waiver-fodder free agents worth 2 and 1 scored
+// "Side A wins big" off a one-point gap. A verdict needs an absolute floor as well as a ratio.
+// The floor is FIVE CENTS of value, carried across the modes by the build's own anchor:
+// $1 = RAW_PER_DOLLAR RA. Measured on this build, five cents is 26 RA -- under it sit 147 of the
+// 2,118 board records and NONE of the 409 rostered players, whose 5th percentile is 368 RA. ROS
+// projections are fantasy points with no dollar anchor, but the board is bimodal there: 44 players
+// under 5 FP, then nothing at all until 180. Any floor inside that empty band behaves identically.
+function gnFloor() {
+  if (MODE === 'ros') return 10;                 // projected FP, inside the 5-to-180 gap
+  if (MODE === 'dollar') return 0.05;            // five cents, as the mode prints it
+  return 0.05 * RAW_PER_DOLLAR;                  // the same five cents in RA
+}
+function gnFloorText() {
+  if (MODE === 'ros') return '10 projected FP';
+  if (MODE === 'dollar') return '$0.05';
+  return '$0.05 (' + Math.round(gnFloor()) + ' RA)';
+}
 function renderVerdict() {
   // CORE-2: in ROS mode getValue returns null for a player the projection does not cover --
   // 899 of the 2,118 board records. Summing those as 0 understated whichever side held them,
@@ -1136,29 +1266,45 @@ function renderVerdict() {
   const unA = vA.filter(v => v === null).length;
   const unB = vB.filter(v => v === null).length;
   const un = unA + unB;
-  const sumA = vA.reduce((s,v) => s + (v || 0), 0);
-  const sumB = vB.reduce((s,v) => s + (v || 0), 0);
+  const sumA = gnDisplayRound(vA.reduce((s,v) => s + (v || 0), 0));
+  const sumB = gnDisplayRound(vB.reduce((s,v) => s + (v || 0), 0));
   const floorA = unA ? '≥ ' : '', floorB = unB ? '≥ ' : '';
   $('totalA').textContent = floorA + fmtValue(sumA);
   $('totalB').textContent = floorB + fmtValue(sumB);
   $('vTotalA').textContent = floorA + fmtValue(sumA);
   $('vTotalB').textContent = floorB + fmtValue(sumB);
+  // V-8: the 5% and 15% cutoffs lived only in the source, and nothing said what the percentage
+  // was a percentage OF. The legend under the box carries the rule now; this repeats it in reach
+  // of a pointer, and names the floor in the units the current mode prints.
+  $('vTag').title = 'The percentage is of the larger side. Under 5% is fair, 5 to 15% a slight edge, '
+    + 'above 15% a clear win. A gap under ' + gnFloorText() + ' is called even rather than graded.';
   if (state.A.length === 0 && state.B.length === 0) {
     $('vTag').textContent = 'Pick players';
     $('vTag').className = 'verdict-tag tag-empty';
     $('vDelta').textContent = '-';
     return;
   }
+  // V-4/V-5/V-6: one side empty is a half-built proposal, not a trade. It used to grade as
+  // "Side A wins big (100.0%)"; with a zero-value player on the full side it claimed "Both sides
+  // total 0" naming a side that held nobody; and in ROS mode a lone unprojected player against an
+  // empty side printed "No verdict" when that side can only be ahead.
+  if (state.A.length === 0 || state.B.length === 0) {
+    const empty = state.A.length === 0 ? 'A' : 'B';
+    $('vTag').textContent = 'One-sided';
+    $('vTag').className = 'verdict-tag tag-empty';
+    $('vDelta').textContent = 'Side ' + empty + ' receives nothing yet';
+    return;
+  }
   const diff = sumA - sumB;
   const bigger = Math.max(sumA, sumB);
-  const pct = bigger > 0 ? Math.abs(diff) / bigger * 100 : 0;
-  const winner = diff > 0 ? 'Side A' : (diff < 0 ? 'Side B' : 'even');
   const absDiff = Math.abs(diff);
+  const FLOOR = gnFloor();
   if (un > 0) {
     // A direction is safe only when the side that TRAILS is fully projected: then the margin
     // shown is a floor and can only grow. Fairness never is -- the missing man could be worth
     // 500 FP -- so this path cannot reach tag-fair, which was the wrong answer being printed.
-    const ahead = (unB === 0 && diff > 0) ? 'Side A' : ((unA === 0 && diff < 0) ? 'Side B' : null);
+    // V-1: a floor margin under the materiality floor is not a lead worth naming either
+    const ahead = (unB === 0 && diff >= FLOOR) ? 'Side A' : ((unA === 0 && -diff >= FLOOR) ? 'Side B' : null);
     $('vTag').textContent = ahead ? (ahead + ' ahead, at least') : 'No verdict';
     $('vTag').className = 'verdict-tag ' + (ahead ? 'tag-slight' : 'tag-empty');
     $('vDelta').textContent = ahead
@@ -1176,7 +1322,27 @@ function renderVerdict() {
     $('vDelta').textContent = 'Both sides total 0';
     return;
   }
-  $('vDelta').textContent = (diff === 0 ? 'Even' : winner + ' +' + fmtValue(absDiff) + ' (' + pct.toFixed(1) + '%)');
+  // V-1: both sides are noise. Ratios are meaningless here -- 2 against 1 is a 50% edge and also
+  // nothing at all -- so say that instead of grading it.
+  if (bigger < FLOOR) {
+    $('vTag').textContent = 'Negligible value';
+    $('vTag').className = 'verdict-tag tag-empty';
+    $('vDelta').textContent = 'Both sides under ' + gnFloorText();
+    return;
+  }
+  const winner = diff > 0 ? 'Side A' : 'Side B';
+  // V-1: a real gap has to clear the floor in absolute terms before a ratio can call it an edge.
+  if (absDiff < FLOOR) {
+    $('vTag').textContent = 'Fair trade';
+    $('vTag').className = 'verdict-tag tag-fair';
+    $('vDelta').textContent = diff === 0 ? 'Even' : 'Within ' + gnFloorText() + ' — too close to call';
+    return;
+  }
+  // V-3: the cutoffs used to test the exact percentage while the line printed it rounded, so a true
+  // 4.95% displayed "5.0%" and graded Fair, and a true 14.97% displayed "15.0%" and graded a slight
+  // edge. Round once, then grade the number the reader is looking at.
+  const pct = Math.round(absDiff / bigger * 1000) / 10;
+  $('vDelta').textContent = winner + ' +' + fmtValue(absDiff) + ' (' + pct.toFixed(1) + '%)';
   let cls, tag;
   if (pct < 5) { cls = 'tag-fair'; tag = 'Fair trade'; }
   else if (pct < 15) { cls = 'tag-slight'; tag = winner + ' has slight edge'; }
@@ -1191,10 +1357,19 @@ function renderVerdict() {
     // v50.20: the text box takes no 'change' listener. 'change' fires on blur, and a click on a result
     // blurs the box first; rebuilding the list at that instant destroyed the node under the pointer and
     // swallowed the click, so every add needed two clicks (two taps on a phone).
-    el.addEventListener('input', () => renderResults(side));
-    if (field !== 'search') el.addEventListener('change', () => renderResults(side));
-    el.addEventListener('focus', () => renderResults(side));
+    // SA-1: only the text box opens the list on focus. The focus listener used to sit on all four
+    // fields, so Tab out of the box -- which the keyboard block closes on -- landed on the sort select
+    // and re-opened the list it had just closed, and the list then stayed open while the user worked
+    // on the other side. The selects re-render on change, which is the moment they matter.
+    if (field === 'search') {
+      el.addEventListener('input', () => renderResults(side));
+      el.addEventListener('focus', () => renderResults(side));
+    } else {
+      el.addEventListener('change', () => renderResults(side));
+    }
   });
+  // SA-8: the placeholder clipped to "Search player or filter, then cli" in a 189px box on a phone
+  if (window.innerWidth < 480) $('search'+side).placeholder = 'Search players';
 });
 
 document.addEventListener('click', (e) => {
@@ -1221,18 +1396,33 @@ $('clearAll').addEventListener('click', () => {
 });
 
 function updateLabels() {
-  const blendStr = BLEND === 0 ? 'RA' : (BLEND === 100 ? 'Pure' : (100-BLEND) + '% RA / ' + BLEND + '% Pure');
-  const yearsStr = YEARS === 1 ? '1 year' : YEARS + ' years';
-  const modeStr = MODE === 'dollar' ? '$' : 'Raw';
-  $('modeLabel').textContent = modeStr + ' / ' + yearsStr + ' / ' + blendStr;
-  $('blendReadout').textContent = BLEND === 0 ? '100% RA' : (BLEND === 100 ? '100% Pure' : (100-BLEND) + '% RA / ' + BLEND + '% Pure');
-  if (YEARS === 1) {
-    $('yearsReadout').textContent = '1 year (single peak season)';
-  } else if (YEAR_MODE === 'single') {
-    $('yearsReadout').textContent = 'Year ' + YEARS + ' only';
-  } else {
-    $('yearsReadout').textContent = YEARS + ' year career (sum yrs 1-' + YEARS + ')';
-  }
+  // DO-5: the mode line said "Raw" for a mode every button on the page calls Risk-Adj, "3 years"
+  // when the year mode was single-season year 3, and "$ / ... / RA" where that RA was the blend.
+  // It now uses the controls' own words, in the controls' order.
+  const blendRO = BLEND === 0 ? '100% RA' : (BLEND === 100 ? '100% Pure' : (100-BLEND) + '% RA / ' + BLEND + '% Pure');
+  const modeStr = MODE === 'dollar' ? '$ value' : 'Risk-Adj';
+  const yearsStr = YEARS === 1 ? '1 year' : (YEAR_MODE === 'single' ? 'year ' + YEARS + ' only' : YEARS + ' years cumulative');
+  $('modeLabel').textContent = modeStr + ' / ' + yearsStr + ' / blend ' + blendRO;
+  $('blendReadout').textContent = blendRO;
+  let yearsRO;
+  if (YEARS === 1) yearsRO = '1 year (single peak season)';
+  else if (YEAR_MODE === 'single') yearsRO = 'Year ' + YEARS + ' only';
+  else yearsRO = YEARS + ' year career (sum yrs 1-' + YEARS + ')';
+  $('yearsReadout').textContent = yearsRO;
+  // DO-2: the sliders announced a bare "0" and "1"; aria-valuetext mirrors the readout beside them.
+  $('blendSlider').setAttribute('aria-valuetext', blendRO);
+  $('yearsSlider').setAttribute('aria-valuetext', yearsRO);
+  // This function now owns all four readouts, so the click handlers and the localStorage restore
+  // cannot drift from each other -- they all call here.
+  $('yearModeReadout').textContent = YEAR_MODE === 'single' ? 'Single season' : 'Cumulative';
+  // DO-4: at Career years 1, getValue takes the blendedRaw path and never reaches fadeAdjustedTj,
+  // so the bust-risk toggle changes nothing -- every one of the 1,116 T3/T4 trajectories valued
+  // identically either way (measured 2026-09-11) while the readout still flipped. Say where it applies.
+  const fadeRO = FADE_MODE === 'on' ? 'Bust risk off' : 'Risk-adj';
+  $('fadeModeReadout').textContent = YEARS === 1
+    ? fadeRO + ' \u2014 applies from Career years 2 up; year 1 is unaffected'
+    : fadeRO;
+  $('fadeModeToggle').classList.toggle('inert', YEARS === 1);
 }
 
 
@@ -1240,9 +1430,9 @@ function updateLabels() {
   btn.addEventListener('click', () => {
     FADE_MODE = btn.dataset.mode;
     [...$('fadeModeToggle').querySelectorAll('button')].forEach(b => b.classList.toggle('active', b.dataset.mode === FADE_MODE));
-    $('fadeModeReadout').textContent = FADE_MODE === 'on' ? 'Bust risk off' : 'Risk-adj';
+    updateLabels();
     try { localStorage.setItem('gn-trade-fade-mode', FADE_MODE); } catch(e) {}
-    ['A','B'].forEach(s => renderResults(s));
+    gnRefreshOpenResults();
     renderPicked('A'); renderPicked('B'); renderVerdict();
     try { if (typeof INSP_CURRENT !== 'undefined' && INSP_CURRENT) renderInspector(INSP_CURRENT); } catch(e) {}
   });
@@ -1251,34 +1441,41 @@ function updateLabels() {
   btn.addEventListener('click', () => {
     YEAR_MODE = btn.dataset.mode;
     [...$('yearModeToggle').querySelectorAll('button')].forEach(b => b.classList.toggle('active', b.dataset.mode === YEAR_MODE));
-    $('yearModeReadout').textContent = YEAR_MODE === 'single' ? 'Single season' : 'Cumulative';
     updateLabels();
-    ['A','B'].forEach(s => renderResults(s));
+    gnRefreshOpenResults();
     renderPicked('A'); renderPicked('B'); renderVerdict();
     try { localStorage.setItem('gn-trade-year-mode', YEAR_MODE); } catch(e) {}
   });
 });
 
+// SL-3: renderVerdict is wrapped further down to rebuild all five charts, so every slider tick
+// destroyed and re-created them -- 8.7 to 14.5 ms a tick with six players picked, against 0.9 ms
+// with none, and a phone is several times slower than the Mac that was measured on. While a slider
+// is moving the wrapper defers the rebuild; the change event at release, and a trailing timer,
+// bring the charts up to date. Picks and toggles still rebuild at once.
 $('blendSlider').addEventListener('input', (e) => {
   BLEND = parseInt(e.target.value);
   updateLabels();
-  ['A','B'].forEach(s => renderResults(s));
-  renderPicked('A'); renderPicked('B'); renderVerdict();
+  gnRefreshOpenResults();
+  window.GN_SLIDING = true;
+  try { renderPicked('A'); renderPicked('B'); renderVerdict(); } finally { window.GN_SLIDING = false; }
   try { localStorage.setItem('gn-trade-blend', String(BLEND)); } catch(e) {}
 });
 
 $('yearsSlider').addEventListener('input', (e) => {
   YEARS = parseInt(e.target.value);
   updateLabels();
-  ['A','B'].forEach(s => renderResults(s));
-  renderPicked('A'); renderPicked('B'); renderVerdict();
+  gnRefreshOpenResults();
+  window.GN_SLIDING = true;
+  try { renderPicked('A'); renderPicked('B'); renderVerdict(); } finally { window.GN_SLIDING = false; }
   try { localStorage.setItem('gn-trade-years', String(YEARS)); } catch(e) {}
 });
+['blendSlider','yearsSlider'].forEach(id => $(id).addEventListener('change', () => { if (typeof gnChartsNow === 'function') gnChartsNow(); }));
 
 try {
   const saved = JSON.parse(localStorage.getItem('gn-trade-state') || '{}');
   if (saved.A && Array.isArray(saved.A)) state.A = gnResolveSaved(saved.A);
-  if (saved.B && Array.isArray(saved.B)) state.B = gnResolveSaved(saved.B).filter(p => !state.A.some(a => a.n === p.n));
+  if (saved.B && Array.isArray(saved.B)) state.B = gnResolveSaved(saved.B).filter(p => !state.A.some(a => gnPKey(a) === gnPKey(p)));
   const savedMode = localStorage.getItem('gn-trade-mode');
   if (savedMode === 'dollar') {
     MODE = 'dollar';
@@ -1298,13 +1495,11 @@ try {
   if (savedYearMode === 'single' || savedYearMode === 'cumulative') {
     YEAR_MODE = savedYearMode;
     [...$('yearModeToggle').querySelectorAll('button')].forEach(b => b.classList.toggle('active', b.dataset.mode === YEAR_MODE));
-    $('yearModeReadout').textContent = YEAR_MODE === 'single' ? 'Single season' : 'Cumulative';
   }
   const savedFadeMode = localStorage.getItem('gn-trade-fade-mode');
   if (savedFadeMode === 'on' || savedFadeMode === 'off') {
     FADE_MODE = savedFadeMode;
     [...$('fadeModeToggle').querySelectorAll('button')].forEach(b => b.classList.toggle('active', b.dataset.mode === FADE_MODE));
-    $('fadeModeReadout').textContent = FADE_MODE === 'on' ? 'Bust risk off' : 'Risk-adj';
   }
 } catch(e) {}
 updateLabels();
@@ -1422,9 +1617,13 @@ function gnNoDataHide(el){
 // is a single rest-of-season projection with neither. They cannot follow ROS, so the axis
 // says what it is rather than leaving the reader to assume it matches the totals above.
 function gnValueAxisTitle(){
-  if (MODE === 'dollar') return '$ value';
   if (MODE === 'ros') return 'Risk-Adj \u2014 dynasty values, not ROS';
-  return 'Risk-Adj';
+  // SL-2: gnCareerArc anchors on the 2026 value and follows the engine's RA shape, so neither
+  // slider reaches these two charts while the stacked bar and the totals follow both. At 100% Pure
+  // and ten years the side total read 17,110 and the stacked bar 7,872 for a player whose arc still
+  // started at 1,111 under a bare "Risk-Adj". The title says so once a slider is off its default.
+  const base = MODE === 'dollar' ? '$ value' : 'Risk-Adj';
+  return (BLEND > 0 || YEARS > 1) ? base + ' \u2014 2026 anchor, sliders not applied' : base;
 }
 
 function renderPlayerChart() { return gnRenderArcPlayer(); }
@@ -1463,7 +1662,14 @@ function gnCareerArc(p){
     if(tj){ return k<=9 ? tj[k]/tj[0] : (tj[9]/tj[0])*((tj[8]>0)?(tj[9]/tj[8]):1); }
     const a0 = gnAgeFactorCanon(age,pit,dec)||1; return gnAgeFactorCanon(age+k,pit,dec)/a0;
   };
-  const prospect = (p.t==='T4'||p.t==='T5');
+  // TT-6: T4/T5 means "not established", not "has never played", and the tier alone decided that a
+  // player had NO past at all. Right for the 709 T4s aged 25 and under; wrong for the 235 T4/T5
+  // players who are older -- Craig Kimbrel at 38, Sandy Leon at 37, Mike Clevinger at 35. Only 54 of
+  // the 763 T4s are over 25, while 181 of the 203 T5s are, because T5 is a fringe tier rather than a
+  // prospect one. Keep the no-past treatment for genuine prospects; everyone else gets the
+  // age-implied debut this same line already uses. Affects both value-over-time cards, by design:
+  // an old player who materialises out of nowhere in 2026 is wrong on either of them.
+  const prospect = (p.t==='T4'||p.t==='T5') && Math.round(age) <= 25;
   let onset = prospect ? GN_NOW_Y : (GN_NOW_Y - Math.max(0, Math.round(age)-22));
   onset = Math.max(GN_Y_LO, Math.min(GN_NOW_Y, onset));
   const vals=[];
@@ -1488,6 +1694,46 @@ const gnFutureShade = {
     ctx.restore();
   }
 };
+// PV-4: PALETTE holds twenty colours and the datasets indexed into it with i % length, so the
+// twenty-first pick drew in the same navy as the first -- Ohtani and Garrett Crochet, indistinguishable.
+// Past the palette, rotate hue by a step coprime with 360 so every further line gets its own colour.
+function gnSeriesColor(i){
+  if (i < PALETTE.length) return PALETTE[i];
+  return 'hsl(' + ((i * 47) % 360) + ',55%,38%)';
+}
+// SB-2: the stacked bars want the same colour at 80% alpha. A hex takes a suffix; the generated
+// hsl() past the palette does not, so it becomes hsla() instead of silently producing a bad value.
+function gnSeriesFill(i){
+  const c = gnSeriesColor(i);
+  return c.charAt(0) === '#' ? c + 'cc' : c.replace('hsl(', 'hsla(').replace(')', ',0.8)');
+}
+// PV-3: the tooltips printed toFixed(2) in every mode, so a Risk-Adj point read 1160.37 beside an
+// axis reading 1160 and side totals reading 1,160. Money keeps its cents; everything else rounds
+// and takes separators, matching fmtValue.
+function gnChartNum(unit, v){
+  if (v == null) return '-';
+  return unit === '$' ? '$' + v.toFixed(2) : Math.round(v).toLocaleString();
+}
+// PV-1: a missing daily shape is a missing VALUE SERIES, which is not the same claim as "no games".
+// 1,538 of the 2,118 board records carry no shape and 842 of those show games, at-bats or innings
+// (JR Ritchie 14 games and 58 innings; Joe Mack 90 games and 264 at-bats). Say which case it is.
+function gnPlayedIn2026(p){ return (p.gp||0) > 0 || (p.ab||0) > 0 || (p.ip||0) > 0 || (p.fp25||0) > 0; }
+function gnFlatNote(p){ return gnPlayedIn2026(p) ? ' \u2014 flat: no daily history on file' : ' \u2014 flat: no 2026 games'; }
+// PV-5: the wrap is a fixed 220px and Chart.js draws the legend inside it, so twelve picks left a
+// 116px plot and twenty-four left 76px. Give the box room per legend row instead, up to a cap.
+function gnFitChartWrap(canvasId, n){
+  const cv = document.getElementById(canvasId); if (!cv) return;
+  const wrap = cv.closest('.chart-canvas-wrap'); if (!wrap) return;
+  wrap.style.height = n ? Math.min(420, 220 + Math.max(0, n - 6) * 14) + 'px' : '';
+}
+// PV-7: a one-line description of what the canvas is showing, for anything that cannot see it.
+function gnDescribeChart(canvasId, text){
+  const cv = document.getElementById(canvasId); if (cv) cv.setAttribute('aria-label', text);
+}
+function gnArcNames(list){
+  const shown = list.slice(0, 8).map(p => p.n);
+  return shown.join(', ') + (list.length > shown.length ? ' and ' + (list.length - shown.length) + ' more' : '');
+}
 function gnArcDataset(label, data, color, w){
   return { label, data, borderColor: color, backgroundColor: color+'22',
     borderWidth: w||2.4, pointRadius: 0, pointHoverRadius: 4, tension: 0.28, spanGaps: false, fill: false,
@@ -1497,7 +1743,21 @@ function gnArcOptions(unit, legendSize){
   return { responsive:true, maintainAspectRatio:false, interaction:{mode:'nearest',intersect:false},
     plugins:{ legend:{position:'bottom',labels:{font:{size:legendSize||10},boxWidth:12}},
       tooltip:{callbacks:{ title:(items)=>items.length?GN_ARC_YEARS[items[0].dataIndex]+(items[0].dataIndex>GN_NOW_IDX?' (proj.)':(items[0].dataIndex<GN_NOW_IDX?' (past)':'')):'' ,
-        label:(c)=>c.dataset.label+': '+unit+(c.parsed.y==null?'-':c.parsed.y.toFixed(2)) }} },
+        label:(c)=>c.dataset.label+': '+gnChartNum(unit, c.parsed.y),
+        // TT-1: a career year sums only the players whose arc has started, so the line steps up when
+        // a player ENTERS it rather than when value grows. 1,868 of the 2,118 records start after
+        // 2016, so nearly every multi-player side steps. Datasets that carry gnCounts say how many
+        // players stand behind the point; the player card sets none and is unaffected.
+        footer:(items)=>{
+          const seen = {}, rows = [];
+          items.forEach(it => {
+            const c = it.dataset.gnCounts;
+            if (!c || c[it.dataIndex] == null || seen[it.datasetIndex]) return;
+            seen[it.datasetIndex] = 1;
+            rows.push(c[it.dataIndex] + ' of ' + it.dataset.gnTotal + ' players counted');
+          });
+          return rows;
+        } }} },
     scales:{ y:{ ticks:{font:{size:10},callback:(v,i,ticks)=>gnAxisTick(unit,v,ticks)}, beginAtZero:false,
           title:{display:true,text:gnValueAxisTitle(),font:{size:10}} },
       x:{ type:'category', ticks:{font:{size:9},maxTicksLimit:11,autoSkip:true} } } };
@@ -1506,31 +1766,65 @@ function gnRenderArcPlayer(){
   const ctx = document.getElementById('playerChart').getContext('2d');
   const allPlayers = [...state.A, ...state.B];
   const emptyMsg = document.getElementById('playerChartEmpty');
-  if (allPlayers.length === 0){ if(chartPlayer){chartPlayer.destroy();chartPlayer=null;} gnNoData(emptyMsg); return; }
+  if (allPlayers.length === 0){
+    if(chartPlayer){chartPlayer.destroy();chartPlayer=null;}
+    gnFitChartWrap('playerChart', 0);
+    gnDescribeChart('playerChart', 'Player value over time. No players picked yet.');
+    gnNoData(emptyMsg); return;
+  }
   gnNoDataHide(emptyMsg);
   const unit = (MODE==='dollar')?'$':'';
+  gnFitChartWrap('playerChart', allPlayers.length);
   const datasets = allPlayers.map((p,i)=>{
     const isA = state.A.some(x=>x.n===p.n && x.o===p.o);
-    return gnArcDataset(p.n+' ('+(isA?'A':'B')+')', gnCareerArc(p), PALETTE[i%PALETTE.length]);
+    return gnArcDataset(p.n+' ('+(isA?'A':'B')+')', gnCareerArc(p), gnSeriesColor(i));
   });
+  gnDescribeChart('playerChart', 'Player value over time, career view. ' + GN_ARC_YEARS[0] + ' to '
+    + GN_ARC_YEARS[GN_ARC_YEARS.length-1] + ', ' + gnValueAxisTitle() + '. '
+    + allPlayers.length + (allPlayers.length===1?' player: ':' players: ') + gnArcNames(allPlayers) + '.');
   const config = { type:'line', data:{labels:GN_ARC_YEARS, datasets}, options:gnArcOptions(unit,10), plugins:[gnFutureShade] };
   if(chartPlayer){ chartPlayer.destroy(); } chartPlayer = new Chart(ctx, config);
 }
 function gnRenderArcTeam(){
   const ctx = document.getElementById('teamTotalChart').getContext('2d');
   const emptyMsg = document.getElementById('teamTotalEmpty');
-  if (state.A.length===0 && state.B.length===0){ if(chartTeamTotal){chartTeamTotal.destroy();chartTeamTotal=null;} gnNoData(emptyMsg); return; }
+  if (state.A.length===0 && state.B.length===0){
+    if(chartTeamTotal){chartTeamTotal.destroy();chartTeamTotal=null;}
+    gnDescribeChart('teamTotalChart', 'Team total over time. No players picked yet.');
+    gnNoData(emptyMsg); return;
+  }
   gnNoDataHide(emptyMsg);
   const unit = (MODE==='dollar')?'$':'';
-  function teamSum(players){
+  // TT-1: carry the per-year contributor count alongside the sum, so the tooltip can say how much
+  // of the side is actually in each point instead of leaving a roster-entry step to read as growth.
+  function teamSeries(players){
     const sums = new Array(GN_ARC_YEARS.length).fill(null);
-    players.forEach(p=>{ const arc=gnCareerArc(p); for(let k=0;k<arc.length;k++){ if(arc[k]!=null) sums[k]=(sums[k]||0)+arc[k]; } });
-    return sums;
+    const counts = new Array(GN_ARC_YEARS.length).fill(0);
+    players.forEach(p=>{ const arc=gnCareerArc(p); for(let k=0;k<arc.length;k++){ if(arc[k]!=null){ sums[k]=(sums[k]||0)+arc[k]; counts[k]++; } } });
+    return { sums, counts };
   }
-  const datasets=[];
-  if(state.A.length>0) datasets.push(gnArcDataset('Team A total', teamSum(state.A), COLOR_A, 3));
-  if(state.B.length>0) datasets.push(gnArcDataset('Team B total', teamSum(state.B), COLOR_B, 3));
-  const config = { type:'line', data:{labels:GN_ARC_YEARS, datasets}, options:gnArcOptions(unit,11), plugins:[gnFutureShade] };
+  const datasets=[]; let stepped=false;
+  // TT-2: the season view of this same card calls these "Side A receives"; so does every other
+  // surface on the page. "Team A total" was this one card's private vocabulary.
+  [['A', state.A, COLOR_A], ['B', state.B, COLOR_B]].forEach(([side, list, color])=>{
+    if(!list.length) return;
+    const s = teamSeries(list);
+    const d = gnArcDataset('Side ' + side + ' receives (' + list.length + ')', s.sums, color, 3);
+    d.gnCounts = s.counts; d.gnTotal = list.length;
+    const entered = s.counts.filter(c=>c>0);
+    if(entered.length && Math.min.apply(null, entered) < list.length) stepped = true;
+    datasets.push(d);
+  });
+  const options = gnArcOptions(unit,11);
+  if(stepped){
+    options.plugins.subtitle = { display:true, color:'#6e6d68', font:{size:10,style:'italic'}, padding:{bottom:4},
+      text:'Earlier years count only the players who had started by then, so the line steps up as they enter' };
+  }
+  const allPicked = state.A.concat(state.B);
+  gnDescribeChart('teamTotalChart', 'Team total over time, career view. ' + GN_ARC_YEARS[0] + ' to '
+    + GN_ARC_YEARS[GN_ARC_YEARS.length-1] + ', ' + gnValueAxisTitle() + '. Side A ' + state.A.length
+    + ', Side B ' + state.B.length + ' players.' + (stepped ? ' Earlier years count fewer players.' : ''));
+  const config = { type:'line', data:{labels:GN_ARC_YEARS, datasets}, options, plugins:[gnFutureShade] };
   if(chartTeamTotal){ chartTeamTotal.destroy(); } chartTeamTotal = new Chart(ctx, config);
 }
 
@@ -1539,30 +1833,47 @@ function renderStackedBarChart() {
   const emptyMsg = document.getElementById('stackedBarEmpty');
   if (state.A.length === 0 && state.B.length === 0) {
     if (chartStacked) { chartStacked.destroy(); chartStacked = null; }
+    gnFitChartWrap('stackedBarChart', 0);
+    gnDescribeChart('stackedBarChart', 'Trade comparison, stacked by player. No players picked yet.');
     gnNoData(emptyMsg);
     return;
   }
   gnNoDataHide(emptyMsg);
 
-  // For each side, build a dataset per player (so it stacks)
-  // labels = ['Team A', 'Team B']
-  const labels = ['Team A', 'Team B'];
+  const unit = (MODE === 'dollar') ? '$' : '';
+  // SB-4: "Team A" was this card's private wording. Every other surface says "Side A receives",
+  // and the count makes a one-sided proposal explain its own empty row.
+  const labels = ['Side A receives (' + state.A.length + ')', 'Side B receives (' + state.B.length + ')'];
   const datasets = [];
   // Combined player list for consistent coloring
   const allPlayers = [];
   state.A.forEach(p => allPlayers.push({ p, side: 'A' }));
   state.B.forEach(p => allPlayers.push({ p, side: 'B' }));
+  let unprojected = 0, sumA = 0, sumB = 0;
   allPlayers.forEach((item, i) => {
     const val = getValue(item.p);
+    // SB-1: in ROS mode getValue is null for 42% of the board. Such a player drew no segment but
+    // kept his legend swatch, so the card showed three players and two bars with nothing saying
+    // why. Name it on his own legend entry, the way the value cards label a gap.
+    if (val == null) unprojected++;
+    else if (item.side === 'A') sumA += val; else sumB += val;
+    // SB-7: bare names on the one card whose whole job is comparing two sides
+    const label = item.p.n + ' (' + item.side + ')' + (val == null ? ' \u2014 no ROS projection' : '');
     const data = item.side === 'A' ? [val, 0] : [0, val];
     datasets.push({
-      label: item.p.n,
+      label: label,
       data,
-      backgroundColor: PALETTE[i % PALETTE.length] + 'cc',
-      borderColor: PALETTE[i % PALETTE.length],
+      backgroundColor: gnSeriesFill(i),
+      borderColor: gnSeriesColor(i),
       borderWidth: 1
     });
   });
+  // SB-3: every player is a dataset here, so the legend crowds this card harder than its
+  // neighbours -- twenty-four picks left a 74px plot in the fixed 220px box.
+  gnFitChartWrap('stackedBarChart', allPlayers.length);
+  gnDescribeChart('stackedBarChart', 'Trade comparison, stacked by player. '
+    + labels[0] + ' totalling ' + gnChartNum(unit, sumA) + ', ' + labels[1] + ' totalling '
+    + gnChartNum(unit, sumB) + '.' + (unprojected ? ' ' + unprojected + ' with no ROS projection.' : ''));
 
   const config = {
     type: 'bar',
@@ -1572,9 +1883,19 @@ function renderStackedBarChart() {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } },
+        // SB-1: the side cards mark an unprojected total with a floor sign; these bars are the same
+        // floor and said nothing. They agree numerically, so this is what was missing, not the math.
+        subtitle: unprojected
+          ? { display: true, color: '#6e6d68', font: { size: 10, style: 'italic' }, padding: { bottom: 4 },
+              text: unprojected + (unprojected === 1 ? ' picked player has' : ' picked players have')
+                + ' no ROS projection, so the bars show a floor' }
+          : { display: false },
         tooltip: {
           callbacks: {
-            label: (ctx) => ctx.dataset.label + ': ' + (MODE === 'dollar' ? '$' + ctx.parsed.x.toFixed(2) : Math.round(ctx.parsed.x))
+            // SB-1: Math.round(null) printed a confident 0 for a player nothing was projected for,
+            // the same conflation the verdict box was fixed for. SB-5: 1160 became 1,160.
+            label: (ctx) => ctx.dataset.label + ': '
+              + (ctx.parsed.x == null ? 'n/a' : gnChartNum(unit, ctx.parsed.x))
           }
         }
       },
@@ -1584,13 +1905,15 @@ function renderStackedBarChart() {
       }
     }
   };
-  if (chartStacked) { chartStacked.data = config.data; chartStacked.options = config.options; chartStacked.update(); }
-  else chartStacked = new Chart(ctx, config);
+  // reassigning .options on a live chart does not reliably re-resolve plugin blocks, and the
+  // subtitle above has to appear and disappear with the picks, so rebuild like the other cards do
+  if (chartStacked) { chartStacked.destroy(); }
+  chartStacked = new Chart(ctx, config);
 }
 
 // ====================== MANAGER COMPARISON CHART ======================
 let MGR_LEVEL = 'org';
-let MGR_ROSTERS=[], MGR_COUNTS=[], MGR_LABELS=[], MGR_DATA=[], DEPTH_ORG=null;
+let MGR_ROSTERS=[], MGR_COUNTS=[], MGR_LABELS=[], MGR_DATA=[], MGR_MISSING=[], DEPTH_ORG=null;
 const LEVEL_LABELS = {org:'Full org', mlb:'MLB roster', aaa:'AAA roster', optimized:'22-Man (fieldable)', keeper30:'30-Man (keeper)', opt30:'30-Man (fieldable)'};
 let MGR_POS = '';
 let chartMgr;
@@ -1760,12 +2083,27 @@ function externalMgrTooltip(context){
   const idx=tooltip.dataPoints[0].dataIndex;
   const org=MGR_LABELS[idx]||chart.data.labels[idx];
   const list=MGR_ROSTERS[idx]||[], ct=(MGR_COUNTS[idx]!=null?MGR_COUNTS[idx]:list.length), total=chart.data.datasets[0].data[idx];
-  let html='<div style="font-weight:700;border-bottom:1px solid #BD9B60;margin-bottom:4px;padding-bottom:3px">'+_iesc(org)+' — '+fmtMgrVal(total)+'  ('+ct+' players)</div>';
-  html+='<div style="columns:'+(list.length>26?2:1)+';column-gap:20px">'+list.map(function(e,i){return (i+1)+'. '+_iesc(e.n)+' — '+fmtMgrVal(e.v);}).join('<br>')+'</div>';
+  // MC-6: mark the total as a floor when some of the roster carries no projection
+  var miss=(MGR_MISSING&&MGR_MISSING[idx])||0;
+  let html='<div style="font-weight:700;border-bottom:1px solid #BD9B60;margin-bottom:4px;padding-bottom:3px">'+_iesc(org)+' — '+(miss?'\u2265 ':'')+fmtMgrVal(total)+'  ('+ct+' players'+(miss?', '+miss+' unprojected':'')+')</div>';
+  // MC-1: this listed every player. 52 rows fit a desktop and a portrait phone, but the box caps at
+  // 88vh and sets pointer-events:none, so on a landscape phone (375px tall) the content ran 414px
+  // against a 330px cap and the overflow could not be scrolled to by any means. Show what fits and
+  // point the rest at the depth chart, which lists a full roster in a panel that CAN be scrolled.
+  var cols=(list.length>26?2:1);
+  var ROW=14.5, HEADER=19, FOOTER=19, PAD=14;            // measured, not guessed
+  var boxMax=Math.floor(window.innerHeight*0.88);        // the CSS max-height on this box
+  var usable=Math.max(ROW*3, boxMax-PAD-HEADER-FOOTER);  // always reserve the overflow line
+  var cap=Math.max(6, Math.floor(usable/ROW))*cols;
+  var shown=list.slice(0,cap), hidden=list.length-shown.length;
+  html+='<div style="columns:'+cols+';column-gap:20px">'+shown.map(function(e,i){return (i+1)+'. '+_iesc(e.n)+' — '+fmtMgrVal(e.v);}).join('<br>')+'</div>';
+  if(hidden>0) html+='<div style="margin-top:4px;padding-top:3px;border-top:1px solid #BD9B60;font-style:italic">and '+hidden+' more — open the depth chart for the full roster</div>';
   el.innerHTML=html; el.style.opacity=1;
   const r=chart.canvas.getBoundingClientRect();
   let left=r.left+window.scrollX+tooltip.caretX+14, top=r.top+window.scrollY+12, ew=el.offsetWidth;
   if(left+ew>window.scrollX+window.innerWidth-8) left=r.left+window.scrollX+tooltip.caretX-ew-14;
+  const eh=el.offsetHeight, topMin=window.scrollY+8, topMax=window.scrollY+window.innerHeight-eh-8;
+  top=Math.max(topMin, Math.min(top, topMax));
   el.style.left=Math.max(8,left)+'px'; el.style.top=top+'px';
 }
 function rosterForLevel(org){
@@ -1780,6 +2118,9 @@ function rosterForLevel(org){
 const DEPTH_POSITIONS=['C','1B','2B','3B','SS','LF','CF','RF','DH','SP','RP'];
 function renderDepth(org){
   DEPTH_ORG=org;
+  // MC-4: a bar click and the select both land here, so sync the control in one place
+  var _pick=document.getElementById('mgrDepthPick');
+  if(_pick && _pick.value!==org) _pick.value=org;
   const roster=rosterForLevel(org);
   const empty=document.getElementById('mgrDepthEmpty'); if(empty) empty.style.display='none';
   const head=document.getElementById('mgrDepthOrg'); if(head) head.textContent='\u2014 '+org+' ('+(LEVEL_LABELS[MGR_LEVEL]||'')+')';
@@ -1879,7 +2220,8 @@ function renderMgrEkg(){
   const wrap = document.getElementById('mgrEkgWrap');
   const cv = document.getElementById('mgrEkgChart');
   if(!wrap || !cv) return;
-  if(!MGR_EKG_ORG){ wrap.style.display='none'; if(chartMgrEkg){ chartMgrEkg.destroy(); chartMgrEkg=null; } return; }
+  if(!MGR_EKG_ORG){ wrap.style.display='none'; if(chartMgrEkg){ chartMgrEkg.destroy(); chartMgrEkg=null; }
+    gnDescribeChart('mgrEkgChart', 'Value over season. No manager selected.'); return; }
   wrap.style.display='block';
   const head = document.getElementById('mgrEkgOrg');
   // MGR-2: this line is daily dollars from gnDollarOnDay, which has no slider-aware or
@@ -2038,18 +2380,25 @@ function renderMgrChart() {
     else if (MGR_LEVEL === 'keeper30') filtered = getKeeper30(org);
     else if (MGR_LEVEL === 'opt30') filtered = getOptimized30(org);
     filtered = filtered.filter(passesPosFilter);
-    const list = filtered.map(p => ({ n: p.n, v: getValue(p) })).sort((a, b) => b.v - a.v);
-    const total = filtered.reduce((s, p) => s + getValue(p), 0);
-    return { org, total, count: filtered.length, list };
+    // MC-6: the depth chart inside this same card already treats a null as absence rather than zero
+    // (CORE-2b). This total added getValue straight into a sum, where null coerces to 0. No rostered
+    // player is unprojected on this build, so it never bit -- but the two halves of one card
+    // disagreed about what a missing projection means, and only one of them was right.
+    const list = filtered.map(p => ({ n: p.n, v: getValue(p) }))
+      .sort((a, b) => (b.v == null ? -Infinity : b.v) - (a.v == null ? -Infinity : a.v));
+    const have = list.filter(e => e.v != null);
+    const total = have.reduce((s, e) => s + e.v, 0);
+    return { org, total, count: filtered.length, list, missing: list.length - have.length };
   });
   totals.sort((a, b) => b.total - a.total);
   const labels = totals.map(t => t.org);
   const data = totals.map(t => t.total);
   const counts = totals.map(t => t.count);
   const rosters = totals.map(t => t.list);
+  const missing = totals.map(t => t.missing);
   const bgColors = labels.map(o => MGR_COLORS[o]);
   const borderColors = labels.map(o => MGR_BORDER[o] || MGR_COLORS[o]);
-  MGR_ROSTERS=rosters; MGR_COUNTS=counts; MGR_LABELS=labels; MGR_DATA=data;
+  MGR_ROSTERS=rosters; MGR_COUNTS=counts; MGR_LABELS=labels; MGR_DATA=data; MGR_MISSING=missing;
 
   // MGR-8: this used to declare its own LEVEL_LABELS, shadowing the global one with
   // different wording, so the bar's dataset label and the EKG/depth headers called the
@@ -2069,29 +2418,13 @@ function renderMgrChart() {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: {
-          enabled: false, external: externalMgrTooltip,
-          titleFont: { size: 12 },
-          bodyFont: { size: 10 },
-          callbacks: {
-            label: (ctx) => {
-              const v = ctx.parsed.y;
-              const ct = counts[ctx.dataIndex];
-              const fmtV = MODE === 'dollar' ? '$' + v.toFixed(2) : Math.round(v).toLocaleString();
-              return 'Total: ' + fmtV + '  (' + ct + ' players)';
-            },
-            afterBody: (items) => {
-              const list = rosters[items[0].dataIndex] || [];
-              const cap = window.innerWidth < 760 ? 15 : list.length;
-              const out = list.slice(0, cap).map((e, i) => {
-                const fv = MODE === 'dollar' ? '$' + e.v.toFixed(2) : Math.round(e.v).toLocaleString();
-                return (i + 1) + '. ' + e.n + '  \u2014  ' + fv;
-              });
-              if (list.length > cap) out.push('+ ' + (list.length - cap) + ' more\u2026');
-              return [''].concat(out);
-            }
-          }
-        }
+        // MC-5: enabled:false with an external renderer means Chart.js never draws this tooltip,
+        // so the label and afterBody callbacks that used to sit here were unreachable. They also
+        // formatted numbers by inlining the mode test while the renderer that does run uses
+        // fmtMgrVal -- two formatters for the same figures, one of them free to drift unnoticed.
+        // The phone build's dead copy even carried a 15-row cap for narrow screens, so the guard
+        // against the overflow MC-1 fixes was sitting in code that could never execute.
+        tooltip: { enabled: false, external: externalMgrTooltip }
       },
       scales: {
         y: { ticks: { font: { size: 10 }, callback: fmtYAxis }, beginAtZero: true, title: { display: true, text: MODE === 'dollar' ? 'Total $ value' : (MODE === 'ros' ? 'Projected ROS FP' : 'Total RA'), font: { size: 11 } } },
@@ -2099,8 +2432,14 @@ function renderMgrChart() {
       }
     }
   };
-  if (chartMgr) { chartMgr.data = config.data; chartMgr.options = config.options; chartMgr.update(); }
-  else chartMgr = new Chart(ctx, config);
+  const _missTotal = missing.reduce((s, m) => s + m, 0);
+  gnDescribeChart('mgrChart', 'Manager comparison, ' + labels.length + ' organizations, ' + levelLabel
+    + posLabel + '. ' + labels.map((o, i) => o + ' ' + fmtMgrVal(data[i])).join(', ') + '.'
+    + (_missTotal ? ' ' + _missTotal + ' players carry no projection and are left out of the totals.' : ''));
+  // MC-7: rebuild, like the other chart cards. Reassigning .options on a live chart does not
+  // reliably re-resolve plugin blocks.
+  if (chartMgr) { chartMgr.destroy(); }
+  chartMgr = new Chart(ctx, config);
   if (DEPTH_ORG) renderDepth(DEPTH_ORG);
 }
 
@@ -2117,6 +2456,26 @@ document.getElementById('mgrPosFilter').addEventListener('change', (e) => {
   renderMgrChart();
   if(MGR_EKG_ORG) renderMgrEkg();
 });
+// MC-4: the keyboard route to the depth chart and the season line. A bar click opens both, so this
+// opens both; picking the blank option closes both, which clicking never offered at all.
+(function(){
+  const pick = document.getElementById('mgrDepthPick');
+  if(!pick) return;
+  MANAGER_ORGS.forEach(function(o){
+    const opt = document.createElement('option'); opt.value = o; opt.textContent = o; pick.appendChild(opt);
+  });
+  pick.addEventListener('change', function(){
+    const org = pick.value;
+    if(org){ renderDepth(org); MGR_EKG_ORG = org; renderMgrEkg(); }
+    else {
+      DEPTH_ORG = null;
+      const grid = document.getElementById('mgrDepthGrid'); if(grid) grid.innerHTML = '';
+      const empty = document.getElementById('mgrDepthEmpty'); if(empty) empty.style.display = 'block';
+      const head = document.getElementById('mgrDepthOrg'); if(head) head.textContent = '';
+      MGR_EKG_ORG = null; renderMgrEkg();
+    }
+  });
+})();
 
 // ====================== INJURY RISK CHART ======================
 let chartInjuryRisk;
@@ -2142,6 +2501,8 @@ function renderInjuryRiskChart() {
   const emptyMsg = document.getElementById('injuryRiskEmpty');
   if (state.A.length === 0 && state.B.length === 0) {
     if (chartInjuryRisk) { chartInjuryRisk.destroy(); chartInjuryRisk = null; }
+    gnFitChartWrap('injuryRiskChart', 0);
+    gnDescribeChart('injuryRiskChart', 'Injury risk assessment. No players picked yet.');
     gnNoData(emptyMsg);
     return;
   }
@@ -2152,6 +2513,8 @@ function renderInjuryRiskChart() {
   const _picked = state.A.concat(state.B);
   if (!_picked.some(p => Math.abs(p.ir || 0) > 0)) {
     if (chartInjuryRisk) { chartInjuryRisk.destroy(); chartInjuryRisk = null; }
+    gnFitChartWrap('injuryRiskChart', 0);
+    gnDescribeChart('injuryRiskChart', 'Injury risk assessment. None of the picked players carries an IL penalty.');
     gnNoData(emptyMsg, _picked.length === 1
       ? _picked[0].n + ' carries no IL penalty \u2014 nothing to chart.'
       : 'None of the ' + _picked.length + ' players picked carries an IL penalty \u2014 nothing to chart.');
@@ -2159,16 +2522,24 @@ function renderInjuryRiskChart() {
   }
   gnNoDataHide(emptyMsg);
 
-  const labels = ['Team A', 'Team B'];
-  // Each player becomes a dataset so they stack with their own color
+  // IR-2: "Team A" was the last card still using that wording. No count here, unlike the sibling
+  // cards: only players carrying a penalty are drawn, so a picked-player count would contradict
+  // the number of segments. The counts go in the caption line below instead.
+  const labels = ['Side A receives', 'Side B receives'];
+  // IR-5: healthy players used to become datasets of [0, 0] -- six of eight on a typical pick --
+  // invisible, filtered back out of the legend, and the only reason the tooltip needed a null
+  // branch. They are simply not charted now, which is also what the caption under the card says.
   const allPlayers = [];
-  state.A.forEach(p => allPlayers.push({ p, side: 'A' }));
-  state.B.forEach(p => allPlayers.push({ p, side: 'B' }));
+  state.A.forEach(p => { if (Math.abs(p.ir || 0) > 0) allPlayers.push({ p, side: 'A' }); });
+  state.B.forEach(p => { if (Math.abs(p.ir || 0) > 0) allPlayers.push({ p, side: 'B' }); });
+  const omitted = _picked.length - allPlayers.length;
+  let totA = 0, totB = 0;
 
   const datasets = allPlayers.map(item => {
     const ir = item.p.ir || 0;
     // Bar value is the ABS of injury risk (negative numbers turned positive for display)
     const val = Math.abs(ir);
+    if (item.side === 'A') totA += val; else totB += val;
     const data = item.side === 'A' ? [val, 0] : [0, val];
     return {
       label: item.p.n + ' (' + riskLabel(ir) + ')',
@@ -2178,6 +2549,13 @@ function renderInjuryRiskChart() {
       borderWidth: 1
     };
   });
+  // IR-3: the one card in this row that never got the adaptive box. Sixteen charted players left
+  // a 73px plot inside the fixed 220px wrap.
+  gnFitChartWrap('injuryRiskChart', allPlayers.length);
+  gnDescribeChart('injuryRiskChart', 'Injury risk assessment, stacked by player. Side A total '
+    + totA.toFixed(2) + ', Side B total ' + totB.toFixed(2) + '. Charting ' + allPlayers.length
+    + ' of ' + _picked.length + ' picked players'
+    + (omitted ? '; the other ' + omitted + ' carry no IL penalty.' : '.'));
 
   const config = {
     type: 'bar',
@@ -2185,24 +2563,27 @@ function renderInjuryRiskChart() {
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12, filter: (item, chartData) => {
-          // Hide players with ir === 0 from legend to reduce noise.
-          // CHT-2: this read `chartInjuryRisk` before the `= new Chart(...)` that assigns it.
-          // Chart.js 4.5.0 runs buildLabels() inside the constructor's first update, so on the
-          // very first render the variable was still undefined, the filter returned undefined
-          // for every item, and the legend collapsed to zero height -- one orange bar with
-          // nothing naming the player or the risk tier. Use the data Chart.js hands the
-          // callback instead of reaching back for the instance.
-          const ds = chartData && chartData.datasets && chartData.datasets[item.datasetIndex];
-          return !!(ds && ((ds.data[0] || 0) > 0 || (ds.data[1] || 0) > 0));
-        } } },
+        // IR-5: no legend filter is needed now that only players with a penalty become datasets.
+        // Keeping the history: CHT-2 was a filter that read `chartInjuryRisk` before the
+        // `= new Chart(...)` that assigns it, so on the first render it returned undefined for
+        // every item and the legend collapsed to nothing. Not reintroducing that shape.
+        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } },
+        // IR-1: the caption defines a five-band scale, but green means "no penalty" and those
+        // players are not drawn at all, so green can never appear. Say which picks were left out
+        // rather than letting the reader match a legend against a roster and wonder.
+        subtitle: omitted
+          ? { display: true, color: '#6e6d68', font: { size: 10, style: 'italic' }, padding: { bottom: 4 },
+              text: 'Charting ' + allPlayers.length + ' of ' + _picked.length + ' picked players; the other '
+                + omitted + (omitted === 1 ? ' carries' : ' carry') + ' no IL penalty' }
+          : { display: false },
         tooltip: {
+          // IR-6: a label callback returning null is not how Chart.js suppresses a line. It is
+          // invisible today only because the resolved interaction mode is "nearest"; forcing every
+          // dataset active at one index produced five blank rows out of seven. filter is the
+          // documented mechanism and holds under any mode. The zero here is the OTHER side's row.
+          filter: (item) => (item.parsed.y || 0) > 0,
           callbacks: {
-            label: (ctx) => {
-              const v = ctx.parsed.y;
-              if (v === 0) return null;
-              return ctx.dataset.label + ': -' + v.toFixed(2);
-            }
+            label: (ctx) => ctx.dataset.label + ': -' + ctx.parsed.y.toFixed(2)
           }
         }
       },
@@ -2210,15 +2591,17 @@ function renderInjuryRiskChart() {
         x: { stacked: true, ticks: { font: { size: 12 } } },
         y: {
           stacked: true,
-          ticks: { font: { size: 10 }, callback: v => '-' + v.toFixed(2) },
+          ticks: { font: { size: 10 }, callback: v => (v === 0 ? '0' : '-' + v.toFixed(2)) },
           beginAtZero: true,
           title: { display: true, text: 'Cumulative Hit% deduction (|absolute value|)', font: { size: 10 } }
         }
       }
     }
   };
-  if (chartInjuryRisk) { chartInjuryRisk.data = config.data; chartInjuryRisk.options = config.options; chartInjuryRisk.update(); }
-  else chartInjuryRisk = new Chart(ctx, config);
+  // IR-8: reassigning .options on a live chart does not reliably re-resolve plugin blocks, and
+  // the subtitle above has to appear and disappear with the picks. Rebuild, like the other cards.
+  if (chartInjuryRisk) { chartInjuryRisk.destroy(); }
+  chartInjuryRisk = new Chart(ctx, config);
 }
 
 function renderAllCharts() {
@@ -2237,7 +2620,11 @@ function renderAllCharts() {
 
 // Wrap existing renderVerdict to also rebuild charts
 const _origRenderVerdict = renderVerdict;
-renderVerdict = function() { _origRenderVerdict.apply(this, arguments); renderAllCharts(); };
+let _gnChartTimer = null;
+function gnChartsNow() { if (_gnChartTimer) { clearTimeout(_gnChartTimer); _gnChartTimer = null; } renderAllCharts(); }
+function gnChartsSoon() { if (_gnChartTimer) clearTimeout(_gnChartTimer); _gnChartTimer = setTimeout(gnChartsNow, 150); }
+// SL-3: see the slider handlers -- a moving slider defers the five-chart rebuild to the release
+renderVerdict = function() { _origRenderVerdict.apply(this, arguments); if (window.GN_SLIDING) gnChartsSoon(); else gnChartsNow(); };
 
 // ====================== PLAYER INSPECTOR ======================
 function growthMultiplier(age, isPitcher) {
@@ -2298,8 +2685,12 @@ function fatherTimeCliff(age) {
   return m;
 }
 
+// PI-5: list-or-tree reset on every reload while every other display setting persisted.
 let INSPECTOR_VIEW='list', INSP_CURRENT=null;
-function setInspView(v){INSPECTOR_VIEW=v; if(INSP_CURRENT) renderInspector(INSP_CURRENT);}
+try{ var _iv=localStorage.getItem('gn-trade-inspview'); if(_iv==='tree'||_iv==='list') INSPECTOR_VIEW=_iv; }catch(e){}
+function setInspView(v){INSPECTOR_VIEW=v;
+  try{ localStorage.setItem('gn-trade-inspview', v); }catch(e){}
+  if(INSP_CURRENT) renderInspector(INSP_CURRENT);}
 // X-3: escape the full set, not just & and <. Every caller interpolates into innerHTML or
 // into an HTML/SVG attribute, and the options ledger is rebuilt weekly from an ESPN feed --
 // one transaction string carrying an angle bracket or a quote would break the markup. The
@@ -2865,13 +3256,16 @@ function renderInspector(p) {
       <div style="text-align: right;">
         <div style="font-size: 20px; font-weight: 500;">${r} Peak RA / $${(p.r/RAW_PER_DOLLAR).toFixed(2)}</div>
         <div style="font-size: 12px; color: var(--color-text-secondary, #6e6d68);">Pure: ${pc} | Hit%: ${(p.h*100).toFixed(0)}%</div>
+        <!-- PI-6: these figures are the peak-season derivation. They do not move with the value mode
+             or the two sliders, which the value-over-time cards now say outright and this one did not. -->
+        <div style="font-size: 11px; font-style: italic; color: var(--color-text-tertiary, #9c9b96);">peak-season basis &mdash; not changed by the value mode or the sliders</div>
       </div>
     </div>
 
     ${spineHTML}
     <div class="toggle" id="inspViewToggle" style="display:inline-flex;margin-bottom:10px;">
-      <button onclick="setInspView('list')" class="${INSPECTOR_VIEW!=='tree'?'active':''}">List view</button>
-      <button onclick="setInspView('tree')" class="${INSPECTOR_VIEW==='tree'?'active':''}">Flow tree</button>
+      <button type="button" data-insp-view="list" class="${INSPECTOR_VIEW!=='tree'?'active':''}">List view</button>
+      <button type="button" data-insp-view="tree" class="${INSPECTOR_VIEW==='tree'?'active':''}">Flow tree</button>
     </div>
     <div id="inspTreeView" style="display:${INSPECTOR_VIEW==='tree'?'block':'none'};margin-bottom:4px;">${treeSVG}</div>
 
@@ -2926,20 +3320,34 @@ function renderInspector(p) {
 const inspectorSearch = document.getElementById('inspectorSearch');
 const inspectorResults = document.getElementById('inspectorResults');
 
+const INSP_CAP = 30;
 inspectorSearch.addEventListener('input', () => {
   const q = gnFold(inspectorSearch.value.trim());
-  if (!q || q.length < 2) {
+  // PI-7b: the side pickers answer from the first keystroke; this box ignored one-character queries.
+  if (!q) {
     inspectorResults.classList.remove('open');
     inspectorResults.innerHTML = '';
     return;
   }
-  const matches = PLAYERS.filter(p => gnFold(p.n).includes(q)).slice(0, 30);
+  // PI-2: one substring test meant "rodriguez julio" found nobody here while the side pickers found
+  // him. Every typed word has to appear in the folded name, in any order -- the same rule they use.
+  const qTokens = q.split(' ').filter(Boolean);
+  const all = PLAYERS.filter(p => { const fn = gnFold(p.n); return qTokens.every(t => fn.indexOf(t) !== -1); });
+  const total = all.length;
+  const matches = all.slice(0, INSP_CAP);
   if (matches.length === 0) {
     inspectorResults.innerHTML = '<div class="inspector-result" style="color:#9c9b96;">No matches</div>';
   } else {
     inspectorResults.innerHTML = matches.map((p, i) =>
       `<div class="inspector-result" data-idx="${i}" data-n="${_iesc(p.n)}" data-o="${_iesc(p.o)}">${_iesc(p.n)} <span style="color:#6e6d68; font-size:11px;">(${_iesc(p.p)}, age ${p.a}, ${_iesc(p.t)}, ${_iesc(rosterBadge(p))})</span></div>`
     ).join('');
+    // PI-1: "an" matches 626 players and thirty were shown with nothing saying so. The side pickers
+    // carry this note already; the row has no data-n so it stays out of the click and ARIA wiring.
+    if (total > matches.length) {
+      inspectorResults.insertAdjacentHTML('afterbegin',
+        '<div class="inspector-result" style="color:#9c9b96;cursor:default;">Top ' + matches.length
+        + ' of ' + total.toLocaleString() + ' matches \u00b7 narrow the search to see the rest</div>');
+    }
   }
   inspectorResults.classList.add('open');
   [...inspectorResults.querySelectorAll('.inspector-result[data-n]')].forEach(el => {
@@ -2949,15 +3357,26 @@ inspectorSearch.addEventListener('input', () => {
         renderInspector(player);
         inspectorSearch.value = player.n;
         inspectorResults.classList.remove('open');
+        // PI-4: picking a player replaces the whole panel silently. Announce the change through the
+        // shared status region -- marking #inspectorBody itself live would read out the entire
+        // 377-line breakdown on every render.
+        if (typeof gnAnnounce === 'function') gnAnnounce(player.n + ' formula breakdown shown.');
       }
     });
   });
 });
 
+// PI-7c: the view buttons are rebuilt inside renderInspector's template on every render, which is
+// why they carried inline onclick attributes -- the only ones on the page. One delegated listener on
+// the container survives every rebuild and needs no attributes.
+document.getElementById('inspectorBody').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-insp-view]');
+  if (b) setInspView(b.getAttribute('data-insp-view'));
+});
 inspectorSearch.addEventListener('focus', () => {
   // same stale-cache shape as the Options search: the row click sets .value and clears
   // only the 'open' class, so refocusing revealed the previous query's rows.
-  if (inspectorSearch.value.trim().length >= 2) {
+  if (inspectorSearch.value.trim().length >= 1) {
     inspectorSearch.dispatchEvent(new Event('input'));
   }
 });
@@ -3036,10 +3455,15 @@ function renderOptions(name) {
 
 const optionsSearch = document.getElementById('optionsSearch');
 const optionsResults = document.getElementById('optionsResults');
+const OPT_CAP = 30;
 optionsSearch.addEventListener('input', () => {
   const q = gnFold(optionsSearch.value.trim());
-  if (!q || q.length < 2) { optionsResults.classList.remove('open'); optionsResults.innerHTML = ''; return; }
-  const matches = OPT_NAMES.filter(n => gnFold(n).includes(q)).slice(0, 30);
+  // OT-4: the Inspector answers from the first keystroke; this box ignored one-character queries.
+  if (!q) { optionsResults.classList.remove('open'); optionsResults.innerHTML = ''; return; }
+  // OT-3: one substring test, so "rodriguez julio" found nobody here and the player one card up.
+  const qTokens = q.split(' ').filter(Boolean);
+  const allMatches = OPT_NAMES.filter(n => { const fn = gnFold(n); return qTokens.every(t => fn.indexOf(t) !== -1); });
+  const matches = allMatches.slice(0, OPT_CAP);
   if (matches.length === 0) {
     optionsResults.innerHTML = '<div class="inspector-result" style="color:#9c9b96;">No matches</div>';
   } else {
@@ -3052,12 +3476,21 @@ optionsSearch.addEventListener('input', () => {
       return `<div class="inspector-result" data-n="${_iesc(n)}"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dot};margin-right:7px;"></span>${_iesc(n)} <span style="color:#6e6d68;font-size:11px;">(${_iesc(meta)}) · ${remShow}/2</span></div>`;
     }).join('');
   }
+  // OT-2: "an" matches 626 names and thirty were shown with nothing saying so. Same note the
+  // Inspector carries; no data-n on the row, so it stays out of the click and ARIA wiring.
+  if (allMatches.length > matches.length) {
+    optionsResults.insertAdjacentHTML('afterbegin',
+      '<div class="inspector-result" style="color:#9c9b96;cursor:default;">Top ' + matches.length
+      + ' of ' + allMatches.length.toLocaleString() + ' matches \u00b7 narrow the search to see the rest</div>');
+  }
   optionsResults.classList.add('open');
   [...optionsResults.querySelectorAll('.inspector-result[data-n]')].forEach(el => {
     el.addEventListener('click', () => {
       renderOptions(el.dataset.n);
       optionsSearch.value = el.dataset.n;
       optionsResults.classList.remove('open');
+      // OT-6: the record panel is replaced silently. Announce through the shared status region.
+      if (typeof gnAnnounce === 'function') gnAnnounce(el.dataset.n + ' option record shown.');
     });
   });
 });
@@ -3065,7 +3498,7 @@ optionsSearch.addEventListener('focus', () => {
   // OPT-2: wireRows() writes optionsSearch.value without touching optionsResults, so
   // revealing the cached markup showed the results of a query the box no longer held.
   // Regenerate from the current value instead of re-opening whatever is there.
-  if (optionsSearch.value.trim().length >= 2) optionsSearch.dispatchEvent(new Event('input'));
+  if (optionsSearch.value.trim().length >= 1) optionsSearch.dispatchEvent(new Event('input'));
 });
 
 // ---- Options burn-count filter buttons (Aug 18, 2026 hotfix) ----
@@ -3107,14 +3540,14 @@ optionsSearch.addEventListener('focus', () => {
         else if(p && p.o===drafter){ st='\u26a0 ILLEGAL DEMOTION ('+(p.l||'AAA')+' roster) \u2014 '+r5.from+' may recapture'; stc='#9c1c14'; }
         else if(!p || (p.o&&p.o.startsWith('FA'))){ st='\u26a0 ON WAIVERS \u2014 '+r5.from+' may recapture'; stc='#9c1c14'; }
         else { st='\u26a0 NO LONGER WITH '+r5.by.toUpperCase()+' \u2014 review'; stc='#b06f00'; }
-        return `<div class="opt-fl-row" data-n="${_iesc(n)}">`+
+        return `<div class="opt-fl-row" role="option" aria-selected="false" data-n="${_iesc(n)}">`+
           `<span style="font-weight:500;">${_iesc(n)}</span>`+
           `<span class="m">${p?_iesc(p.p)+' · ':''}drafted by ${_iesc(r5.by)} · from ${_iesc(r5.from)}</span>`+
           `<span class="s" style="color:${stc};">${_iesc(st)}</span></div>`;
       }).join('');
       listEl.innerHTML=`<div class="opt-fl-head" style="color:#13274F;">${names.length} players selected in the July 14, 2026 Rule 5 draft</div>`+
         `<div class="opt-fl-r5note"><b>Roster restriction:</b> a Rule 5 selection may NOT be demoted from the MLB roster, regardless of remaining options. He leaves that roster only two ways: the <b>original manager recaptures him when an illegal demotion is attempted</b>, or the <b>original manager claims him off waivers after the drafting manager drops him</b>.</div>`+
-        `<div class="opt-fl-scroll">${rows}</div>`;
+        `<div class="opt-fl-scroll" role="listbox" tabindex="0" aria-label="Filtered players, use the arrow keys">${rows}</div>`;
       wireRows(); return;
     }
     const title = k==='one' ? `${names.length} players have burned exactly 1 option \u2014 1 remaining each`
@@ -3127,18 +3560,33 @@ optionsSearch.addEventListener('focus', () => {
     }
     const rows=names.map(n=>{
       const d=OPTIONS_DATA[n]; const lb=lastBurn(n);
-      return `<div class="opt-fl-row" data-n="${_iesc(n)}">`+
+      return `<div class="opt-fl-row" role="option" aria-selected="false" data-n="${_iesc(n)}">`+
         `<span style="font-weight:500;">${_iesc(n)}</span><span class="m">${_iesc(metaOf(n))}</span>`+
         `<span class="s" style="color:${col};">${d.burns} burned · ${d.remaining} left${lb?` · last: ${_iesc(lb)}`:''}</span></div>`;
     }).join('');
-    listEl.innerHTML=`<div class="opt-fl-head" style="color:${col};">${title}</div><div class="opt-fl-scroll">${rows}</div>`;
+    listEl.innerHTML=`<div class="opt-fl-head" style="color:${col};">${title}</div><div class="opt-fl-scroll" role="listbox" tabindex="0" aria-label="Filtered players, use the arrow keys">${rows}</div>`;
     wireRows();
   }
   function wireRows(){
-    [...listEl.querySelectorAll('.opt-fl-row')].forEach(el=>{
-      el.addEventListener('click',()=>{
+    // OT-1: these rows were plain divs with click handlers -- no tab stop, no role, so the whole
+    // filter was mouse-only. Giving 182 rows their own tab stops would be worse than the disease,
+    // so the scroll container is the single tab stop and the arrows move within it, the same
+    // listbox shape the four search dropdowns already use.
+    const rows=[...listEl.querySelectorAll('.opt-fl-row')];
+    const box=listEl.querySelector('.opt-fl-scroll');
+    let active=-1;
+    rows.forEach((el,i)=>{ if(!el.id) el.id='optfl-row-'+i; });
+    function stamp(){
+      rows.forEach((el,i)=>el.setAttribute('aria-selected', i===active?'true':'false'));
+      if(box){
+        if(active>=0&&rows[active]) box.setAttribute('aria-activedescendant', rows[active].id);
+        else box.removeAttribute('aria-activedescendant');
+      }
+    }
+    function openRow(el){
         const nm=el.dataset.n;
         renderOptions(nm);
+        if (typeof gnAnnounce === 'function') gnAnnounce(nm + ' option record shown.');
         optionsSearch.value=nm;
         // OPT-2: the search box now names this player, so the cached result list for the
         // previous query must go with it or refocusing the box offers the wrong names.
@@ -3153,16 +3601,41 @@ optionsSearch.addEventListener('focus', () => {
         // right target was computed and the page never moved).
         _bd.style.scrollMarginTop=((_hd?_hd.getBoundingClientRect().height:0)+12)+'px';
         _bd.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+    rows.forEach((el,i)=>el.addEventListener('click',()=>{ active=i; stamp(); openRow(el); }));
+    if(box){
+      box.addEventListener('keydown',function(e){
+        const k=e.key;
+        if(!rows.length) return;
+        if(k==='ArrowDown'||k==='ArrowUp'){
+          e.preventDefault();
+          active=(active<0)?(k==='ArrowDown'?0:rows.length-1)
+                           :(active+(k==='ArrowDown'?1:-1)+rows.length)%rows.length;
+          stamp(); rows[active].scrollIntoView({block:'nearest'});
+        } else if(k==='Home'){ e.preventDefault(); active=0; stamp(); rows[0].scrollIntoView({block:'nearest'}); }
+        else if(k==='End'){ e.preventDefault(); active=rows.length-1; stamp(); rows[active].scrollIntoView({block:'nearest'}); }
+        else if(k==='Enter'||k===' '){ if(active>=0&&rows[active]){ e.preventDefault(); openRow(rows[active]); } }
       });
+    }
+    stamp();
+  }
+  function syncChips(){
+    Object.keys(btns).forEach(x=>{
+      const on = (openKey===x);
+      btns[x].dataset.on = on?'1':'0';
+      btns[x].setAttribute('aria-pressed', on?'true':'false');
+      btns[x].setAttribute('aria-expanded', on?'true':'false');
     });
   }
   Object.keys(btns).forEach(k=>{
     btns[k].addEventListener('click',()=>{
-      if(openKey===k){ openKey=null; listEl.style.display='none'; btns[k].dataset.on='0'; return; }
+      if(openKey===k){ openKey=null; listEl.style.display='none'; syncChips(); return; }
       openKey=k;
-      Object.keys(btns).forEach(x=>btns[x].dataset.on = x===k?'1':'0');
+      syncChips();
       render(k);
       listEl.style.display='block';
+      // OT-1: move focus into the list that just opened, so the arrows work without hunting for it
+      const box=listEl.querySelector('.opt-fl-scroll'); if(box) box.focus();
     });
   });
 })();
@@ -3261,6 +3734,17 @@ tryRenderCharts();
 .toggle button.active{background:var(--nl-navy,#0B2C5C)!important;color:#F2D77E!important;
  box-shadow:inset 0 0 0 1.5px #C9A227;}
 input[type=range],.slider-input{accent-color:#C9A227;}
+/* DO-1: .toggle{overflow:hidden} clipped the focus ring the browser draws OUTSIDE each button, so
+   keyboard focus was invisible on all seven Display-options buttons (:focus-visible matched, nothing
+   painted). A negative outline-offset keeps the ring inside the clip. DO-2: .slider-input{outline:none}
+   removed the sliders' ring with no replacement. */
+.toggle button:focus-visible{outline:2px solid #C9A227!important;outline-offset:-3px;}
+.slider-input:focus-visible{outline:2px solid #C9A227;outline-offset:4px;}
+/* DO-3: the two sliders and the Year-mode / Prospect toggles are disabled while ROS is the value
+   mode (see the ros-v46 block). DO-4: the bust-risk toggle is dimmed, not disabled, at Career
+   years 1, where it changes no value. */
+.toggle button:disabled,.slider-input:disabled{opacity:.45;cursor:not-allowed;}
+.toggle.inert button:not(:disabled){opacity:.7;}
 /* editorial titles: eyebrow caps + gold underline w/ red diamond */
 .charts-title,.inspector-title,.chart-box-title{font-family:var(--font-display)!important;
  text-transform:uppercase;letter-spacing:.1em;font-weight:900;color:var(--nl-navy,#0B2C5C);}
@@ -3308,7 +3792,7 @@ input[type=range],.slider-input{accent-color:#C9A227;}
    return { responsive:true, maintainAspectRatio:false, interaction:{mode:'nearest',intersect:false},
      plugins:{ legend:{position:'bottom',labels:{font:{size:legendSize||10},boxWidth:12}},
        tooltip:{callbacks:{ title:function(items){return items.length?GNDAILY.dates[items[0].dataIndex]:'';},
-         label:function(c){return c.dataset.label+': '+unit+(c.parsed.y==null?'-':c.parsed.y.toFixed(2));} }} },
+         label:function(c){return c.dataset.label+': '+gnChartNum(unit, c.parsed.y);} }} },
      scales:{ y:{ ticks:{font:{size:10},callback:function(v,i,ticks){return gnAxisTick(unit,v,ticks);}}, beginAtZero:false,
            title:{display:true,text:gnValueAxisTitle(),font:{size:10}} },
        x:{ type:'category', ticks:{font:{size:9},maxTicksLimit:12,autoSkip:true} } } };
@@ -3319,17 +3803,36 @@ input[type=range],.slider-input{accent-color:#C9A227;}
    var ctx=document.getElementById('playerChart').getContext('2d');
    var all=state.A.concat(state.B);
    var em=document.getElementById('playerChartEmpty');
-   if(all.length===0){ if(window.chartPlayer||chartPlayer){ try{chartPlayer.destroy();}catch(e){} chartPlayer=null; } gnNoData(em); return; }
+   if(all.length===0){ if(chartPlayer){ try{chartPlayer.destroy();}catch(e){} chartPlayer=null; }
+     gnFitChartWrap('playerChart', 0);
+     gnDescribeChart('playerChart', 'Player value over time. No players picked yet.');
+     gnNoData(em); return; }
    gnNoDataHide(em);
    var unit=(MODE==='dollar')?'$':'';
+   gnFitChartWrap('playerChart', all.length);
    var datasets=all.map(function(p,i){
      var isA=state.A.some(function(x){return x.n===p.n&&x.o===p.o;});
-     var ds=gnArcDataset(p.n+' ('+(isA?'A':'B')+')'+(hasShape(p)?'':' \u2014 no 2026 games'),
-                         seasonSeries(p), PALETTE[i%PALETTE.length]);
+     var ds=gnArcDataset(p.n+' ('+(isA?'A':'B')+')'+(hasShape(p)?'':gnFlatNote(p)),
+                         seasonSeries(p), gnSeriesColor(i));
      ds.segment={}; ds.tension=0.12; return ds;
    });
+   // PV-2: only 580 of the 2,118 records carry a daily shape, so for most picks this view is a set
+   // of horizontal lines. Flat because there is no history, not because the value held steady --
+   // the chart says which, above the plot, instead of leaving it to be inferred.
+   var flat=all.filter(function(p){ return !hasShape(p); }).length;
+   var opts=seasonOptions(unit,10);
+   if(flat){
+     opts.plugins.subtitle={ display:true, color:'#6e6d68', font:{size:10,style:'italic'}, padding:{bottom:4},
+       text: flat===all.length
+         ? (all.length===1 ? 'No daily history for this player; the line is flat at today\'s value'
+                           : 'No daily history for any picked player; the lines are flat at today\'s value')
+         : flat+' of '+all.length+' picked players have no daily history; those lines are flat at today\'s value' };
+   }
+   gnDescribeChart('playerChart', 'Player value over time, 2026 season view. '+GNDAILY.dates[0]+' to '
+     +GNDAILY.dates[GNDAILY.days-1]+', '+gnValueAxisTitle()+'. '+all.length+(all.length===1?' player: ':' players: ')
+     +gnArcNames(all)+'.'+(flat?' '+flat+' with no daily history.':''));
    try{ if(chartPlayer){chartPlayer.destroy();}
-     chartPlayer=new Chart(ctx,{type:'line',data:{labels:GNDAILY.dates.slice(),datasets:datasets},options:seasonOptions(unit,10)});
+     chartPlayer=new Chart(ctx,{type:'line',data:{labels:GNDAILY.dates.slice(),datasets:datasets},options:opts});
    }catch(err){
      // CHT-5: this catch was empty, and em had already been hidden above -- any failure left
      // a blank card with nothing on screen and nothing in the console, which is exactly the
@@ -3343,7 +3846,9 @@ input[type=range],.slider-input{accent-color:#C9A227;}
    if(GN_TIMEVIEW==='career') return origT();
    var ctx=document.getElementById('teamTotalChart').getContext('2d');
    var em=document.getElementById('teamTotalEmpty');
-   if(state.A.length===0&&state.B.length===0){ if(chartTeamTotal){ try{chartTeamTotal.destroy();}catch(e){} chartTeamTotal=null; } gnNoData(em); return; }
+   if(state.A.length===0&&state.B.length===0){ if(chartTeamTotal){ try{chartTeamTotal.destroy();}catch(e){} chartTeamTotal=null; }
+     gnDescribeChart('teamTotalChart', 'Team total over time. No players picked yet.');
+     gnNoData(em); return; }
    gnNoDataHide(em);
    var unit=(MODE==='dollar')?'$':'';
    function teamSum(players){
@@ -3353,10 +3858,26 @@ input[type=range],.slider-input{accent-color:#C9A227;}
    }
    var datasets=[];
    if(state.A.length>0) datasets.push(gnArcDataset('Side A receives ('+state.A.length+')', teamSum(state.A), COLOR_A, 3));
-   if(state.B.length>0) datasets.push(gnArcDataset('Side B receives ('+state.B.length+')', teamSum(state.B), COLOR_B||'#C81029', 3));
+   // TT-5: COLOR_B is a const and always set, so the fallback here was unreachable
+   if(state.B.length>0) datasets.push(gnArcDataset('Side B receives ('+state.B.length+')', teamSum(state.B), COLOR_B, 3));
    datasets.forEach(function(d){ d.segment={}; d.tension=0.12; });
+   // TT-3: a player with no daily shape contributes a FLAT line to this total, and the total said
+   // nothing about it -- measured at 37.5% of one side's last-day figure. The player card beside it
+   // already names the same gap for the same picks; this one stayed silent.
+   var allPicked=state.A.concat(state.B);
+   var flatN=allPicked.filter(function(p){ return !hasShape(p); }).length;
+   var opts=seasonOptions(unit,10);
+   if(flatN){
+     opts.plugins.subtitle={ display:true, color:'#6e6d68', font:{size:10,style:'italic'}, padding:{bottom:4},
+       text: flatN===allPicked.length
+         ? 'No daily history for any picked player; the totals are flat at today\'s value'
+         : flatN+' of '+allPicked.length+' picked players have no daily history; their share of the totals is flat' };
+   }
+   gnDescribeChart('teamTotalChart', 'Team total over time, 2026 season view. '+GNDAILY.dates[0]+' to '
+     +GNDAILY.dates[GNDAILY.days-1]+', '+gnValueAxisTitle()+'. Side A '+state.A.length+', Side B '+state.B.length
+     +' players.'+(flatN?' '+flatN+' with no daily history.':''));
    try{ if(chartTeamTotal){chartTeamTotal.destroy();}
-     chartTeamTotal=new Chart(ctx,{type:'line',data:{labels:GNDAILY.dates.slice(),datasets:datasets},options:seasonOptions(unit,10)});
+     chartTeamTotal=new Chart(ctx,{type:'line',data:{labels:GNDAILY.dates.slice(),datasets:datasets},options:opts});
    }catch(err){
      // CHT-5: as above -- surface the failure instead of hiding it behind a blank card.
      chartTeamTotal=null;
@@ -3369,17 +3890,40 @@ input[type=range],.slider-input{accent-color:#C9A227;}
    var box=cv.closest('.chart-box'); if(!box) return;
    var title=box.querySelector('.chart-box-title'); if(!title) return;
    var sp=document.createElement('span'); sp.className='gn-tv';
-   sp.innerHTML='<button data-v="career" class="on">Career</button><button data-v="season">2026</button>';
+   // PV-6: the page's own a11y pass stamps the four .toggle groups by id and never saw this one.
+   // PV-9: one control exists as two copies and either moves both charts -- say so rather than
+   // surprising someone who changed the view on one card and found the other had followed.
+   sp.setAttribute('role','group');
+   sp.setAttribute('aria-label','Chart time range, applies to both value charts');
+   sp.title='Switches both value-over-time charts';
+   sp.innerHTML='<button data-v="career" class="on" aria-pressed="true">Career</button>'
+              + '<button data-v="season" aria-pressed="false">2026</button>';
    title.appendChild(sp);
  }
  addToggle('playerChart'); addToggle('teamTotalChart');
+ function gnSyncTimeview(){
+   document.querySelectorAll('.gn-tv button').forEach(function(x){
+     var on = x.dataset.v===GN_TIMEVIEW;
+     x.classList.toggle('on', on);
+     x.setAttribute('aria-pressed', on ? 'true' : 'false');
+   });
+ }
  document.querySelectorAll('.gn-tv button').forEach(function(b){
    b.addEventListener('click',function(){
      GN_TIMEVIEW=b.dataset.v;
-     document.querySelectorAll('.gn-tv button').forEach(function(x){ x.classList.toggle('on', x.dataset.v===GN_TIMEVIEW); });
+     gnSyncTimeview();
+     // PV-8: every other display setting on this page survives a reload; this one reset to Career.
+     try{ localStorage.setItem('gn-trade-timeview', GN_TIMEVIEW); }catch(e){}
      gnRenderArcPlayer(); gnRenderArcTeam();
    });
  });
+ try{ var _tv=localStorage.getItem('gn-trade-timeview');
+   if(_tv==='season'||_tv==='career') GN_TIMEVIEW=_tv; }catch(e){}
+ gnSyncTimeview();
+ // the charts were drawn by tryRenderCharts before this block replaced the two render functions, so
+ // a restored 2026 view has to redraw them. Chart.js may not have loaded yet, in which case
+ // tryRenderCharts calls these same wrappers itself and reads the restored view.
+ if(GN_TIMEVIEW==='season'){ try{ gnRenderArcPlayer(); gnRenderArcTeam(); }catch(e){} }
 })();
 </script>
 
@@ -3432,13 +3976,28 @@ const GNROS={"coef":{"SP":[89.71,3.044],"RP":[76.03,1.322],"H":[70.76,2.123]},"f
  // CORE-2: Math.round(null) is 0, which is exactly the conflation this defect is about -- the
  // result list, the picked list and the side totals all printed a confident 0 for a player
  // nothing was projected for. n/a is the honest cell; a real projected 0 still prints 0.
- window.fmtValue=function(v){ return (MODE==='ros')? (v==null?'n/a':String(Math.round(v))) : __fv(v); };
+ window.fmtValue=function(v){ return (MODE==='ros')? (v==null?'n/a':Math.round(v).toLocaleString()) : __fv(v); };
  window.updateLabels=function(){ __ul();
-   if(MODE==='ros'){ var el=document.getElementById('modeLabel');
+   // DO-3: gnROS reads none of BLEND / YEARS / YEAR_MODE / FADE_MODE, but the controls stayed live
+   // and only two of the four readouts said n/a. A drag on Career years in ROS mode was saved and
+   // came back silently on the next Risk-Adj click (1160 -> 5356 for the same player). Disable the
+   // four while ROS is the mode; __ul() above already restores every readout on the way out.
+   var ros=(MODE==='ros');
+   ['blendSlider','yearsSlider'].forEach(function(id){ var s=document.getElementById(id); if(s) s.disabled=ros; });
+   ['yearModeToggle','fadeModeToggle'].forEach(function(id){ var g=document.getElementById(id);
+     if(g){ if(ros) g.classList.remove('inert'); [].slice.call(g.querySelectorAll('button')).forEach(function(x){ x.disabled=ros; }); } });
+   if(ros){ var el=document.getElementById('modeLabel');
      if(el) el.textContent="ROS ’26 / projected FP, Wk "+GN_DATA_WEEK+" form (through "+GN_DATA_THROUGH_TXT+") / "+UNPROJ.toLocaleString()+" of "+PLAYERS.length.toLocaleString()+" unprojected / form+role engine v10";
-     var yr=document.getElementById('yearsReadout'), bl=document.getElementById('blendReadout');
-     if(yr) yr.textContent='n/a \u2014 ROS mode projects rest-of-2026 only';
-     if(bl) bl.textContent='n/a \u2014 ROS mode ignores the blend'; } };
+     var yr=document.getElementById('yearsReadout'), bl=document.getElementById('blendReadout'),
+         ym=document.getElementById('yearModeReadout'), fm=document.getElementById('fadeModeReadout'),
+         ys=document.getElementById('yearsSlider'), bs=document.getElementById('blendSlider');
+     var yrTxt='n/a \u2014 ROS mode projects rest-of-2026 only', blTxt='n/a \u2014 ROS mode ignores the blend';
+     if(yr) yr.textContent=yrTxt;
+     if(bl) bl.textContent=blTxt;
+     if(ys) ys.setAttribute('aria-valuetext', yrTxt);
+     if(bs) bs.setAttribute('aria-valuetext', blTxt);
+     if(ym) ym.textContent='n/a \u2014 ROS mode is a single rest-of-2026 projection';
+     if(fm) fm.textContent='n/a \u2014 ROS mode carries no bust-risk fade'; } };
  var tg=document.getElementById('modeToggle');
  if(tg){
    var b=document.createElement('button'); b.dataset.mode='ros'; b.textContent="ROS \u201926";
