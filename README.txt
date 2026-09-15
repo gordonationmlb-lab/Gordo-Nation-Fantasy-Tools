@@ -4,11 +4,12 @@ GORDO NATION TRADE CALCULATOR — v51.1  DURABILITY v2.2 POINT BUILD (2026-09-14
   F = 162/149 = 1.0872; September absorption 0.90. No weekly refresh ran; this is a framework
   point build on the injury module (Durability v2.1 -> v2.2, commissioner's decisions of 15 Sep
   2026 after the Hunter Greene case). Methodology v11 otherwise stands.
-  Service worker: gordo-calc-v75-2026-09-13-v51.1.  GN_BUILD v51.1, GN_DATA_THROUGH 2026-09-13.
+  Service worker: gordo-calc-v76-2026-09-13-v51.1.  GN_BUILD v51.1, GN_DATA_THROUGH 2026-09-13.
 
   Run with bump_build_v51_1.py (the identity lines a point build has no refresh to write), then
-  apply_injury_v2.py, patch_ui_v51_1.py (once — it refuses a second run), stamp.py and
-  resync_ceiling_workbook_v51.1.py. Acceptance: verify_calc.py, FAIL 0. The weekly template
+  apply_injury_v2.py, patch_ui_v51_1.py (once — it refuses a second run), patch_css_v51_1.py
+  (the Inspector wrapping hotfix, idempotent), stamp.py and resync_ceiling_workbook_v51.1.py.
+  Acceptance: verify_calc.py, FAIL 0. The weekly template
   (update_calc_weekly.py, apply_pace_v51.py, news_facts.py, update_options.py) is carried
   forward with its injury helpers updated to the v2.2 fields, ready for the next pull.
 
@@ -132,6 +133,21 @@ THE CALCULATOR UI (patch_ui_v51_1.py — every change is one asserted replacemen
                     "Inj x0.57" is the asset multiplier.
   Both pages' injury-card note rewritten for v2.2; the as-of footer says "Durability v2.2 injury
   module — return-season rust, asset-value headline" (stamp.py).
+  HOTFIX, same day (patch_css_v51_1.py; service-worker cache v75 -> v76 so installed copies pick it
+  up): numbers were breaking mid-token in the Inspector — Dustin: "some numbers are getting wrapped
+  in the player inspector. see cole ragans. are there others?" Yes: 20 distinct rows in every section
+  on both pages (Ragans' "= Pure ceiling (healthy peak = expected full-season pace)" value as
+  "156 / 7", the "x Pace multiplier" label beside the evidence-rule sentence as "x / Pac / e / mu /
+  ltip / lier", Griffin's proximity "-0.1 / 0", every Pure ceiling on the desktop page). The cause
+  predates v51.1: the MOB-1 phone fix (v50.2x) put overflow-wrap:anywhere on every formula row's
+  label and value, which lets the browser break inside a word or a number whenever the flex row is
+  crowded — and the v51.x rows are longer. The fix keeps MOB-1's min-width:0 and changes the row
+  contract: the label flexes and wraps at spaces (overflow-wrap:break-word); the value keeps its
+  natural width (flex 0 0 auto, so a number is never squeezed) and a long value wraps at spaces
+  inside a 70% cap, right-aligned; lone-value sentence rows and notes stay full width, left. A
+  Playwright probe over 20 players x 3 widths (1380 / 400 / 375 px) that counts the text lines a
+  numeric token occupies: 20 split rows before, 0 after; every remaining multi-line value is a
+  sentence wrapping at spaces.
 
 ================================================================================
 THE OTHER TOOLS (verify_calc.py, FAIL 0 WARN 1)

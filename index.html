@@ -74,7 +74,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;op
    contribution) - zeroing the chain is what stops it. */
 .inspector-box,#inspectorBody,#optionsBody,.player-card,
 .player-card>*,.formula-section,.formula-row,.formula-row>*{min-width:0;}
-.formula-row .label,.formula-row .value{overflow-wrap:anywhere;}
+.formula-row .label,.formula-row .value{overflow-wrap:break-word;word-break:normal;}
+/* v51.1: a value keeps its natural width (numbers never break mid-token); a long value wraps
+   at spaces inside a 70% cap; the label takes the rest and wraps at spaces. */
+.formula-row .label{flex:1 1 auto;}
+.formula-row .value{flex:0 0 auto;max-width:70%;text-align:right;}
+.formula-row.note .value,.formula-row.note .label,.formula-row>.value:only-child{flex:1 1 auto;max-width:none;text-align:left;}
 /* MOB-2 + MOB-4  .filters is flex with two selects whose min-width:auto is their
    widest option ('Kansas Sunflower Seeds'), so #posA/#posB hung 59px past the
    card at 390px and ~9px past it in the 640-690px two-column band. The sibling
