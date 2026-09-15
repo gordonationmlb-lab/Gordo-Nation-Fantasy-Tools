@@ -1,4 +1,4 @@
-/* gn-build-stamp — v50.22. Reads the page's OWN constants at load, so the line can never
+/* gn-build-stamp — v51.0 (injury module added to the line). Reads the page's OWN constants at load, so the line can never
    disagree with the build it is printed on. That disagreement is the thing this exists to
    prevent: 191 calculator copies on disk plus a Pages deploy, and no way to tell them apart
    from the screen. */
@@ -16,6 +16,9 @@
     }
     if (typeof GN_PACE_BASIS !== 'undefined' && GN_PACE_BASIS) {
       bits.push('pace: ' + GN_PACE_BASIS);
+    }
+    if (typeof GN_INJURY_MODULE !== 'undefined' && GN_INJURY_MODULE) {
+      bits.push('injury: ' + GN_INJURY_MODULE);
     }
     el.textContent = bits.join('  \u00b7  ');
     el.title = 'Build identity, read from this page\'s own constants at load time.';

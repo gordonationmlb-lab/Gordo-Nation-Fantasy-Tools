@@ -1,190 +1,230 @@
-GORDO NATION TRADE CALCULATOR — v50.22  WEEK 22 DATA BUILD (2026-09-07)
-  First build past the postseason line. Data window moves to Week 22: scoringPeriod 166, matchup
-  period 21 — PLAYOFF ROUND 1 — complete (SP153-166, Aug 24 - Sep 6). F = 162/143 = 1.1329;
-  September absorption 0.90. No framework change; Methodology v11 still stands.
-  Service worker: gordo-calc-v71-2026-09-08-v50.22.  GN_BUILD v50.22, GN_DATA_THROUGH 2026-09-06.
+GORDO NATION TRADE CALCULATOR — v51.1  DURABILITY v2.2 POINT BUILD (2026-09-14)
+  Same pull and data window as v51.0: scoringPeriod 173, matchup period 22 — the championship
+  round, SP167-180 — one week in (SP167-173 complete, Sep 7 - Sep 13). Week 22 data.
+  F = 162/149 = 1.0872; September absorption 0.90. No weekly refresh ran; this is a framework
+  point build on the injury module (Durability v2.1 -> v2.2, commissioner's decisions of 15 Sep
+  2026 after the Hunter Greene case). Methodology v11 otherwise stands.
+  Service worker: gordo-calc-v75-2026-09-13-v51.1.  GN_BUILD v51.1, GN_DATA_THROUGH 2026-09-13.
 
-  Run with update_calc_weekly.py (the v50.20 weekly template, one substantive change —
-  see BRIDGE below), then update_options.py, stamp.py and
-  resync_ceiling_workbook_v50.21.py. Acceptance: verify_calc.py, FAIL 0.
-
-================================================================================
-THE BRIDGE DECISION — why RAW barely moved
-  RAW_PER_DOLLAR 497.64 -> 497.17 (-0.09%). Anchor pool 1,376 -> 1,391 eid-bearing r>0.
-
-  This needed a ruling. The Week 22 pull returned ESPN's ENTIRE player universe — 3,935 records,
-  where every prior pull effectively carried ~1.4k. Run unchanged, the id bridge matched 468 extra
-  unrostered deep prospects and swept them into the anchor pool:
-
-      EXISTING anchor pool      n=1,376   mean r = 497.6
-      NEWLY BRIDGED (r>0)       n=  468   mean r = 131.6
-      COMBINED                  n=1,844   mean r = 404.7   => every dollar +23.0%
-
-  RAW is the mean raw value of the eid-bearing priced pool, so widening the pool with cheap
-  prospects deflates the unit and inflates every dynasty dollar on the board. A +23% board-wide
-  move in the week the World Series is being previewed, caused by ESPN changing what its endpoint
-  returns rather than by anything that happened on a field, is not a valuation — it is an artefact.
-
-  RULING (commissioner, 7 Sep 2026): the bridge indexes only the ACTIVE universe — 2026 fantasy
-  points, a fantasy roster spot, or last-30 activity. That is the same 1,452-player subset shipped
-  as GN_Universe_Active_Stats_2026.json, and the same universe prior pulls contained. 17 players
-  bridged this week instead of 485; nothing genuinely active or rostered was excluded, and what was
-  excluded had no 2026 production to sync anyway. Issue 22's dollars stay comparable with Issue 21's.
-  689 board players still carry no ESPN id, unchanged in kind from prior weeks.
+  Run with bump_build_v51_1.py (the identity lines a point build has no refresh to write), then
+  apply_injury_v2.py, patch_ui_v51_1.py (once — it refuses a second run), stamp.py and
+  resync_ceiling_workbook_v51.1.py. Acceptance: verify_calc.py, FAIL 0. The weekly template
+  (update_calc_weekly.py, apply_pace_v51.py, news_facts.py, update_options.py) is carried
+  forward with its injury helpers updated to the v2.2 fields, ready for the next pull.
 
 ================================================================================
-ENGINE DATA (update_calc_weekly.py, report in refresh_report_2026-09-06.json)
-  Board RA 762,833 -> 767,057 (+4,224): 290 up, 225 down. Invariants: ALL CLEAR.
-  515 records repriced, 792 fantasy-point updates, 327 pace-multiplier changes.
+WHAT CHANGED — two rules, both stated on every record they touch
+  1. RETURN-SEASON RUST. In v51.0 the rate term R (the per-inning penalty after a return: surgery
+     -15%, structural shoulder -20%, repeat elbow -14%, ...) was anchored to the calendar: full in
+     2027, half in 2028, gone after — whatever season the player actually came back in. For a
+     pitcher who misses all of 2027 that put the full rust on a season he does not pitch (where
+     the zero availability made it moot) and only the half-strength term on his real first season
+     back. Greene read 2027 0 / 2028 1,104 / 2029 1,134: the least rust in the year he will carry
+     the most. v2.2 anchors it to the RETURN SEASON — the season that contains the expected return
+     date (k_ret: 0 = 2027, 1 = 2028, ...): full R there on the share of that season he is back
+     for, R/2 the season after, survival S alone beyond, and every season before the return is a
+     zero line. Closed episodes keep the spec's decay by months from the return to opening day
+     (full <= 8, half 8-20, none beyond).
+     UCL WORKLOAD FACTOR V = 0.85. The all-player study's 82 paired UCL returners lost 12% per
+     inning in the first window back (that is the R term) AND threw fewer of them: innings per 30
+     days 20.7 -> 17.4, starts share 0.65 -> 0.54, because clubs cap the workload. In this scoring
+     fewer innings is fewer points, so the return season of a UCL-class pitcher return
+     (reconstruction-length: surgery named, or 300+ days out — not a sprain rested for a month;
+     pitchers only, the finding is innings) carries x0.85 on top of R. It rides with a full-weight
+     UCL term: the return season for a player still out, 2027 for a return inside the last 8
+     months before opening day (Steele, Houck, Lopez, Montgomery, J. Martinez).
+  2. ASSET-VALUE HEADLINE. r has never been a coming-season forecast: it is the ceiling-blended
+     asset value for everyone, and a prospect who will spend all of 2027 in the minors keeps his
+     full r. The v2.1 module was the only thing that turned r into "what he produces in 2027",
+     and only for hurt players — so Greene read 0 on the Trade Desk's default 1-year window. Now
+        r = round( Pure x Pace x Hit% x ia ),   ia = (1 + R) x V x S x (1 - A_rec) x 0.90^deferral
+     deferral = seasons the production is pushed back = k_ret + the share of the return season
+     missed (= A_known for a 2027 return). DELTA = 0.90 per season deferred is the commissioner's
+     call (the measurable part — 15% of UCL returners take longer than 591 days, i.e. past
+     opening day 2028 for a 12 Aug 2026 surgery, and 8% more than two years — is 5-8% of the
+     next-season line; the rest is a year of not seeing him pitch; the thin market for a 2028
+     season and the AAA stash slot are left to the engine's per-window valuation, and the
+     revision-TJ risk is a player-specific S question, not a time preference). The coming-season
+     availability now prices only the coming season's LINE:
+        f[0] = (1 + R) x V x A x S  (A = 1 - A_known - A_rec) when he is back during 2027, 0 if not;
+        f[k] per the return-season schedule;   tj[k] = round(tjp[k] x Hit%(age+k) x f[k]).
+     On the record: p.im = ia (the multiplier on the headline, as before), p.inj.ia, p.inj.f (ten
+     year factors), p.inj.im = f[0] (the 2027 line), p.inj.im2 = f[1], k_ret, miss_ret, V, defer.
+     The asset never reads below the 2027 line (0.90^x >= 1 - x on [0, 1]), asserted.
 
-  1  ROSTER SYNC — 4 org/level moves, 2 drops to free agency, 0 unbridged rostered players.
-  2  INJURY SYNC — 94 designation changes; 272 pull records carrying a designation (273 board
-     records read non-ACTIVE, the extra one a player ESPN no longer returns). 23 went onto one,
-     53 cleared to ACTIVE (Ketel Marte, Will Smith and Blake Treinen off IL-60, Riley Greene,
-     Josh Smith, JoJo Romero, George Lombard Jr.).
-  3  PHASE PROMOTION (§10/§19.4, promote-only) — 7: A.J. Ewing, Owen Caissie, Cole Carrigg and
-     Max Muncy (Ath) Book->Established; Craig Yoho, Joshua Báez and Jonah Cox Honeymoon->Book.
-  4  §19.6 RATCHET — 111 eng.rch records re-anchored to banked 2026 to-date; 24 non-ratcheted
-     surpassers met both conditions and fired to pm 1.00 (Zach Neto, Ivan Herrera, CJ Abrams,
-     Gavin Williams, Reid Detmers, Taj Bradley, Zack Gelof, Brice Turang, Caleb Durbin,
-     Henry Davis, J.T. Ginn among them).
-  5  §20.15 IMPORT PACE — pm tracks 2 - 1/F, now 1.117 (was 1.153): Okamoto, Imai, Murakami.
-     Santa, Ward, Wenninger, Prieto, Pallette stay at 1.00 through the short-circuits.
-  6  §13 GATE — every player, every week. 76 eligible players remain parked at 1.00
-     (ALLOW_NEW_PM off, the standing ruling).
-  7  GNDAILY extended 152 -> 166 days (Mar 25 - Sep 6), 573 shapes rebuilt, 7 new, 2 txn nodes.
-     This closes the gap v50.18/19/20 all shipped with: GNDAILY used to end at SP152 (Aug 23),
-     so the EKG was two weeks behind the board it sat next to. It now runs to the data date.
-  8  GNROS — 380 forms updated; replacement-level rn 0.7473 -> 0.7465 across 100 rostered RPs.
-     GNROS described Week 20 in the last three builds; it describes Week 22 now.
-  9  HISTORY — a 2026-09-06 snapshot of all 2,118 players appended (14 snapshots on file).
+  HUNTER GREENE (River Cats, second Tommy John 12 Aug 2026, 12-18 months, return 2027-11-11):
+     healthy RA 1,331 (Pure 1416 x pace 1.00 x Hit% 0.94); A_known 1.00, A_rec 0.030, R -15%
+     (surgery), V 0.85, S 0.897 (10% never-return), return season 2028, deferral 1.00.
+        v51.0   r 0      lines 2027 0 / 2028 1,104 / 2029 1,134 / 2030 1,043
+        v51.1   r 753    lines 2027 0 / 2028   862 / 2029 1,049 / 2030 1,043
+     ia = 0.85 x 0.85 x 0.897 x 0.970 x 0.90 = x0.565. His 2028 line is his first season back:
+     1416 x 0.94 x (0.85 x 0.85 x 0.897); 2029 carries the half rate term; 2030 survival only.
 
-  A NOTE ON DIRECTION, because it looks wrong and is not: several players who went ONTO the IL
-  this week went UP in value. §13 short-circuits the pace multiplier to 1.00 on the IL — a player
-  cannot be charged for a pace he is not permitted to post — so retiring a sub-1.00 multiplier
-  outweighs the -0.02 hit% haircut. Shane McClanahan (IL-15) 727 -> 952 is the clearest case:
-  1445 x 1.00 x 0.659 = 952. Luis Robert Jr. (IL-10) 435 -> 849 = 1023 x 1.00 x 0.83. Eric Lauer
-  (IL-15) 572 -> 833 = 957 x 1.00 x 0.87. Every one reconciles on r = pc x pm x h to the point.
-  The mirror case is Logan Webb, healthy and falling 1064 -> 938 = 1594 x 0.661 x 0.89, because a
-  live pace below expectation is exactly what the multiplier is for.
+  WHAT IT DID TO THE BOARD. RAW 527.29 -> 530.98 (+0.7%); board RA 804,530 -> 813,667 (+1.1%).
+  96 records moved (74 with a deferral, 34 with the workload factor, 2 by +-1 RA of rounding);
+  nobody else. 762 of 2,080 priced records still carry a multiplier under 1.00 (243 of 406
+  rostered); no rostered player sits under x0.50 any more (v51.0 had 8, all IL-60 pitchers).
+  Every org's $ moves a little with RAW (-0.5 to -0.7 for the six that did not gain RA).
 
-  ORG IMPACT ($ at each build's RAW)          v50.20      v50.21     delta   largest movers
-    Free-agent pool                           837.33      840.48    +3.14   Luis Robert Jr. +414, Eric Lauer +261, Travis d'Arnaud +250
-    KC Gray Hotdogs                            94.41       96.72    +2.31   Cole Carrigg +133, Ivan Herrera +109, Pete Crow-Armstrong +94
-    High Cheddar                                83.60       85.27    +1.67   Shane McClanahan +225, Walbert Urena +143, Garrett Cleavinger +122
-    River Cats                                 107.32      108.86    +1.54   A.J. Ewing +226, Willi Castro -90, Konnor Griffin +72
-    MidwestBears                                81.99       82.57    +0.59   Rafael Devers +103, Drew Rasmussen +62, Jeff McNeil +61
-    Balking Dead                                76.81       77.30    +0.48   Steven Okert -81, Brooks Lee +62, Taylor Ward -60
-    Kansas Sunflower Seeds                      86.39       86.75    +0.36   Logan Webb -126, TJ Rumfield +113, Gunnar Henderson -90
-    Dirty Spikes                                87.09       87.11    +0.01   Corbin Carroll -72, Parker Messick +71, Kody Clemens +71
-    C-Town Liquors (commissioner)                77.95       77.80    -0.16   Jackson Holliday -83, Peter Lambert +70, Colton Cowser -55
-
-  The two World Series clubs move least: Dirty Spikes +0.01 and, on the other side of the bracket,
-  KC Gray Hotdogs +2.31 on Carrigg's promotion and Herrera's ratchet. Nobody bought a title in the
-  last two weeks — both finalists are being paid for what they already had.
-
-================================================================================
-OPTIONS TRACKER (update_options.py)
-  495 -> 502 players, 1,079 -> 1,115 events, 248 -> 250 burns, 34 still out of options.
-
-  The weekly template does not touch OPTIONS_DATA — options are a function of the league ACTIVITY
-  feed, not the player pool — so this ran separately. ESPN returns only a trailing window of that
-  feed (500 records, Aug 19 - Sep 7), which cannot rebuild the season the way Week 20 did. It
-  extends the stored ledger instead, and uses the five-day Aug 19-24 overlap to prove the parse
-  before trusting anything past it. Three findings came out of that check, all of which would have
-  shipped silently without it:
-
-  1  THE FEED READS to<from, NOT from<to. Each token is "6<2:pid": the arrow points at the
-     RECEIVING club. Read the other way round, every MLB->AAA demotion inverts — and a demotion is
-     precisely what burns an option under VI(b)(3). The first run produced Juan Soto with two burns
-     and OUT OF OPTIONS on a fabricated Aug 31 demotion. The overlap check caught it as 36 events
-     whose burn flag was the exact negation of the stored record. He has one burn and one option left.
-  2  THE STORED HISTORY STOPS MID-DAY ON AUG 24. The Week 20 build ran during the deadline, so it
-     holds that day's moves only up to its own pull time; four adds later the same day (A.J. Ewing,
-     Landen Roupp, Noah Cameron, Tyler Mahle) were missing. A single league-wide date cutoff drops
-     them. The extension therefore reclassifies from Aug 24 inclusive and keeps, per player, only
-     what is strictly newer than that player's own newest stored event.
-  3  MATCHING ON THE DETAIL STRING DOUBLE-WRITES A RULED EVENT. Daniel Palencia's Aug 24 add is
-     stored as "Reacquired by Clam Shack Knucklers (AAA) — RULE 5 RECAPTURE, no option charged
-     [Art. V(b)(4)(C)(i)]", wording that came from the commissioner's ruling and that no
-     re-derivation reproduces. The per-player watermark suppresses it correctly; a detail-string
-     match appended a duplicate. His record stands untouched: 2 burns (Apr 20, Jun 19), 0 remaining,
-     the recapture not charged.
-
-  NEW BURNS — two, both processed MLB->AAA trades, both cross-checked against the live rosters:
-     JJ Wetherholt      Aug 31   River Cats (MLB) -> Flying Squirrels (AAA)      1 burn, 1 remaining
-     Willson Contreras  Sep 1    High Cheddar (MLB) -> hicheddar AAA (AAA)       1 burn, 1 remaining
-  NEW TO THE LEDGER — DL Hall, Drew Sommers, Hayden Wesneski, Mickey Gasper, Pedro Ramirez,
-     Tim Tawa, Tyler Mahle.
-  Nobody is over the 2-option limit; remaining == 2 - burns for all 502; every event carries a date.
-  Ian Seymour's Aug 22 trade is still unprocessed and still labelled as such.
+  ROSTERED MOVERS (RA v51.0 -> v51.1; im is the headline multiplier)
+     Hunter Greene      River Cats     0 ->  753   x0.000 -> x0.565  return season 2028, V 0.85, deferral 1.00
+     Spencer Strider    Dirty Spikes 467 -> 1191   x0.247 -> x0.630  back 2027-07-16, deferral 0.61 (repeat elbow, no V)
+     Robert Suarez      River Cats   189 ->  497   x0.256 -> x0.674  back 2027-07-21, deferral 0.63
+     Keegan Akin        Balking Dead  10 ->  256   x0.020 -> x0.538  TJ 15 Jul, back 2027-09-12, V 0.85, deferral 0.92
+     Carlos Estevez     Balking Dead 163 ->  386   x0.226 -> x0.535  shoulder surgery, back 2027-07-12, deferral 0.59
+     Rafael Devers      MidwestBears 1152 -> 1199  x0.947 -> x0.985  back 2027-04-02, deferral 0.04
+     Phil Maton         MidwestBears 290 ->  305   x0.837 -> x0.880  deferral 0.05
+     Justin Sterner     MidwestBears 317 ->  330   x0.703 -> x0.732  deferral 0.04
+     Justin Steele      Balking Dead 716 ->  608   x0.670 -> x0.570  UCL revision, rehab 1 Sep: V 0.85 on 2027
+     Justin Martinez    Dirty Spikes 634 ->  539   x0.747 -> x0.635  UCL, returned Aug 2026: V 0.85 on 2027
+     Robert Stephenson  MidwestBears 317 ->  269   x0.672 -> x0.571  UCL, back 2026-12-15: V 0.85 on 2027
+     (Eovaldi 870 -> 871 and B. Ashcraft 1156 -> 1155 are 4-decimal rounding of the same terms.)
+  FREE-AGENT MOVERS: up — Giolito 136 -> 714, Dollander 302 -> 872, Woodruff 106 -> 566,
+     M. Parker 40 -> 404, Horton 145 -> 508, Keller 0 -> 342 (return season 2028), Lauer 59 -> 380,
+     Kolek 0 -> 289 (2028), Priester 242 -> 524, Sands 140 -> 416, Whisenhunt 0 -> 263 (2028);
+     down (V on a 2027 return season) — P. Lopez 925 -> 786, Houck 732 -> 622, Montgomery
+     635 -> 540, Montas 587 -> 499, Berrios 568 -> 483, Gonsolin 538 -> 457, Vasil 529 -> 449.
+  ORG RA: River Cats 53,121 -> 54,181 (+2.0%), Dirty Spikes 45,396 -> 46,025 (+1.4%), Balking
+     Dead 41,402 -> 41,764 (+0.9%), MidwestBears +0.1%, the other four unchanged; FA pool +1.6%.
+     Whole-board $ (RAW moved): River Cats +1.30, Dirty Spikes +0.59, Balking Dead +0.14, Bears
+     -0.51, C-Town -0.57, High Cheddar -0.59, Sunflower Seeds -0.63, KC Gray -0.70.
 
 ================================================================================
-THE OTHER THREE TOOLS
-  INJURY TRACKER    all 409 rostered players cross-checked against the pull: 0 ir mismatches.
-                    59 of those 409 carry a designation; 273 across the whole 2,118-record board.
-  EKG ORG VALUE     GNDAILY 166 dates == its own days field, all 581 series exactly 166 long,
-                    GNDAILY.raw == RAW_PER_DOLLAR (the v50.20 fix holds), 8 orgs each with a txn
-                    node set, 16 fantasy teams, 607 membership series.
-  PLAYER INSPECTOR  every field the inspector reads is present on all 2,118 records; d == r/RAW
-                    for all; pace == round(ef x F) for every player still in ESPN's pool.
-                    Three players — Austin Warren, Zach Dezenzo, Jack Anderson — are FROZEN: ESPN
-                    has dropped them from its universe, so ef and pace both hold at the last week
-                    it carried them (their ratio is ~1.29, i.e. week 18's F). That is deliberate.
-                    A player ESPN has stopped tracking is not accumulating production either, so
-                    re-scaling a frozen ef by an ever-growing 162/games factor would manufacture a
-                    projection for someone who has stopped playing. They read identically in v50.20.
+THE MODULE (apply_injury_v2.py, Durability v2.2 — report in injury_report_2026-09-13.json)
+  Re-run on the v51.0 board (idempotent: the v50 terms stay retired on p.v50inj, Hit% is already
+  clean, the v51.0 note stays on the record as history and a v2.2 note is written only on the 94
+  records whose terms changed). New in the port: return_season(date) -> (k_ret, miss_ret);
+  assemble(inj) builds f[0..9], im/im2, defer and ia from the terms and is called last, after the
+  designation-only fallback and the tool-basis rule, so every path shares one assembly. The UCL
+  workload flag is set in the rate loop beside the decay (pitchers, cat ucl, full weight, surgery
+  or 300+ days). Tool-basis prospects: R, A_rec and V are zero (the scouting bust carries
+  durability); they keep A_known, S and the deferral. build.json carries deferral_delta 0.90 and
+  ucl_workload_factor 0.85; the module and the verifier read them from there.
+  Return seasons on the board: 263 players out with a 2027 return, 8 with a 2028 return (Greene,
+  Keller, Kolek, McDonald, Avila, Whisenhunt, Ky Bush + 1); 34 pitchers carry V; 74 records carry
+  a deferral, 8 of them a full season.
+  Records: 1,003 bridged, 1,077 no IL record since 2021, 12 designation-only, 8 resolved by ESPN
+  activity, 10 name/age mismatches (unchanged from v51.0); review flags: Chris Martin, Brock
+  Stewart (unchanged). Overrides: 128 entries, unchanged (127 auto from the news + Ragans by hand).
 
 ================================================================================
-CHROME (stamp.py)
-  Three hand-written prose stamps are not touched by the template and were still reading v50.20:
-  the Trade Desk footer ("as of August 30, 2026 (Week 21 data...)"), the mode line ("v50.20 · data
-  through Aug 30, 2026") and the options ledger note. All three now read the Week 22 window. Each
-  substitution is asserted to match exactly once — "Week 21" and "v50.20" also occur hundreds of
-  times inside PLAYERS[].notes, which is the per-player audit trail of when each value moved, and
-  rewriting that would falsify the record.
+THE CALCULATOR UI (patch_ui_v51_1.py — every change is one asserted replacement in gn-app.js)
+  VALUE ENGINE      gnInjFactor(p, k) reads p.inj.f[k] (falls back to im / im2 / S on a v51.0
+                    record); fadeAdjustedTj and the cumulative / single-season windows follow.
+                    p.im is the asset multiplier. New helpers gnInjSeasonLine(p) (the 2027 factor)
+                    and gnInjReturnYear(p). Constants GN_INJURY_MODULE 'Durability v2.2',
+                    GN_INJURY_DELTA 0.90, GN_UCL_WORKLOAD 0.85 (the build stamp prints the module).
+  PLAYER INSPECTOR  header "Injury (asset): x0.565 (extreme)"; the injury section adds the
+                    return season sentence ("Return season 2028 — the rust is anchored there ...;
+                    2027 is a zero line"), the V row, the "= 2027 season line" subtotal, the
+                    deferral row and "= Injury asset multiplier (1 + R) x V x S x (1 - A_rec) x
+                    delta^deferral", then the factors by season; the RA section reads RA = Pure x
+                    Pace x Hit% x Injury asset multiplier and prints the 2027 season line under
+                    the headline with a note that the headline is what the asset is worth now and
+                    the line is what he gives this season (the trajectory's Current cell); the
+                    trajectory note says Current is the season line, not the headline, and names
+                    the return season.
+  FLOW TREE / SPINE the INJURY column adds "return season 2028 (2027 out)", "V: UCL workload",
+                    "2027 season line" and "deferral 0.90^1.00" rows and ends "= INJURY (asset)";
+                    step 6 of the decision spine carries the same terms.
+  TRADE DESK        the injury card's text says the discount is on the asset value (the chart is
+                    unchanged: healthy RA minus risk-adjusted RA per pick); the picked-row tag
+                    "Inj x0.57" is the asset multiplier.
+  Both pages' injury-card note rewritten for v2.2; the as-of footer says "Durability v2.2 injury
+  module — return-season rust, asset-value headline" (stamp.py).
 
 ================================================================================
-WORKBOOK (resync_ceiling_workbook_v50.21.py)
-  Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED.xlsx re-synced — the v50.20 note said it would
-  re-sync on the next weekly build, and this is it. 1,412 rows refreshed, 8,077 cells changed,
-  780 Risk-Adj values moved, 0 rows without a calculator record.
-
-  All 24 calculator-derived columns are now refreshed in one pass. Three earlier scripts each owned
-  a slice (update_player_inputs.py: 11 columns; update_workbook_tiers.py: 5; update_options_workbook.py:
-  1) and everything else drifted. The consolidation was gated on a check that the four columns
-  nothing had ever written — Pos, Age, Healthy Base, Conf — already agreed with the calculator; they
-  did, exactly, so nothing curated was overwritten. Phase was the one real drift: 23 rows, every one
-  a forward promotion, no reversals, which is what a promote-only engine must produce. The script
-  refuses to write if any phase change runs backward.
-
-  Column 19 "Options Remaining" now carries the live ledger instead of the blanks it held.
-  2_Org_Rankings recomputed (River Cats 54,630 still first, KC Gray Hotdogs 49,986 second).
-  Sheets 3-12 re-stamped [NOT REFRESHED WK22] — they are unchanged and now say so honestly.
-
-  IT IS NOT WRITTEN AT THE LEAGUE ROOT, ON PURPOSE — but not for the reason this note used to
-  give. It claimed the root Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED.xlsx was a HARD LINK to
-  the v50.19 archive copy, and cited "mv over an existing file changed both names" as proof. Both
-  halves are wrong, measured 8 Sep 2026: the two paths are separate inodes (60387901 and
-  73601710) holding identical content, and mv/rename BREAKS a link rather than writing through it.
-  The real mechanism runs the other way — openpyxl save() truncates in place and PRESERVES the
-  inode, so it rewrites every hard link to its target. The root file does carry a second link, to
-  a Claude session upload cache outside the league tree. The script now refuses to save over any
-  path with a link count above 1, so the hazard is enforced rather than described. v50.21 ships as
-      2026/GN_v50.21_wk22_2026-09-07/Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED.xlsx
-      Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED_v50.21.xlsx   (league root)
-  and the root UNIFIED file still holds v50.19 values. Swapping it in is a decision to make
-  deliberately, not a side effect of a refresh; the two archives are confirmed intact
-  (v50.19: 529 KB, "Updated: August 31, 2026").
+THE OTHER TOOLS (verify_calc.py, FAIL 0 WARN 1)
+  INJURY MODULE     the v51.0 gates stand (im present and in [0,1] on all 2,080 priced records,
+                    r == round(pc x pm x h x im), Hit% clean, no retired fields, ESPN-IL-but-
+                    module-healthy hard check, GN_INJURY_MODULE == build.json) with the trajectory
+                    gate now reading tj == tjp x Hit%(age+k) x inj.f[k]. New v51.1 gate on every
+                    record with an asset term: p.im == inj.ia; ia reproduces from (1 + R) x V x
+                    S x (1 - A_rec) x delta^defer to 1e-3; ia >= f[0]; every season before the
+                    return season is a zero line; inj.im == f[0]; and, when build.json says v2.2,
+                    every priced record carries ia. 0 broken. The 23 soft designation-vs-record
+                    disagreements (data lag / unrostered) are the same WARN as v51.0.
+  update_calc_weekly.py / apply_pace_v51.py: inj_factor(p, k) reads inj.f[k] so the next weekly
+                    pace change keeps r = pc x pm x h x im and tj on the v2.2 factors.
+  bump_build_v51_1.py: GN_BUILD, the .tc-sub line, the service-worker cache and build.json for a
+                    point build, with update_calc_weekly's count guards.
 
 ================================================================================
-STILL NOT COVERED
-  - The 737 non-ESPN prospects carry forward unverified. MLB statsapi is the right source for
-    proximity / T4->T3 and remains deferred by direction.
-  - 55 bridged T4 prospects with 2026 MLB cameos are still T4; §4 sets no cameo threshold.
-  - 21 T3s at or past peak age await graduation (no birthdates on file).
-  - Roman Anthony's Hit% still carries the June "permanent IL stack -0.02" that is not a current
-    designation.
-  - HISTORY has a duplicate 2026-08-10 snapshot date, inherited from Week 19. Harmless, uncorrected.
-  - season_roll_lambda_v50.21.py is staged but NOT run. It is a season-roll tool and the season
-    is not over; it needs --apply --confirm-season-complete after the World Series.
+WORKBOOK (resync_ceiling_workbook_v51.1.py)
+  Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED_v51.1.xlsx, refreshed from the v51.0 workbook:
+  1,412 rows, 10,089 cells changed, 90 Risk-Adj values moved, 749 rows under x1.00, 0 rows
+  without a calculator record. Column Q is re-headed "Injury Asset Mult" and
+  carries ia (what Risk-Adj is priced on); column AI is "Inj Mult 2028 (yr 2)"; seven columns are
+  appended (AL-AR): Season Line Mult 2027 (f[0]), Return Season, UCL Workload V, Deferral
+  (seasons), Season Line RA 2027, Inj Mult 2029, Inj Mult 2030. Column S "Options Remaining"
+  carries the same ledger as v51.0.
+  2_Org_Rankings recomputed (River Cats 54,181 still first, KC Gray Hotdogs 52,844 second).
+  Sheets 3-12 re-stamped [NOT REFRESHED WK22]. The league-root UNIFIED file is not written (same
+  rule as v50.21); the v51.1 workbook ships beside it and inside this build folder.
+
+================================================================================
+SWEEP (sweep_v51_1.js — headless Chromium, both pages, Chart.js from the byte-identical local copy)
+  166 checks PASS, 0 FAIL on index.html at 1380x900 and mobile.html at 400x860 (sweep_v51.js carried
+  forward with the v2.2 expectations, 14 checks added). What was driven, beyond the v51.0 list:
+  build stamp "injury: Durability v2.2", the .tc-sub line, RAW 530.98 / GN_BUILD v51.1 /
+  GN_INJURY_DELTA 0.90 / GN_UCL_WORKLOAD 0.85; in the browser's own arithmetic, r == round(pc x pm x
+  h x im) on every priced record, im == inj.ia on all 2,080, gnInjFactor(p, k) == inj.f[k] on every
+  record, no asset below its 2027 line, 8 players returning in 2028 and 34 carrying V; the value
+  engine on Greene — 1-year window 753 (the asset), 2-year single-season 862 (the 2028 line),
+  2-year cumulative 862 (0 + 862 over the 753 floor); the bust-risk-off view holding the year-0
+  factor on every T3/T4 record under 1.00; Trade Desk with Ragans (row tag "Inj x0.60", legend
+  "extreme, -40%"), Strider and Trout against Crochet, Jobe and Judge (injury card datasets equal
+  to the RA each pick gives up, the untouched-pick subtitle); $ mode, 5-year cumulative, ROS '26,
+  the 2026 time view, manager comparison and the EKG; the Inspector on Ragans (V row, "= 2027
+  season line" x0.389, deferral 0.90^0.37, asset x0.600, the 2027 line 573 under the headline),
+  Greene (header "Injury (asset): x0.565 (extreme)", "Return season 2028 — ... 2027 is a zero
+  line", x0.85, "out all season", deferral x0.900, by-season 2027 x0.000 . 2028 x0.648 . 2029
+  x0.830 . 2030 x0.897, the roll-off note naming the return season; never "Injury (asset):
+  x0.000"), Brad Keller (x0.574, return season 2028), Steele (UCL revision, V on 2027, no
+  deferral), Bautista, Crochet, Trout, Jobe, Griffin, Martin (flag), Woodruff, Helsley (rehab
+  reset), Ohtani and Perez (untouched: no season-line row, no deferral row) — required strings
+  present, stale strings absent, no undefined / NaN / null, the identity line equal to the header
+  RA, six spine steps with step 6 reading "Durability v2.2 | x<asset>", the four-column flow
+  tree on Ragans (V, the 2027 line, deferral 0.90^0.37, "= INJURY (asset)") and Greene ("return
+  season 2028 (2027 out)", "2027 season line x0.000", deferral 0.90^1.00, x0.565); the Options
+  tracker, its filter and provenance; the footer as-of line naming Durability v2.2. The only
+  console error on either page is the Google Fonts stylesheet the sandbox cannot reach.
+  Two presentation defects found in the phone screenshots and fixed before packaging: the V and
+  deferral rows' long labels squeezed their values into "x0. / 85" and "x0.9 / 00" (labels
+  shortened, the formula and the innings finding moved to a note under the asset row), and the
+  by-season row's label wrapped to "Seaso / ns" (it is a full-width sentence now).
+
+================================================================================
+STILL NOT COVERED (carried from v51.0 unless struck here)
+  - R phase-out INSIDE the return season (spec 3.8, R x (1 - a x w) as appearances accumulate)
+    is still not coded; the return-season anchoring in this build settles WHICH season carries
+    the rust, not how it fades within it. Code it before a returner has 15+ appearances on file.
+  - The second-season half-weight (R/2) is a judgment call the data cannot yet measure (most
+    UCL returners have not had a second season back); so is the 0.85 workload factor's
+    application to the 2027 share of a mid-season return.
+  - A player whose R comes from an older closed episode but whose open episode returns in 2028
+    has that older rust pushed out with the return season (no such case on the board).
+  - Evidence rule for IL pitchers with more than 15 appearances (30 rostered, 87 with the whole
+    pool) — needs per-game logs.
+  - Hit% base recalibration is a backtest gate item (spec 3.8); the back-test gate itself has not
+    been run on v51.x.
+  - 10 name/age bridge mismatches (Jake Rogers, Chadwick Tromp, Hayden Birdsong, Albert Suarez,
+    Porter Hodge, Carlos Rodriguez, Orlando Ribalta, Josh Simpson, Jose Devers, Yunior Marte):
+    treated as no record; a birth year on the board would settle them.
+  - 16 MEDIUM news-facts entries (story text only) still await review; Martin and Stewart carry
+    review flags.
+  - Starting pitchers' appearances are G rather than GS in the rate multiplier (swingmen read low).
+  - 23 players outside ESPN's 3,000-player pool hold last build's appearances and multiplier.
+  - The 737 non-ESPN prospects carry forward unverified; 55 bridged T4 prospects with 2026 MLB
+    cameos are still T4; 21 T3s at or past peak age await graduation (no birthdates on file).
+  - HISTORY has a duplicate 2026-08-10 snapshot date, inherited from Week 19. Harmless.
+  - season_roll_lambda_v50.21.py is staged but NOT run; it needs --apply --confirm-season-complete
+    after the World Series.
+
+================================================================================
+THE v51.0 RECORD (unchanged; the full text is prev/README_v51.0.txt in the build folder)
+  v51.0 (14 Sep 2026) replaced the v50 Hit% injury terms with the Durability v2.1 module, re-ran
+  the pace multiplier on the whole 3,000-player pool, pulled the ESPN news for every injured
+  player into injury_overrides.json (news_facts.py), and rebuilt the options ledger from the
+  whole-season activity feed. Its README carries the per-step counts, the full-pool stats
+  method, the news-facts extraction rules and traps, and the sweep of 152 checks.

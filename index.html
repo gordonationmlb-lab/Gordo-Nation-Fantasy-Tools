@@ -117,7 +117,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;op
    type the layout was already sized for. Cost: a 655px desktop card now scrolls
    ~65px instead of drawing at 0.91x. */
 #inspTreeView{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;}
-#inspTreeView>svg{min-width:720px;}
+#inspTreeView>svg{min-width:880px;}
 </style>
 </head><body><div class="gn-header"><div class="gn-masthead"><div class="gn-crest" role="img" aria-label="Gordo Nation league crest"></div><div class="gn-mast-c"><div class="kicker">Gordo Nation Dynasty &bull; Official Trade Desk</div><h1>The Trade Calculator</h1><p>16-team dynasty framework — ceiling values, refreshed weekly</p><div class="gn-build-stamp" id="gnBuildStamp" style="margin:4px 0 0;font-family:'Lato',Arial,sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;opacity:.72;">&nbsp;</div></div><div class="gn-crest" role="img" aria-label="Gordo Nation league crest"></div></div></div>
 
@@ -320,7 +320,7 @@ body, html { background: transparent; }
   <div class="tc-header">
     <div>
       <p class="tc-title">Gordo Nation Dynasty Trade Calculator</p>
-      <p class="tc-sub"><span id="playerCount">2,118</span> players. Mode: <span id="modeLabel">Risk-Adj</span>. v50.22 &middot; data through Sep 6, 2026.</p>
+      <p class="tc-sub"><span id="playerCount">2,118</span> players. Mode: <span id="modeLabel">Risk-Adj</span>. v51.1 &middot; data through Sep 13, 2026.</p>
     </div>
     <div class="controls">
       <button class="btn" id="clearAll">Clear</button>
@@ -455,10 +455,10 @@ body, html { background: transparent; }
         <div class="no-data-msg" id="stackedBarEmpty">Pick players on either side to compare</div>
       </div>
       <div class="chart-box">
-        <div class="chart-box-title">Injury risk assessment — stacked by player</div>
-        <div class="chart-canvas-wrap"><canvas id="injuryRiskChart" role="img" aria-label="Injury risk assessment, stacked by player. Pick players to see the breakdown.">Injury risk assessment, stacked by player. Pick players to see the breakdown.</canvas></div>
-        <div class="no-data-msg" id="injuryRiskEmpty">Pick players to see injury risk breakdown</div>
-        <div class="history-note">Each colored segment is one player's stacked IL penalty. Yellow=−0.01 to −0.04 (low), Orange=−0.05 to −0.09 (moderate), Red=−0.10 to −0.14 (high), Purple=−0.15+ (extreme). Players with no IL penalty are left off the chart entirely. Bar height = total team injury risk.</div>
+        <div class="chart-box-title">Injury discount — RA removed, stacked by player</div>
+        <div class="chart-canvas-wrap"><canvas id="injuryRiskChart" role="img" aria-label="Injury discount, stacked by player. Pick players to see the breakdown.">Injury discount, stacked by player. Pick players to see the breakdown.</canvas></div>
+        <div class="no-data-msg" id="injuryRiskEmpty">Pick players to see the injury discount breakdown</div>
+        <div class="history-note">Each colored segment is one player's injury discount on his asset value: his healthy RA (Pure × Pace × Hit%) minus his risk-adjusted RA — what the Durability v2.2 module takes off (rate after a return, the UCL workload factor, survival, recurrence load, and a 0.90-per-season deferral discount for production pushed back by a long absence; the coming season's availability itself is priced on the season line, not the headline). Color = share of value removed: Yellow under 5% (low), Orange 5–15% (moderate), Red 15–35% (high), Purple 35%+ (extreme). Players the module leaves untouched (×1.00) are left off. Bar height = total RA a side is giving up to injury.</div>
       </div>
       <div class="chart-box full">
         <div class="chart-box-title-row">
@@ -579,7 +579,7 @@ body, html { background: transparent; }
           <button type="button" class="opt-filter-btn opt-fb-r5" id="optFiltR5" aria-pressed="false" aria-expanded="false" aria-controls="optFilterList">RULE 5 DRAFT <span class="cnt" id="optCntR5">&ndash;</span></button>
         </div>
         <div id="optFilterList"></div>
-        <div class="opt-filter-note">Ledger rebuilt from the full ESPN transaction log through the Aug 24 deadline processing, extended from the league activity feed through Sep 6 &middot; parse verified against the Aug 19&ndash;24 overlap &middot; tap a button to list players, tap a player to open their record.</div>
+        <div class="opt-filter-note">Ledger rebuilt from the full ESPN transaction log through the Aug 24 deadline processing, extended from the league activity feed through Sep 13 &middot; parse verified against the whole-season feed, 1,102 of 1,102 stored events reproduced &middot; tap a button to list players, tap a player to open their record.</div>
       </div>
       <div id="optionsBody">
         <div class="inspector-empty">Search for any player to see their 2026 AAA option status and transaction history. Moves that burn an option are shown in red.</div>
@@ -591,7 +591,7 @@ body, html { background: transparent; }
 
 <script src="gn-app.js"></script>
 </div>
-<div class="gn-footer"><b>Gordo Nation Weekly</b> &bull; Trade Desk &mdash; dynasty ceiling values as of September 6, 2026 (Week 22 data; playoff round 1 complete)</div>
+<div class="gn-footer"><b>Gordo Nation Weekly</b> &bull; Trade Desk &mdash; dynasty ceiling values as of September 13, 2026 (Week 22 data; championship round in progress, SP167&ndash;173 complete; Durability v2.2 injury module &mdash; return-season rust, asset-value headline)</div>
 <script src="gn-sw-register.js"></script>
 
 <style id="gn-detail-v45">
