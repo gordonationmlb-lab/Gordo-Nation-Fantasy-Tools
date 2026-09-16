@@ -1,20 +1,178 @@
-GORDO NATION TRADE CALCULATOR — v51.1  DURABILITY v2.2 POINT BUILD (2026-09-14)
-  Same pull and data window as v51.0: scoringPeriod 173, matchup period 22 — the championship
-  round, SP167-180 — one week in (SP167-173 complete, Sep 7 - Sep 13). Week 22 data.
-  F = 162/149 = 1.0872; September absorption 0.90. No weekly refresh ran; this is a framework
-  point build on the injury module (Durability v2.1 -> v2.2, commissioner's decisions of 15 Sep
-  2026 after the Hunter Greene case). Methodology v11 otherwise stands.
-  Service worker: gordo-calc-v76-2026-09-13-v51.1.  GN_BUILD v51.1, GN_DATA_THROUGH 2026-09-13.
+GORDO NATION TRADE CALCULATOR — v51.3  THE EXIT CLASS CONSTANTS (2026-09-14)
+  Same pull and data window as v51.0, v51.1 and v51.2: scoringPeriod 173, matchup period 22 — the
+  championship round, SP167-180 — one week in (SP167-173 complete, Sep 7 - Sep 13). Week 22 data.
+  F = 162/149 = 1.0872; September absorption 0.90. No weekly refresh ran. Methodology v11 stands.
+  Service worker: gordo-calc-v78-2026-09-13-v51.3.  GN_BUILD v51.3, GN_DATA_THROUGH 2026-09-13.
 
-  Run with bump_build_v51_1.py (the identity lines a point build has no refresh to write), then
-  apply_injury_v2.py, patch_ui_v51_1.py (once — it refuses a second run), patch_css_v51_1.py
-  (the Inspector wrapping hotfix, idempotent), stamp.py and resync_ceiling_workbook_v51.1.py.
-  Acceptance: verify_calc.py, FAIL 0. The weekly template
-  (update_calc_weekly.py, apply_pace_v51.py, news_facts.py, update_options.py) is carried
-  forward with its injury helpers updated to the v2.2 fields, ready for the next pull.
+  v51.3 changes SIX CONSTANTS and re-floats a seventh. The injury module's structure is again
+  untouched — same four terms, same assembly, still Durability v2.2. What moves is the CLASS
+  MULTIPLIER under the exit hazard, and the calibration scalar that has to be re-fitted with it.
+
+  Run with bump_build_v51_1.py v51.3, then patch_injury_v51_3.py, apply_injury_v2.py --apply,
+  patch_ui_v51_3.py --apply, stamp.py --apply and resync_ceiling_workbook_v51.3.py --apply.
+  Acceptance: verify_calc.py, FAIL 0.
 
 ================================================================================
-WHAT CHANGED — two rules, both stated on every record they touch
+WHAT CHANGED IN v51.3 — six exit class constants, re-fitted instead of assumed
+  WHERE THIS CAME FROM. v51.2's gate left an aggregate model that was calibrated in the mean. The
+  follow-up work asked whether the exit hazard could be split finer — by injury class and by age.
+  A full class x age grid was built and tested out-of-fold and it LOST: MAE 239.5 against the
+  shipped 237.9, every confidence interval straddling zero. The grid was declined. See
+  claude/exit-grid-proposal-tested-and-declined.md.
+
+  What the grid did do is expose constants in the SHIPPED table that were wrong by more than a
+  factor of two on their own samples. An aggregate MAE over 303 players cannot see a constant that
+  is backwards on a class holding twenty men; that is an argument for fixing the constant on its
+  own evidence, not for adding machinery. Six were fixed. Two more were proposed and are NOT in
+  this build (see HELD BACK, below).
+
+  THE EVIDENCE BASE is the same one the shipped EXIT table was built on: 2021-2024 IL episodes with
+  at least two full seasons of follow-up, "never returned" measured to 2026-09-13. Each class is
+  estimated as a ratio to its role x list pool and shrunk toward that pool at K = 12, the constant
+  the held-out sweep in backtest/micro_channels.py chose. No age term and no interaction — those
+  are what lost.
+
+  THE SIX CONSTANTS (60-day list only; the short list is untouched in this build):
+
+      class                              n   realized   pool    was      now
+      P  UCL / Tommy John              164      12.2%  21.8%   x1.00    x0.58
+      P  elbow, not a reconstruction    62      37.1%  21.8%   x1.00    x1.56
+      P  forearm / flexor, not a TJ     39      33.3%  21.8%   x1.00    x1.38
+      P  shoulder, soft tissue         138      32.6%  21.8%   x1.50    x1.45
+      P  shoulder, structural           18      33.3%  21.8%   x1.80    x1.45
+      H  named surgery                  31      22.6%  10.8%   x0.75*   x1.70
+                                                (* x1.40 where the category was lower-body)
+
+  THE HEADLINE. The module had the two elbow classes EXACTLY INVERTED. A pitcher who has had a
+  reconstruction comes back: 12.2% never played in the majors again, against a 21.8% pool. A 60-day
+  elbow that is NOT a reconstruction is the dangerous one: 37.1%. Both were priced at the pool.
+  Forearm/flexor behaves like the dangerous end too. Tommy John is now the SAFE elbow injury in
+  this calculator, because that is what the record says.
+
+  THE SHOULDER SUBTYPE, which Dustin's capsule objection produced in v2.1, does not survive on the
+  exit term: structural 33.3% (n=18) and soft tissue 32.6% (n=138) are the same number. Both are
+  well above the pool; neither is distinguishable from the other. x1.80 / x1.50 is finer than the
+  data supports, so both go to x1.45. The subtype KEEPS its rate term (-20% against +2.6%) and its
+  return-time curve (surgical, 53% back by day 416 against 89%), where it was actually measured.
+
+  CLASS RESOLUTION, and it is the part that is not a one-line edit. cat_mult() keyed on the
+  category string, and the transaction feed almost never writes "UCL": 60 of 971 pitcher 60-day
+  episodes carry cat 'ucl' while 203 carry the TJ flag. Editing CATMULT['P']['ucl'] would have
+  reached under a third of actual reconstructions and left the rest mis-priced. So exit_class()
+  resolves the class first, in the order the constants were fitted in:
+
+      pitchers : TJ flag OR category 'ucl' > structural shoulder > named surgery > module category
+      hitters  : named surgery > module category
+
+  The 'ucl' category counts as a reconstruction even without the flag. In the feed the two are the
+  same set (68 of 68 'ucl' episodes carry the flag), which is why the fitted cell is unaffected —
+  but the NEWS-FACTS layer writes cat='ucl' from a surgery report without always setting tj, and 14
+  overrides do exactly that. Keying on the flag alone dropped Justin Steele and Robert Stephenson
+  into `surgery_other` and they never saw the correction. Caught by reading the board.
+
+  THE ORDER IS LOAD-BEARING. An elbow with a named surgery but no TJ flag is `surgery_other`, NOT
+  `elb` — the 37.1% was measured on non-surgical elbows and must not be charged to surgical ones.
+  `surgery_other` has no constant of its own and falls through to CATMULT exactly as before. This
+  was caught in review: a first pass applied x1.56 to every non-TJ elbow and moved Spencer
+  Schwellenbach 111 RA on a population his cell was never fitted on.
+
+  EXIT_CALIB 1.50 -> 1.58, RE-FITTED. The v51.2 scalar was fitted against the OLD class multipliers,
+  so changing them shifts the level and the scalar cannot be left alone. Re-fitted by the same
+  procedure on the same 2024 cohort: predicted 13.9% against a realized 13.9%, ratio 1.00.
+
+  WHAT THE BACK-TEST SAYS. The gate was re-run with the new constants in place:
+      MAE on the injured cohort   238.2 against 237.9 shipped   (95% CI -0.7 to +1.3)
+      bias                        +7.2 against +9.2 shipped     (better)
+      2024 calibration ratio      1.00 against 1.01 shipped
+      healthy cohort              provably unchanged, to 0.00e+00 — a player who is not on an
+                                  injured list has no exit term, so none of this can reach him
+  No significant improvement, and none was expected: the aggregate test is underpowered to see a
+  correction that touches twenty records out of 303, which is exactly why these are argued on their
+  own samples. What the gate is for here is ABSENCE OF HARM, and it shows absence of harm.
+
+  BOARD EFFECT. RAW 526.16 -> 525.39; board RA 806,706 -> 805,599 (-0.14%). Thirty-three rostered
+  records move, but only thirteen by more than four points — the rest is the calibration step
+  touching short-list players by a point or two. The ones that matter:
+
+      down   Spencer Strider       Dirty Spikes      elbow, no reconstruction   1060 ->  818  -242
+             Colt Emerson          River Cats        season-ending wrist surgery 760 ->  626  -134
+             Ryan Helsley          Balking Dead      elbow, no reconstruction    566 ->  475   -91
+             Robert Suarez         River Cats        elbow, no reconstruction    455 ->  376   -79
+             Connelly Early        River Cats        elbow, no reconstruction    611 ->  539   -72
+      up     Justin Steele         Balking Dead      UCL revision                527 ->  622   +95
+             Hunter Greene         River Cats        second Tommy John           709 ->  760   +51
+             Felix Bautista        Dirty Spikes      structural shoulder         441 ->  478   +37
+             Carlos Estevez        Balking Dead      structural shoulder         319 ->  349   +30
+             Robert Stephenson     MidwestBears      ligament + flexor repair    244 ->  274   +30
+             Keegan Akin           Balking Dead      Tommy John                  236 ->  259   +23
+
+  Colt Emerson is the hitter-surgery constant doing what it was fitted to do: a season-ending wrist
+  operation was priced at x0.75, BELOW average risk, because it fell in the `other` bucket. It is
+  now x1.70. Among free agents the biggest moves are Giolito (long-absence elbow, down) and Eflin
+  and Severino (reconstruction and structural shoulder, up).
+
+  ORG RA: River Cats 53,773 -> 53,522 (-0.5%), Dirty Spikes 45,689 -> 45,466 (-0.5%), Balking Dead
+  41,532 -> 41,588 (+0.1%), MidwestBears 42,479 -> 42,499, KC Gray 52,835 -> 52,833, Kansas
+  Sunflower Seeds 47,702 -> 47,701, High Cheddar 44,957 -> 44,951, C-Town 43,051 -> 43,045. The two
+  clubs holding 60-day elbows pay for it; nobody else moves materially.
+
+  VERIFICATION. The study rule and the shipped code are two independent implementations of the same
+  resolution, so they were compared on EVERY episode in the feed rather than on a sample: 4,892 of
+  4,892 agree (backtest/verify_v513_impl.py). 659 episodes get a different multiplier than under
+  v51.2, all of them on the 60-day list, as intended.
+
+  HELD BACK — two corrections that did NOT clear the gate and are not in this build:
+    * Hitter foot/ankle x1.40 -> x0.29. n=15 with ZERO realized events; the value is entirely the
+      shrinkage prior, and the gate drifts the wrong way (+0.4 MAE). It needs a floor and more data.
+    * Giving the short list a class multiplier at all. cat_mult() returns 1.0 whenever il60 is
+      false, and the spread there is real (hitter knee 5.3% on n=76 against hand 1.2% on n=167,
+      pool 2.0%). But it moves 18 records for a net +45 RA, and stacking it with the foot
+      correction pushed the MAE confidence interval to (+0.0 to +3.2) — significant harm, in the
+      wrong direction. Broadest change, smallest stakes, weakest evidence: it waits.
+  Both are written up in claude/v51.3-proposal-four-exit-constants.md.
+
+================================================================================
+WHAT CHANGED IN v51.2 — the exit prior, calibrated against what actually happened
+  THE GATE. The spec had carried an open item since v51.0: "2024->2025 and 2025->2026 back-tests
+  with v2 in place of the v50 haircut ... lower MAE on the injured cohort, calibrated exit
+  probabilities, no loss on the healthy cohort." It was run on 15 Sep 2026. Artifacts:
+  backtest/ in this folder; write-up: claude/durability-v2.2-backtest-gate-results.md.
+
+  WHAT IT FOUND. The module beats the retired v50 haircut on the injured cohort by 30.9 points of
+  MAE (95% CI +16.4 to +45.5) and costs 0.18 points of 248 on healthy players — the framework
+  change is vindicated. But the exit probabilities are not calibrated. Over the 2024 cohort, the
+  only one with two full seasons of follow-up, the module said 9.3% of the players it had on an
+  injured list would never play in the majors again. 13.9% did not. The buckets are monotone, so S
+  RANKS correctly; only the level is wrong, by about half again.
+
+  THE CHANGE. EXIT_CALIB = 1.50, carried in build.json as exit_calibration, applied to p0 inside
+  exit_p0() — the PRIOR, not the posterior. The time update
+
+      p_exit(t) = p0 / (p0 + (1 - p0)(1 - F(t)))
+
+  is a correct Bayesian statement given a correct prior; scaling its OUTPUT would leave the wrong
+  prior in place and break the identity. 1.50 is fitted rather than chosen: it is the scalar whose
+  output is calibrated (ratio 1.01) after the update runs. Every record the module touches states
+  it — "exit 36% base (back-tested x1.50) -> 39% at day 165".
+
+  WHAT IT DID NOT CHANGE. Nothing else from the gate has been acted on. Two findings are recorded
+  and deliberately not built: only one of six rate classes (surgery, realized -18% against the
+  shipped -15%) verifies against a clean pre-injury base, and the module is well calibrated for
+  pitchers (+4 points of bias) while over-valuing hitters coming off an injured list by 56. The
+  structural-shoulder -15/-25 question the gate was supposed to settle cannot be settled from two
+  seasons — five cases, two usable, both the same pitcher — and stays a judgment call.
+
+  WHAT IT DID TO THE BOARD. RAW 530.98 -> 526.16 (-0.9%); board RA 813,667 -> 806,706 (-0.9%).
+  259 records carry the calibrated base. Nobody the module leaves alone moved at all.
+  ORG RA: River Cats 54,181 -> 53,773 (-0.8%), Dirty Spikes 46,025 -> 45,689 (-0.7%), Balking
+     Dead 41,764 -> 41,532 (-0.6%), MidwestBears 42,575 -> 42,479 (-0.2%), C-Town 43,096 ->
+     43,051 (-0.1%), High Cheddar 44,997 -> 44,957 (-0.1%), KC Gray 52,844 -> 52,835 and Kansas
+     Sunflower Seeds 47,711 -> 47,702 (both -0.0%); FA pool 440,474 -> 434,688 (-1.3%).
+     The clubs holding hurt players pay for it, which is the point.
+
+================================================================================
+WHAT v51.1 CHANGED — two rules, both stated on every record they touch (carried forward)
+
   1. RETURN-SEASON RUST. In v51.0 the rate term R (the per-inning penalty after a return: surgery
      -15%, structural shoulder -20%, repeat elbow -14%, ...) was anchored to the calendar: full in
      2027, half in 2028, gone after — whatever season the player actually came back in. For a
@@ -61,7 +219,7 @@ WHAT CHANGED — two rules, both stated on every record they touch
      ia = 0.85 x 0.85 x 0.897 x 0.970 x 0.90 = x0.565. His 2028 line is his first season back:
      1416 x 0.94 x (0.85 x 0.85 x 0.897); 2029 carries the half rate term; 2030 survival only.
 
-  WHAT IT DID TO THE BOARD. RAW 527.29 -> 530.98 (+0.7%); board RA 804,530 -> 813,667 (+1.1%).
+  WHAT v51.1 DID TO THE BOARD. RAW 527.29 -> 530.98 (+0.7%); board RA 804,530 -> 813,667 (+1.1%).
   96 records moved (74 with a deferral, 34 with the workload factor, 2 by +-1 RA of rounding);
   nobody else. 762 of 2,080 priced records still carry a multiplier under 1.00 (243 of 406
   rostered); no rostered player sits under x0.50 any more (v51.0 had 8, all IL-60 pitchers).
@@ -85,7 +243,7 @@ WHAT CHANGED — two rules, both stated on every record they touch
      Kolek 0 -> 289 (2028), Priester 242 -> 524, Sands 140 -> 416, Whisenhunt 0 -> 263 (2028);
      down (V on a 2027 return season) — P. Lopez 925 -> 786, Houck 732 -> 622, Montgomery
      635 -> 540, Montas 587 -> 499, Berrios 568 -> 483, Gonsolin 538 -> 457, Vasil 529 -> 449.
-  ORG RA: River Cats 53,121 -> 54,181 (+2.0%), Dirty Spikes 45,396 -> 46,025 (+1.4%), Balking
+  ORG RA (v51.0 -> v51.1): River Cats 53,121 -> 54,181 (+2.0%), Dirty Spikes 45,396 -> 46,025 (+1.4%), Balking
      Dead 41,402 -> 41,764 (+0.9%), MidwestBears +0.1%, the other four unchanged; FA pool +1.6%.
      Whole-board $ (RAW moved): River Cats +1.30, Dirty Spikes +0.59, Balking Dead +0.14, Bears
      -0.51, C-Town -0.57, High Cheddar -0.59, Sunflower Seeds -0.63, KC Gray -0.70.
@@ -166,23 +324,38 @@ THE OTHER TOOLS (verify_calc.py, FAIL 0 WARN 1)
                     point build, with update_calc_weekly's count guards.
 
 ================================================================================
-WORKBOOK (resync_ceiling_workbook_v51.1.py)
-  Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED_v51.1.xlsx, refreshed from the v51.0 workbook:
+WORKBOOK (resync_ceiling_workbook_v51.3.py)
+  Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED_v51.3.xlsx, refreshed from the v51.2 workbook:
+  1,412 rows, 2,778 cells changed, 187 Risk-Adj values moved, 749 rows under x1.00, 0 rows without
+  a calculator record. No column and no meaning changes in v51.3; every figure downstream of S
+  moves. 2_Org_Rankings recomputed: River Cats 53,522 still first, KC Gray Hotdogs 52,833 second,
+  Kansas Sunflower Seeds 47,701 third. Sheets 3-12 re-stamped [NOT REFRESHED WK22]. The league-root
+  UNIFIED file is not written (same rule as v50.21); the v51.3 workbook ships beside it and inside
+  this build folder.
+
+  The column layout, unchanged since v51.1 and repeated here so the sheet reads on its own:
   1,412 rows, 10,089 cells changed, 90 Risk-Adj values moved, 749 rows under x1.00, 0 rows
   without a calculator record. Column Q is re-headed "Injury Asset Mult" and
   carries ia (what Risk-Adj is priced on); column AI is "Inj Mult 2028 (yr 2)"; seven columns are
   appended (AL-AR): Season Line Mult 2027 (f[0]), Return Season, UCL Workload V, Deferral
   (seasons), Season Line RA 2027, Inj Mult 2029, Inj Mult 2030. Column S "Options Remaining"
   carries the same ledger as v51.0.
-  2_Org_Rankings recomputed (River Cats 54,181 still first, KC Gray Hotdogs 52,844 second).
-  Sheets 3-12 re-stamped [NOT REFRESHED WK22]. The league-root UNIFIED file is not written (same
-  rule as v50.21); the v51.1 workbook ships beside it and inside this build folder.
+  (Those figures are the v51.1 sync's; the v51.3 numbers are stated above.)
 
 ================================================================================
-SWEEP (sweep_v51_1.js — headless Chromium, both pages, Chart.js from the byte-identical local copy)
-  166 checks PASS, 0 FAIL on index.html at 1380x900 and mobile.html at 400x860 (sweep_v51.js carried
-  forward with the v2.2 expectations, 14 checks added). What was driven, beyond the v51.0 list:
-  build stamp "injury: Durability v2.2", the .tc-sub line, RAW 530.98 / GN_BUILD v51.1 /
+SWEEP (sweep_v51_2.js — headless Chromium, both pages, Chart.js from vendor/chart.umd.js)
+  168 checks PASS, 0 FAIL on index.html at 1380x900 and mobile.html at 400x860. Every build-specific
+  expectation was repointed to v51.2 BY READING THE SHIPPED BOARD, not by typing figures from a note:
+  Greene r 709 (was 753), asset x0.533 (was x0.565), lines 0 / 813 / 988; Ragans asset x0.563, 2027
+  line x0.365, injury cost -44%; Crochet never-return risk 38% (was 27%); Keller x0.541; Steele
+  x0.493; Ohtani x0.991. Two checks added, one per page: GN_EXIT_CALIB == 1.50.
+  vendor/chart.umd.js (208,337 bytes, sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi)
+  is byte-identical to the CDN build and matches the integrity attribute in both pages. It now lives
+  in the build folder: the v51.1 copy was in a scratchpad and was lost, and neither sandbox can reach
+  cdn.jsdelivr.net or the npm registry.
+  (The v51.1 run, for the record: 166 checks PASS, 0 FAIL. sweep_v51.js was carried
+  forward with the v2.2 expectations, 14 checks added.) What was driven, beyond the v51.0 list:
+  build stamp "injury: Durability v2.2", the .tc-sub line, RAW 526.16 / GN_BUILD v51.2 /
   GN_INJURY_DELTA 0.90 / GN_UCL_WORKLOAD 0.85; in the browser's own arithmetic, r == round(pc x pm x
   h x im) on every priced record, im == inj.ia on all 2,080, gnInjFactor(p, k) == inj.f[k] on every
   record, no asset below its 2027 line, 8 players returning in 2028 and 34 carrying V; the value
