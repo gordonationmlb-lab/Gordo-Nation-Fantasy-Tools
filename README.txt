@@ -1,3 +1,121 @@
+GORDO NATION TRADE CALCULATOR — v51.4  THE OPTIONS LEDGER, REBUILT (2026-09-16)
+  Same pull and data window as v51.0-v51.3: scoringPeriod 173, matchup period 22 — the
+  championship round — one week in (SP167-173 complete, Sep 7 - Sep 13). Week 22 data.
+  F = 162/149 = 1.0872; September absorption 0.90. No weekly refresh ran. Methodology v11 stands.
+  Service worker: gordo-calc-v79-2026-09-13-v51.4.  GN_BUILD v51.4, GN_DATA_THROUGH 2026-09-13.
+
+  v51.4 touches NO valuation input. Dynasty values, ceilings, org ranks, the injury module and
+  every constant in it are byte-identical to v51.3. What changes is the OPTIONS TRACKER: three
+  parse defects are fixed, the ledger is rebuilt from the full season, and the Rule 5 note in the
+  record card is repaired. 14 players' burn counts move; all 14 move UP; 10 of them are now out
+  of options. Nobody is over the limit.
+
+  Run with bump_build_v51_1.py v51.4, patch_ui_v51_4.py --apply, patch_options_parse_v51_4.py
+  --apply and rebuild_options_v51.4.py --apply.
+  Acceptance: the roster-reconstruction gate in rebuild_options_v51.4.py, then update_options.py
+  reproducing 1,151 of 1,151 stored events with zero divergence and zero new burns.
+
+================================================================================
+WHAT CHANGED IN v51.4 — three parse defects, a full-season rebuild, one CSS collapse
+
+  HOW THIS STARTED. The commissioner read Dillon Dingler's card. High Cheddar released him
+  Sep 7; hicheddar AAA — the same organisation's AAA club — took him back Sep 10. That is an MLB
+  release followed by a AAA acquisition in the same season, which is an option under Article
+  VI(b)(3), and the card charged nothing. Time in the free-agent pool is irrelevant to VI(b)(3);
+  the only question the rule asks is what the most-immediate prior roster status was.
+
+  DEFECT 1 — mt 180 and mt 181 are INVERTED. They are the two halves of a waiver claim: 180 is
+  the player CLAIMED, 181 the player dropped to make room. The classifier had 181 adding and 180
+  dropping. 13 adds were filed as drops, 12 drops as adds. Three independent proofs: replaying
+  the feed onto the live rosters, the swap fixes six players the old reading strands in free
+  agency who are in fact rostered (Dingler on hicheddar AAA, Salvador Perez, Emerson Hancock,
+  Carson Benge, Jacob Latz, Ian Seymour); the stored ledger held impossible sequences under the
+  old reading (AJ Blubaugh "dropped by hicheddar AAA" Mar 27, then TRADED FROM hicheddar AAA
+  Apr 4; Matt Svanson added twice with no drop between); and every 180 is paired same-day,
+  same-club with a 181, which is what a claim plus its corresponding drop looks like.
+
+  DEFECT 2 — mt 239's `from` is a LINEUP SLOT, not a club. The dropping club is in `for`. Slot
+  ids and team ids share the range 0..17, so is_team() said yes to a slot and the drop was filed
+  against whatever club carried that number: 36 of 52 drops to the wrong club, 16 to "FA/Waivers
+  (None)". Dingler's Sep 7 release reads from=0 — slot 0 is CATCHER, which is what he is. Brad
+  Lord's Jun 16 release by TheMidwestBears (MLB) reads from=15, slot 15 is RP, and it was filed
+  as "Dropped by Flying Squirrels (AAA)". This is not a misprinted name. A drop sets the player's
+  level, and level is the entire input to VI(b)(3): an MLB release filed as a AAA release makes
+  the next AAA add read AAA->AAA and charge nothing.
+
+  DEFECT 3 — a pending trade could never be upgraded to a processed one. The weekly extension
+  keeps, per player, only events strictly NEWER than that player's newest stored event. A trade
+  accepted and processed on the same day writes the 224 first; the 244 that follows lands ON the
+  watermark and is suppressed for good. Five of Mike F's Sep 7 demotions were still sitting in
+  the ledger as "Trade pending" — all five processed (DeLauter, Leahy, Murakami and Neto are on
+  PCA and Jarren Duran Fan Fest right now; Pfaadt was demoted and then dropped Sep 9), and all
+  five are MLB->AAA. Related: mt 241 is the veto, and the parser did not read it, so a vetoed
+  acceptance sat in the ledger as a pending burn that could never land and someone annotated it
+  by hand every week (Ian Seymour, Aug 22). It is derived now.
+
+  WHY A REBUILD AND NOT AN EXTENSION. update_options.py extends because ESPN's activity feed
+  "only returns a trailing window" — true of the 500-record pull it was written against, not of
+  this one: the v51.0 pull carries 792 records / 2,131 messages spanning 2026-02-19 to
+  2026-09-12, the whole season. The defects above are historical — baked into events already
+  stored — and an extension by construction never revisits those.
+
+  THE RULE SET IS UNCHANGED. Article VI(b) as the Week 20 build states it: (b)(1) own MLB -> own
+  AAA, (b)(2) own MLB -> another manager's AAA, both as a processed trade; (b)(3) an add to a AAA
+  club when the most-immediate prior roster status was MLB. Preseason rows set level and never
+  burn. Art. V(b)(4)(C)(i) Rule 5 recapture remains the only exemption (Art. VI(d)) and is still
+  granted to Palencia alone, on the commissioner's Aug 24 ruling.
+
+  THE GATE. Nothing was written until the corrected parse reconstructed the live rosters at least
+  as well as the parse it replaces (2 players on the wrong club against 8; 21 phantom-rostered
+  against 28) and until every player already on file was reproduced. Stored 508 players / 1,158
+  events; rebuilt 508 players / 1,158 events — the same universe, reclassified. Burns 259 -> 273.
+  Histogram {0:289, 1:179, 2:40} -> {0:285, 1:173, 2:50}. Over the limit: none.
+
+  THE 14 CORRECTIONS, none downward:
+    Adrian Morejon      1 -> 2  OUT   Jul 16 added by DirtySpikes AAA off an MLB roster
+    Brad Lord           0 -> 1        Jun 18 added by KC Royales off an MLB roster
+    Brandon Pfaadt      0 -> 1        Sep 7  KC Gray -> KC Royales, processed, not pending
+    Carson Benge        1 -> 2  OUT   Jul 16 added by Minion AAA off an MLB roster
+    Chase DeLauter      1 -> 2  OUT   Sep 7  KC Gray -> KC Royales, processed, not pending
+    Dillon Dingler      1 -> 2  OUT   Sep 10 added by hicheddar AAA off an MLB roster
+    Fernando Cruz       0 -> 1        Jul 29 added by hicheddar AAA off an MLB roster
+    Ian Seymour         0 -> 1        Jun 27 added by Flying Squirrels off an MLB roster
+    Kyle Leahy          1 -> 2  OUT   Sep 7  KC Gray -> KC Royales, processed, not pending
+    Munetaka Murakami   1 -> 2  OUT   Sep 7  KC Gray -> KC Royales, processed, not pending
+    Payton Tolle        1 -> 2  OUT   Jun 28 River Cats -> Flying Squirrels
+    Pete Fairbanks      1 -> 2  OUT   Aug 26 added by hicheddar AAA off an MLB roster
+    Will Warren         1 -> 2  OUT   Jul 13 Dirty Spikes -> DirtySpikes AAA
+    Zach Neto           1 -> 2  OUT   Sep 7  KC Gray -> KC Royales, processed, not pending
+
+  RULE 5 — DINGLER REVERTED, AND THE CARD SAYS SO WITHOUT RULING. Art. V(b)(4)(C)(i) shelters a
+  released draftee reacquired BY THE CLUB HE WAS DRAFTED FROM, WITHIN TWO DAYS. Dingler fails
+  both: three days, and hicheddar AAA is the drafting organisation's own club, not Midwest Bears.
+  Art. V(b)(4)(C)(iii) governs instead — he reverted to ordinary property on clearance, and that
+  clause is explicit that no exception to VI(b)(3) is granted, so the option is charged. On the
+  keeper tag, Advisory Opinion 2026-R5-02 (Jul 8) is directly on point: Holding 5 leaves a
+  reacquired draftee in the drafting organisation's hands as ordinary property under the rules as
+  written, and §IV names this exact sequence, declines to bar it by opinion, and refers an
+  anti-circumvention amendment to the membership for the next-season vote. The record card states
+  that and marks the commissioner's determination as pending. RULE5 entries may now carry
+  `reverted`, `reverted_on` and `reverted_note`; the blue note branches on it rather than
+  claiming a reverted player "may NOT be demoted", which is false once he has reverted.
+
+  CSS — THE RULE 5 NOTE RENDERED VERTICALLY. The Options record sits in a .dual-grid half (575px
+  of content at a 1280px viewport) and .player-card split that in two again, so each .formula-row
+  had 254px. The only rule that unstacks .player-card is @media (max-width:700px), which keys off
+  the VIEWPORT — it can never fire for a card that is narrow because of its CONTAINER. Inside
+  254px the note's inline `grid-template-columns:auto 1fr` gave the label its max-content 243.5px
+  and the text 0px; v50.22's min-width:0 on .formula-row>* let the track shrink past min-content
+  instead of holding there, and overflow-wrap:break-word then set 400 characters one per line —
+  measured at 0px wide and 3,752px tall. Fixed twice over: the card now sizes off ITSELF
+  (auto-fit, minmax(min(320px,100%),1fr) — the min() is load-bearing, a bare 320px floor is a
+  HARD minimum and overflowed a 390px phone by 18px), and the note stacks label over text so no
+  track width can collapse it again. Verified headless at 360 / 390 / 768 / 1024 / 1280 / 1600:
+  zero overflow at every width, note 246-549px wide and 204-464px tall, background #edf1f7.
+  The same squeeze was quietly cramping the transaction rows, whose "- 1 option" chips were
+  rendering into a 0px track; they read normally now.
+
+================================================================================
 GORDO NATION TRADE CALCULATOR — v51.3  THE EXIT CLASS CONSTANTS (2026-09-14)
   Same pull and data window as v51.0, v51.1 and v51.2: scoringPeriod 173, matchup period 22 — the
   championship round, SP167-180 — one week in (SP167-173 complete, Sep 7 - Sep 13). Week 22 data.

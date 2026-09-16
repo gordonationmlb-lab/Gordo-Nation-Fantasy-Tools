@@ -360,7 +360,7 @@ body, html { background: transparent; }
   <div class="tc-header">
     <div>
       <p class="tc-title">Gordo Nation Dynasty Trade Calculator</p>
-      <p class="tc-sub"><span id="playerCount">2,118</span> players. Mode: <span id="modeLabel">Risk-Adj</span>. v51.3 &middot; data through Sep 13, 2026.</p>
+      <p class="tc-sub"><span id="playerCount">2,118</span> players. Mode: <span id="modeLabel">Risk-Adj</span>. v51.4 &middot; data through Sep 13, 2026.</p>
     </div>
     <div class="controls">
       <button class="btn" id="clearAll">Clear</button>
@@ -590,6 +590,23 @@ body, html { background: transparent; }
           .opt-fb-r5{background:#dbe5f4;color:#13274F;}
           .opt-fl-r5note{font-size:11px;color:#13274F;background:#edf1f7;padding:8px 12px;line-height:1.45;border-bottom:1px solid var(--color-border,#e3e2dd);}
           .opt-filter-note{font-size:10.5px;color:#9c9b96;margin-top:6px;}
+          /* OPT-7  the Rule 5 note rendered as a 0px-wide, 3,752px-tall column of single
+             characters. .player-card split a 575px dual-grid half into two 280px tracks
+             because the rule that unstacks it keys off the viewport, not the card; the note's
+             `auto 1fr` then left its text track 0px, and min-width:0 + overflow-wrap:break-word
+             broke every character onto its own line. (1) the card sizes off itself; (2) the
+             note stacks, so no track width can collapse it again. */
+          /* the floor is min(320px,100%) and not a bare 320px: a bare one is a HARD minimum
+             and overflowed the 302px card on a 390px phone by 18px. */
+          #optionsBody .player-card,#inspectorBody .player-card{
+            grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));}
+          /* id-qualified so the note keeps its blue: .formula-section .formula-row:nth-of-type(even)
+             is three classes and was repainting it with the navy row tint. */
+          #optionsBody .formula-row.r5-note,#inspectorBody .formula-row.r5-note{
+            display:block;background:#edf1f7;padding:8px 10px;line-height:1.55;}
+          .formula-row.r5-note>.label{display:block;max-width:none;margin-bottom:2px;white-space:normal;}
+          .formula-row.r5-note>.value{display:block;max-width:none;text-align:left;
+            white-space:normal;font-weight:400;font-variant-numeric:normal;}
           /* OPT-1: this dropdown hangs from top:100% of a wrap inside .inspector-header,
              and #optFilterWrap is that header's next sibling -- so it opened directly over
              the four filter buttons and ate their clicks (all four covered at 390px, the
