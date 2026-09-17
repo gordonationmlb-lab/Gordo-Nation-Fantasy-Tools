@@ -1,3 +1,49 @@
+GORDO NATION TRADE CALCULATOR — v51.5  A RELEASE IS NOT A DEMOTION (2026-09-16)
+  Same pull and data window as v51.0-v51.4. Week 22 data. F = 1.0872; absorption 0.90. No weekly
+  refresh ran. Methodology v11 stands.
+  Service worker: gordo-calc-v80-2026-09-13-v51.5.  GN_BUILD v51.5, GN_DATA_THROUGH 2026-09-13.
+
+  v51.5 changes THREE STRINGS and one status branch. No valuation input, no option burn and no
+  ledger entry moves: OPTIONS_DATA is byte-identical to v51.4. Run with patch_ui_v51_5.py --apply
+  and bump_build_v51_1.py v51.5. Acceptance: verify_calc.py FAIL 0, and no Rule 5 player reading
+  ILLEGAL DEMOTION.
+
+================================================================================
+WHAT CHANGED IN v51.5 — the Rule 5 list was calling a legal release an illegal demotion
+
+  v51.4 taught the RECORD CARD that a draftee can revert to ordinary property. It did not teach
+  the RULE 5 FILTER LIST, which computes its own status from the roster and has no `reverted`
+  branch. It saw Dingler on his drafting organisation's AAA club and printed
+  "⚠ ILLEGAL DEMOTION (AAA roster) — Midwest Bears may recapture". Both halves are wrong.
+
+  A DEMOTION is a move from the drafting manager's MLB roster to a AAA roster. Art. V(b)(4)(B)(iii)
+  and (C) prohibit TRADING or DEMOTING a draftee and leave exactly one transaction open: release to
+  waivers. High Cheddar released him Sep 7 — the permitted door. hicheddar AAA acquired him from
+  the pool Sep 10, a separate transaction three days later, by which time he was an ordinary
+  player. Calling that a demotion describes a move that never happened.
+
+  "MIDWEST BEARS MAY RECAPTURE" is equally stale. Advisory Opinion 2026-R5-02, Holding 3:
+  declination or expiry of the two-day window extinguishes every reclamation right, in-season and
+  preseason alike. Their window closed Sep 9. Offering a recapture the rules no longer grant is
+  worse than printing nothing.
+
+  WHAT DOES NOT CHANGE: the option. VI(b)(3) asks one question — what was the most-immediate prior
+  roster status — and the answer is MLB. Time in the free-agent pool has no bearing on it, and
+  V(b)(4)(C)(iii) says in terms that no exception to VI(b)(3) is granted to a reverted player. The
+  Sep 10 burn stands; the ledger is untouched.
+
+  THE THIRD EXIT, now stated. The list's standing note described two ways off the MLB roster —
+  recapture on an attempted illegal demotion, or a waiver claim by the original manager — and
+  omitted the one that actually occurred: the original manager passes, the window expires, the
+  player clears, and he reverts to ordinary property under (C)(iii), keeper-eligible on ordinary
+  terms under Holding 5 even if the drafting organisation signs him back. The note says so now,
+  and says that such a signing still charges an option.
+
+  The record card's note for Dingler is restated in the same terms: it leads with "This was a
+  RELEASE, not a demotion," and it still marks the commissioner's determination as pending rather
+  than ruling on the keeper tag.
+
+================================================================================
 GORDO NATION TRADE CALCULATOR — v51.4  THE OPTIONS LEDGER, REBUILT (2026-09-16)
   Same pull and data window as v51.0-v51.3: scoringPeriod 173, matchup period 22 — the
   championship round — one week in (SP167-173 complete, Sep 7 - Sep 13). Week 22 data.
