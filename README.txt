@@ -1,3 +1,272 @@
+GORDO NATION TRADE CALCULATOR — v51.6  THE PROSPECT BOARD, RE-READ (2026-09-17)
+  Same pull and data window as v51.0-v51.5: scoringPeriod 173, matchup period 22 — the championship round —
+  one week in (SP167-173 complete, Sep 7 - Sep 13). Week 22 data. F = 162/149 = 1.0872; September absorption
+  0.90. No weekly refresh ran. Methodology v11 stands.
+  Service worker: gordo-calc-v81-2026-09-13-v51.6.  GN_BUILD v51.6, GN_DATA_THROUGH 2026-09-13.
+
+  v51.6 is a VALUATION-INPUT build: every tool-basis prospect record (950 of 2,118) was re-read from the five outlets
+  on 17 Sep 2026 — the first time any outlet has been read since the June 21 blend. GNFV, the tool ceiling, the
+  tool-matrix bust, the level proximity and the maturation stage were all recomputed; 76 T4s with 2026 MLB time
+  were graduated to T3 on the commissioner's call. The injury module, the pace multipliers, the options ledger
+  and every non-prospect record are byte-identical to v51.5. RAW 525.39 -> 526.03.
+
+  Run with bump_build_v51_1.py v51.6, apply_gnfv_v51_6.py --apply, write_readme_v51_6.py, stamp.py --apply and
+  resync_ceiling_workbook_v51.6.py --apply. Acceptance: verify_calc.py FAIL 0 (WARN 1, the standing designation-lag
+  warning), the invariant sweep inside apply_gnfv_v51_6.py (identity, tj, clean Hit%%, $, T4-with-MLB-games) ALL CLEAR,
+  and the workbook's phase guard admitting exactly the tagged graduations.
+
+================================================================================
+WHAT CHANGED IN v51.6 — the five outlets, read again
+
+  HOW THIS STARTED. The v51.5 README carried, under STILL NOT COVERED, "the 737 non-ESPN prospects carry forward
+  unverified; 55 bridged T4 prospects with 2026 MLB cameos are still T4". Both dated from June 21: apply_gnfv7.py
+  (v25) blended FanGraphs, MLB Pipeline, Just Baseball, Prospects Live and TJStats once, rebuild_gradeless.py (v29)
+  read FanGraphs' tool grades once, and apply_prox74.py placed the top prospects on the level ladder from a June web
+  check. Thirteen builds later a July draft class had arrived, FanGraphs had re-graded its whole board, Pipeline had
+  re-ranked every system, three of the outlets had published new Top 100s and 76 of the board's T4s had played in
+  the majors. The commissioner asked for the grades and the proximity to be re-read for every prospect.
+
+  THE SOURCES (sources/ in the build folder, all captured through the commissioner's Chrome session on 17 Sep):
+     fg_board_2026-09-17.json        FanGraphs The Board, "2026 Updated" — 1,371 rows, every team list: FV, ETA, present /
+                                     future tool grades, current level, age, birth date. Read out of the page's own data.
+     fg_graduates_2026-09-17.json    FanGraphs 2026 Graduates — 88 players who exhausted rookie eligibility this year, with
+                                     the FV and grades FanGraphs left them on.
+     mlbp_prospects_2026-09-17.json  MLB Pipeline Top 100 + thirty team Top 30s — 900 players: Overall grade, tool grades,
+                                     ETA, current club and level, read from each page's embedded state.
+     jb_top100_2026-09-17.json       Just Baseball Top 100 for 2026 (page dated 25 Aug): FV with the "+" tier edge, tool grades.
+     pl_top100_2026-09-17.json       Prospects Live Pro Scouting Top 100 (17 Aug): OFP, level, ETA, future tool grades.
+     tj_top100_2026-09-17.json       TJStats Top 100, post-draft update (1 Aug; player cards updated 17 Sep): FV, tools.
+  Coverage on the board: FanGraphs anchors 949 of 950 records, Pipeline 517 (378 in June), Just Baseball 84, Prospects
+  Live 84 (39 in June), TJStats 88. Source-count confidence: High (5) 67, Medium High 16, Medium 20, Medium Low 417, Low 430.
+
+  THE BLEND IS THE JUNE BLEND. Same position-group weights (FG/MLBP/JB/PL/TJ — hitters 33/24/16/14/13, pitchers
+  36/24/14/13/13, catchers 29/33/14/14/10), renormalised over the sources that grade each player; Pipeline on
+  FanGraphs' scale as 0.92x + 3.2 (the June fit, n=378); TJStats' top end decompressed 50 + (x - 50) x 1.8 (their
+  scale still stops at 60); FanGraphs' and Just Baseball's "+" read as +2. GNFV rose on 213 records, fell on 294 and
+  held on 443. The ceiling follows GNFV exactly as v29 built it (cfv = GNFV + the de-risk premium, on the v28 scaled
+  curve), and Pure moves by the RATIO of the recomputed tc x blend x maturation to the stored one, so a ratchet, a
+  hand adjustment or a scarcity factor already inside a record's Pure rides through untouched.
+
+  THE GRADES. 872 records were re-graded on the v13 tool matrix from FanGraphs' current future grades; 337 of them had
+  never had grades on the record at all — their June bust was the 0.10 floor or an FV fallback, and they are where the
+  largest moves in this build sit (A.J. Ewing 0.10 -> 0.41, Nick Yorke 0.31 -> 0.67, Carson Williams 0.27 -> 0.52). Across
+  those with a June bust to compare (333) it moved -0.05 on average (190 down, 121 up, 22 flat), so the matrix is not systematically harsher than the fallback
+  it replaces; it is specific. Records with no current FanGraphs grades keep their bust and say so in the note. The
+  weak-command SP blend (CMD <= 45) is re-derived with the grades: it eases on Bubba Chandler (0.70 -> 0.86 — a 70
+  fastball and a 70 changeup move the SP/RP/washout mix to 65/35/0) and tightens on Seth Hernandez (command 20/40,
+  0.74) and Gage Jump (35/45, 0.80), which is most of what moved those three.
+
+  LEVEL -> PROXIMITY -> LADDER. Each prospect's level is the highest he has reached in 2026 across FanGraphs (mlevel,
+  else llevel), Pipeline's current club, Prospects Live's and TJStats' levels played, and ESPN MLB time; the stage the
+  record already held is a floor (v50.20: a promotion never withdraws proximity credit, so a rehab assignment or a
+  demotion listed today does not pull anyone down the ladder). Proximity bands as methodology 11 / apply_prox74:
+  Rookie +0.25/+0.35, A and A+ +0.15/+0.20, AA -0.05/0.00, AAA and MLB -0.10/-0.05 (hitter/pitcher). 295 records changed
+  proximity and 263 changed stage: A-or-below -> AA 109, AA -> AAA 64, A-or-below -> AAA 14, and the graduations below.
+  72 records (all but three of them T3s who graduated before 2026) are on no current list; they keep the stage and
+  proximity the record already carried.
+
+  GRADUATIONS. A T4 is a player who has not played in the majors; 76 of them had — an ESPN-bridged record with 2026
+  games or innings, or a name on FanGraphs' 2026 Graduates list. On the commissioner's call (17 Sep) they are T3 now,
+  phased by the weekly's own rule on cumulative 2025 + 2026 FP (hitters 150 / 500, pitchers 250 / 750): 68 Honeymoon
+  (x0.60, phase factor 0.80, Hit% cap 0.85), 8 Book (x0.80, phase factor 1.15). One is rostered — Josue De Paula,
+  River Cats, 3 G -> MLB Honeymoon, $0.74 -> $1.11. The pace multiplier stays 1.00 for all of them (the §13 gate opens
+  for a T3 only at Established, on the next weekly run). Every graduation carries a GRADUATION note on the record and
+  the workbook's phase guard admits exactly those blank -> value flips.
+
+  OFF THE BOARD. FanGraphs' team lists bottom out at 35+; a T4 who was on the June board and is on no FanGraphs list
+  now has fallen below that, and reads FG 35 (the list floor): Jhonkensy Noel, Jacob Berry, Eli Whithold, Triston McKenzie, JP Wheat, Tink Hence, Landon Beidelschies.
+  Three of the seven (McKenzie, Noel, Berry) were carrying a T4 tag they should never have had; the floor takes them to
+  ~$0.10, which is where an unowned, unlisted free agent belongs, and the tag is left for the classification review.
+  70 T3 tool-basis records graduated before 2026 and are on no 2026 list (Sasaki, Jobe, Rushing, Mayer, Dollander, ...);
+  they keep their June FG, marked "carried" in the note and the consensus sheet.
+
+  WHAT v51.6 DID TO THE BOARD. RAW 525.39 -> 526.03 (prospects rarely carry an ESPN id, so the $ anchor barely moves).
+  Prospect RA 175,010 -> 192,758 (+10.1%); whole board 805,599 -> 823,347 (+2.2%). The rise is the graduations and the ladder climbs
+  (a summer of promotions moved 187 prospects up a stage) landing mostly in the free-agent pool; the rostered prospect
+  pool is DOWN on every club but Balking Dead and the Bears (Dirty Spikes flat), because rostered prospects are the graduated ones whose
+  outside outlets stopped grading them (a graduate's GNFV collapses to FanGraphs alone) and whose FanGraphs grades came
+  in below the June fallback.
+
+  ROSTERED MOVERS ($, v51.5 -> v51.6; RA at the old and new RAW)
+     A.J. Ewing             River Cats               CF  T3 Established     1130 ->   601   $2.15 -> $1.14 (-1.01)   GNFV 53 -> 47   bust 0.41   1 src
+     Travis Bazzana         C-Town Liquors           2B  T3 Established     1077 ->   846   $2.05 -> $1.61 (-0.44)   GNFV 53 -> 50   bust 0.36   1 src
+     Gage Jump              KC Gray Hotdogs          SP  T3 MLB Book         766 ->   555   $1.46 -> $1.06 (-0.40)   GNFV 52.4 -> 50   bust 0.23   1 src
+     Bryce Eldridge         River Cats               DH  T3 Established     1023 ->   868   $1.95 -> $1.65 (-0.30)   GNFV 54.6 -> 55   bust 0.39   1 src
+     Carter Jensen          Kansas Sunflower Seeds   C   T3 Established      946 ->   790   $1.80 -> $1.50 (-0.30)   GNFV 53.3 -> 50   bust 0.41   1 src
+     Seth Hernandez         C-Town Liquors           SP  T4 A-or-below       328 ->   182   $0.62 -> $0.35 (-0.27)   GNFV 60.4 -> 60.7   bust 0.28   5 src
+     Kevin McGonigle        C-Town Liquors           SS  T3                 1389 ->  1265   $2.64 -> $2.40 (-0.24)   GNFV 63 -> 60   bust 0.20   1 src
+     Braden Montgomery      River Cats               CF  T3 MLB Book         651 ->   549   $1.24 -> $1.04 (-0.20)   GNFV - -> 50   bust 0.37   1 src
+     Andrew Painter         C-Town Liquors           SP  T3 MLB Book         933 ->   837   $1.78 -> $1.59 (-0.19)   GNFV 53 -> 55   bust 0.24   1 src
+     Hagen Smith            C-Town Liquors           SP  T3 MLB Book         471 ->   377   $0.90 -> $0.72 (-0.18)   GNFV 55.2 -> 49.7   bust 0.54   3 src
+     Charlie Condon         C-Town Liquors           1B  T4 AAA              386 ->   289   $0.73 -> $0.55 (-0.18)   GNFV 57.4 -> 50   bust 0.52   4 src
+     Samuel Basallo         River Cats               C   T3 Established     1501 ->  1421   $2.86 -> $2.70 (-0.16)   GNFV 63.2 -> 65   bust 0.34   1 src
+     Ryan Sloan             C-Town Liquors           SP  T4 AA               580 ->   499   $1.10 -> $0.95 (-0.15)   GNFV 63.7 -> 58.9   bust 0.16   5 src
+     Ethan Holliday         C-Town Liquors           SS  T4 A-or-below       218 ->   149   $0.41 -> $0.28 (-0.13)   GNFV 62.3 -> 50.9   bust 0.37   5 src
+     Payton Tolle           KC Gray Hotdogs          SP  T3 Established     1335 ->  1273   $2.54 -> $2.42 (-0.12)   GNFV 56.3 -> 55   bust 0.10   1 src
+     Kade Anderson          High Cheddar             SP  T3 MLB Honeymoon    915 ->   855   $1.74 -> $1.63 (-0.11)   GNFV 62.9 -> 60.7   bust 0.12   5 src
+     ---
+     Bubba Chandler         C-Town Liquors           SP  T3 Established     1008 ->  1259   $1.92 -> $2.39 (+0.47)   GNFV 59.5 -> 60   bust 0.10   1 src
+     Josue De Paula         River Cats               LF  T3 MLB Honeymoon    390 ->   582   $0.74 -> $1.11 (+0.37)   GNFV 63.1 -> 57.8   bust 0.42   5 src
+     Jarlin Susana          C-Town Liquors           SP  T4 AAA              307 ->   391   $0.58 -> $0.74 (+0.16)   GNFV 54.2 -> 53   bust 0.28   5 src
+     Franklin Arias         River Cats               SS  T4 AAA              517 ->   602   $0.98 -> $1.14 (+0.16)   GNFV 61.4 -> 61   bust 0.27   5 src
+     Carson Benge           Balking Dead             CF  T3 Established      899 ->   964   $1.71 -> $1.83 (+0.12)   GNFV 55.6 -> 55   bust 0.31   1 src
+     Konnor Griffin         River Cats               SS  T3 MLB Book        1351 ->  1382   $2.57 -> $2.63 (+0.06)   GNFV 68.4 -> 70   bust 0.10   1 src
+     Jesus Made             River Cats               SS  T4 AA               600 ->   632   $1.14 -> $1.20 (+0.06)   GNFV 63.8 -> 65.6   bust 0.10   5 src
+     Eduardo Valencia       KC Gray Hotdogs          C   T3 MLB Book         356 ->   380   $0.68 -> $0.72 (+0.04)   GNFV 40.9 -> 42   bust 0.46   1 src
+  FREE-AGENT MOVERS: up — Ty Johnson $0.21 -> $0.85, Owen Murphy $0.36 -> $0.97, Ethan Salas $0.65 -> $1.26, Kade Morris $0.27 -> $0.87, Demetrio Crisantes $0.31 -> $0.89, Harry Ford $0.34 -> $0.92, Santiago Suarez $0.25 -> $0.81, Matt Wilkinson $0.26 -> $0.74, Carlos Jorge $0.15 -> $0.60, Sean Keys $0.09 -> $0.53;
+     down — Carson Williams $1.58 -> $0.78, Nick Yorke $1.10 -> $0.31, Owen Caissie $1.69 -> $0.91, Tyler Callihan $0.99 -> $0.31, Jacob Gonzalez $0.87 -> $0.27, Jimmy Crooks $1.32 -> $0.73, Henry Bolte $1.15 -> $0.60, Rhett Lowder $1.55 -> $1.01, Daniel Susac $0.89 -> $0.39, Miguel Ullola $0.85 -> $0.37.
+  PROSPECT RA BY ORG (v51.5 -> v51.6):
+     FA                       141,753 -> 161,138  $269.81 -> $306.33 (+36.52)
+     C-Town Liquors            14,410 ->  13,757  $27.43 -> $26.15 (-1.27)
+     River Cats                10,147 ->   9,516  $19.31 -> $18.09 (-1.22)
+     KC Gray Hotdogs            4,001 ->   3,794  $7.62 -> $7.21 (-0.40)
+     Balking Dead               1,751 ->   1,816  $3.33 -> $3.45 (+0.12)
+     High Cheddar               1,067 ->   1,007  $2.03 -> $1.91 (-0.12)
+     Kansas Sunflower Seeds       946 ->     790  $1.80 -> $1.50 (-0.30)
+     MidwestBears                 710 ->     715  $1.35 -> $1.36 (+0.01)
+     Dirty Spikes                 225 ->     225  $0.43 -> $0.43 (-0.00)
+  2_Org_Rankings recomputed (River Cats 52,891 still first, KC Gray Hotdogs 52,626 second); C-Town Liquors 43,045 -> 42,392
+  (-1.5%%, Bazzana -231 RA, McGonigle -124, Painter -96, Hagen Smith -94; Chandler +251) and River Cats 53,522 -> 52,891 (-1.2%%,
+  Ewing -529) carry the largest rostered moves; Dirty Spikes is unchanged to the RA and the Bears move +5.
+
+  THE GRADUATIONS (T4 -> T3; G / IP are 2026 MLB; cum FP is 2025 + 2026):
+     Luis Lara              FA (MIL)       CF  G 49  IP 0.0    cum 270  -> Book      (AAA -> MLB Book)
+     Brett Bateman          FA (CHC)       CF  G 31  IP 0.0    cum 239  -> Book      (AAA -> MLB Book)
+     Gabriel Hughes         FA (COL)       SP  G 13  IP 59.3   cum 223  -> Honeymoon (AAA -> MLB Honeymoon)
+     Abimelec Ortiz         FA (WSH)       1B  G 37  IP 0.0    cum 197  -> Book      (AAA -> MLB Book)
+     Trent Harris           FA (SF)        RP  G 15  IP 17.0   cum 192  -> Honeymoon (AAA -> MLB Honeymoon)
+     Justin Hagenman        FA (NYM)       SP  G 2   IP 4.0    cum 188  -> Honeymoon (AAA -> MLB Honeymoon)
+     Tyler Schweitzer       FA (CWS)       RP  G 18  IP 37.3   cum 182  -> Honeymoon (AAA -> MLB Honeymoon)
+     Kaelen Culpepper       FA (MIN)       SS  G 30  IP 0.0    cum 181  -> Book      (AAA -> MLB Book)
+     Tommy White            FA (ATH)       3B  G 44  IP 0.0    cum 176  -> Book      (AA -> MLB Book)
+     Harry Ford             FA (WSH)       C   G 30  IP 0.0    cum 166  -> Book      (A-or-below -> MLB Book)
+     Riley Cornelio         FA (WSH)       RP  G 14  IP 27.7   cum 164  -> Honeymoon (AAA -> MLB Honeymoon)
+     Mitch Bratt            FA (ARI)       SP  G 10  IP 44.0   cum 158  -> Honeymoon (AA -> MLB Honeymoon)
+     Hector Rodriguez       FA (CIN)       RF  G 31  IP 0.0    cum 155  -> Book      (AAA -> MLB Book)
+     Angel Genao            FA (CLE)       SS  G 32  IP 0.0    cum 153  -> Book      (AAA -> MLB Book)
+     Mason Adams            FA (CWS)       SP  G 4   IP 18.7   cum 147  -> Honeymoon (AAA -> MLB Honeymoon)
+     George Klassen         FA (LAA)       SP  G 6   IP 27.0   cum 143  -> Honeymoon (AAA -> MLB Honeymoon)
+     Alex McFarlane         FA (PHI)       RP  G 15  IP 14.7   cum 141  -> Honeymoon (AA -> MLB Honeymoon)
+     Joshua Kuroda-Grauer   FA (ATH)       2B  G 16  IP 0.0    cum 116  -> Honeymoon (AAA -> MLB Honeymoon)
+     Ethan Pecko            FA             SP  G 5   IP 23.0   cum 108  -> Honeymoon (A-or-below -> MLB Honeymoon)
+     Jose Cabrera           FA (ARI)       RP  G 7   IP 27.0   cum 106  -> Honeymoon (AA -> MLB Honeymoon)
+     Zac Veen               FA (COL)       LF  G 26  IP 0.0    cum 105  -> Honeymoon (A-or-below -> MLB Honeymoon)
+     Kahlil Watson          FA (CLE)       CF  G 27  IP 0.0    cum 84   -> Honeymoon (AAA -> MLB Honeymoon)
+     Yunior Marte           FA (SF)        SP  G 3   IP 14.7   cum 84   -> Honeymoon (AA -> MLB Honeymoon)
+     Matt Wilkinson         FA (CLE)       SP  G 6   IP 19.7   cum 82   -> Honeymoon (A-or-below -> MLB Honeymoon)
+     Kohl Drake             FA (ARI)       SP  G 5   IP 20.7   cum 77   -> Honeymoon (AAA -> MLB Honeymoon)
+     Drew Cavanaugh         FA (SF)        C   G 50  IP 0.0    cum 77   -> Honeymoon (AAA -> MLB Honeymoon)
+     John Peck              FA (DET)       SS  G 10  IP 0.0    cum 74   -> Honeymoon (AA -> MLB Honeymoon)
+     Kevin Alcantara        FA (CHC)       CF  G 20  IP 0.0    cum 73   -> Honeymoon (A-or-below -> MLB Honeymoon)
+     Andrew Sears           FA (DET)       RP  G 4   IP 16.7   cum 73   -> Honeymoon (AA -> MLB Honeymoon)
+     Jackson Kent           FA (WSH)       SP  G 6   IP 27.3   cum 67   -> Honeymoon (AA -> MLB Honeymoon)
+     Lazaro Montes          FA (SEA)       RF  G 11  IP 0.0    cum 60   -> Honeymoon (AA -> MLB Honeymoon)
+     Sean Keys              FA (TOR)       3B  G 17  IP 0.0    cum 60   -> Honeymoon (A-or-below -> MLB Honeymoon)
+     Ricky Tiedemann        FA (TOR)       SP  G 5   IP 6.0    cum 56   -> Honeymoon (AAA -> MLB Honeymoon)
+     Carson Palmquist       FA (COL)       RP  G 11  IP 16.3   cum 56   -> Honeymoon (AAA -> MLB Honeymoon)
+     Cooper Hjerpe          FA (STL)       RP  G 2   IP 5.0    cum 53   -> Honeymoon (AA -> MLB Honeymoon)
+     Brock Rodden           FA (SEA)       2B  G 22  IP 0.0    cum 52   -> Honeymoon (AA -> MLB Honeymoon)
+     Khristian Curtis       FA (PIT)       SP  G 4   IP 14.0   cum 49   -> Honeymoon (AA -> MLB Honeymoon)
+     Michael Arroyo         FA (SEA)       2B  G 4   IP 0.0    cum 46   -> Honeymoon (AA -> MLB Honeymoon)
+     Josue De Paula         River Cats     LF  G 3   IP 0.0    cum 41   -> Honeymoon (AA -> MLB Honeymoon)
+     Owen Murphy            FA (ATL)       SP  G 3   IP 6.7    cum 38   -> Honeymoon (A-or-below -> MLB Honeymoon)
+     Connor Thomas          FA (ATL)       RP  G 13  IP 17.3   cum 36   -> Honeymoon (AAA -> MLB Honeymoon)
+     Marco Raya             FA (MIN)       RP  G 3   IP 6.0    cum 31   -> Honeymoon (AAA -> MLB Honeymoon)
+     Austin Peterson        FA (CLE)       SP  G 1   IP 2.0    cum 28   -> Honeymoon (AAA -> MLB Honeymoon)
+     Nick Morabito          FA (NYM)       CF  G 12  IP 0.0    cum 28   -> Honeymoon (AA -> MLB Honeymoon)
+     Ty Johnson             FA (TB)        SP  G 3   IP 2.3    cum 27   -> Honeymoon (A-or-below -> MLB Honeymoon)
+     Nate Furman            FA (SF)        2B  G 19  IP 0.0    cum 27   -> Honeymoon (AAA -> MLB Honeymoon)
+     Luis De León           FA (BAL)       SP  G 5   IP 5.3    cum 24   -> Honeymoon (AA -> MLB Honeymoon)
+     Jared Serna            FA (MIA)       SS  G 6   IP 0.0    cum 20   -> Honeymoon (AAA -> MLB Honeymoon)
+     Blake Walston          FA (ARI)       SP  G 2   IP 3.0    cum 14   -> Honeymoon (AAA -> MLB Honeymoon)
+     Luis Perales           FA (WSH)       RP  G 4   IP 7.0    cum 13   -> Honeymoon (AAA -> MLB Honeymoon)
+     Sean Sullivan          FA (COL)       RP  G 3   IP 15.3   cum 11   -> Honeymoon (AA -> MLB Honeymoon)
+     James Triantos         FA (CHC)       2B  G 5   IP 0.0    cum 10   -> Honeymoon (AAA -> MLB Honeymoon)
+     Brendan Beck           FA (NYY)       SP  G 3   IP 7.7    cum 7    -> Honeymoon (AAA -> MLB Honeymoon)
+     Dylan Ross             FA (NYM)       RP  G 1   IP 1.0    cum 6    -> Honeymoon (AAA -> MLB Honeymoon)
+     Braxton Roxby          FA (SF)        RP  G 2   IP 2.0    cum 6    -> Honeymoon (AAA -> MLB Honeymoon)
+     Blake Burkhalter       FA (ATL)       RP  G 1   IP 1.0    cum 2    -> Honeymoon (AAA -> MLB Honeymoon)
+     Winston Santos         FA (TEX)       SP  G 1   IP 2.0    cum 1    -> Honeymoon (AAA -> MLB Honeymoon)
+     Robby Snelling         FA (MIA)       SP  G 1   IP 5.0    cum 0    -> Honeymoon (AAA -> MLB Honeymoon)
+     Cade Winquest          FA (NYY)       RP  G 1   IP 0.0    cum 0    -> Honeymoon (AA -> MLB Honeymoon)
+     Ben Ross               FA (MIN)       SS  G 3   IP 0.0    cum -1   -> Honeymoon (AAA -> MLB Honeymoon)
+     BJ Murray              FA (CHC)       3B  G 6   IP 0.0    cum -2   -> Honeymoon (AAA -> MLB Honeymoon)
+     Brody Hopkins          FA (TB)        SP  G 1   IP 1.0    cum -3   -> Honeymoon (AAA -> MLB Honeymoon)
+     Kyler Fedko            FA (MIN)       RF  G 10  IP 0.0    cum -3   -> Honeymoon (AAA -> MLB Honeymoon)
+     Ethan Salas            FA (SD)        C   G 7   IP 0.0    cum -6   -> Honeymoon (AA -> MLB Honeymoon)
+     Trei Cruz              FA             SS  G 2   IP 0.0    cum -6   -> Honeymoon (A-or-below -> MLB Honeymoon)
+     Emiliano Teodo         FA (TEX)       RP  G 1   IP 1.7    cum -6   -> Honeymoon (AAA -> MLB Honeymoon)
+     Carlos Jorge           FA (CIN)       CF  G 6   IP 0.0    cum -9   -> Honeymoon (A-or-below -> MLB Honeymoon)
+     Tanner McDougal        FA (CWS)       SP  G 1   IP 0.3    cum -12  -> Honeymoon (AA -> MLB Honeymoon)
+     Cooper Ingle           FA (CLE)       C   G 7   IP 0.0    cum -16  -> Honeymoon (AAA -> MLB Honeymoon)
+     Yilber Díaz            FA             RP  G 5   IP 6.0    cum -22  -> Honeymoon (A-or-below -> MLB Honeymoon)
+     Braxton Garrett        FA (MIA)       SP  G 2   IP 4.3    cum -22  -> Honeymoon (A-or-below -> MLB Honeymoon)
+     Kade Morris            FA (ATH)       SP  G 6   IP 17.3   cum -27  -> Honeymoon (A-or-below -> MLB Honeymoon)
+     Hancel Rincon          FA (STL)       SP  G 2   IP 1.3    cum -29  -> Honeymoon (AA -> MLB Honeymoon)
+     Wilkin Ramos           FA (SF)        RP  G 2   IP 2.0    cum -29  -> Honeymoon (AAA -> MLB Honeymoon)
+     Jose Corniell          FA (TEX)       SP  G 2   IP 4.3    cum -39  -> Honeymoon (AAA -> MLB Honeymoon)
+     Jedixson Paez          FA (CWS)       SP  G 4   IP 6.7    cum -60  -> Honeymoon (A-or-below -> MLB Honeymoon)
+
+  WHAT IS ON EACH RECORD NOW. eng.fg_fv / mlbp_fv / jb_fv / pl_fv / tj_fv are the outlets' RAW grades; eng.gnfv, nsrc,
+  conf, fv (= round GNFV), cfv and tc the blend and the ceiling; eng.fg_src says board / graduates / off-board floor /
+  carried; eng.lvl and lvl_src the level and where it came from; eng.eta (FanGraphs, else Pipeline), fg_rank, fg_org_rank,
+  fg_trend, mlbp_rank / mlbp_eta / mlbp_lvl, jb_rank, pl_rank, tj_rank the outlets' own placements; eng.grades the
+  current FanGraphs tool grades with grades_asof; eng.bd the FanGraphs birth date. Nothing in the calculator UI reads a
+  new field yet — the Inspector's tool-ceiling, bust and proximity rows show the refreshed values through the fields
+  they already read, and the GNFV REFRESH note on every record carries the sources and the before/after.
+
+================================================================================
+THE WORKBOOK (resync_ceiling_workbook_v51.6.py --apply, from the v51.3 workbook)
+  1_Player_Inputs refreshed in place (1,412 rows, 204 Risk-Adj moved) with the tier and phase of the graduates written;
+  2_Org_Rankings recomputed. 12_Prospect_Consensus_FV is REBUILT for the 17 Sep vintage — all 950 tool-basis records,
+  the five raw outlet grades, GNFV with the June 21 GNFV beside it, the v51.5 $ and the delta, tier / stage, level, ETA,
+  bust, proximity, ceiling, Pure, Hit%, Risk-Adj and the FG source. 7_Prospect_Rankings is REBUILT: Top 100 by Pure
+  ceiling (T4 + T3 Book/Honeymoon) and the per-level Top 25s, with GNFV / sources / bust / level in the note column.
+  Every other sheet keeps its [NOT REFRESHED WK22] banner. Written as Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED_v51.6.xlsx
+  at the league root and in this build folder; the root UNIFIED.xlsx is not touched.
+
+================================================================================
+THE OTHER TOOLS
+  verify_calc.py       FAIL 0, WARN 1 — the standing 23 designation-vs-module soft disagreements. Every prospect record
+                       reproduces r = round(pc x pm x h x im), tj = tjp x Hit%(age+k) x f[k], the clean Hit% assembly and
+                       d = r / RAW; HISTORY's 2026-09-13 snapshot restated with the refreshed r; GNDAILY.raw re-stamped.
+  apply_gnfv_v51_6.py  dry run prints the whole report; --apply refuses to write on any invariant violation. Writes
+                       gnfv_report_2026-09-17.json (movers, graduations, off-board, carried, no-level, age gaps, orgs)
+                       and gnfv_consensus_2026-09-17.json (the table the workbook sheet is built from).
+  stamp.py             two fixes. (1) The pages' as-of line had grown four stray closing parentheses since v51.1 — the
+                       editorial clause carried "(&times;1.50)", the pattern stopped at its ')' and left the outer one
+                       behind on every stamp, so v51.5 shipped "...(&times;1.50)))))". The pattern now matches to the
+                       next tag and writes one paren back. (2) The README identity line is dated by the BUILD date
+                       (build.json 'built', new), as v51.3-v51.5 wrote it by hand, not by the pull date; and only
+                       this build's card (above the first rule) is stamped, since the earlier builds' cards below it
+                       carry lines of the same shape.
+  package.py --apply   the flat app zip and the build zip, stamps re-read from the archive.
+
+================================================================================
+STILL NOT COVERED (carried from v51.5 unless struck here)
+  - STRUCK: "737 non-ESPN prospects carry forward unverified" and "55 bridged T4 prospects with 2026 MLB cameos are
+    still T4" — every tool-basis record was re-read on 17 Sep and the 76 with MLB time are T3.
+  - NEW: the 2026 draft class and the summer's new international signings are NOT on the board. FanGraphs' list carries
+    54 rows with no player id yet, and the outlets' Top 100s name Roch Cholowsky (FG #18, 55 FV), Grady Emerson (#14),
+    Vahn Lackey (#13), Jackson Flora, Eric Booth Jr., Tyler Bell, Drew Burress, Taitn Gray, Cooper Flemming and others
+    who have no calculator record. Adding them is a build_prospects.py pass with an ESPN-id bridge, not a refresh.
+  - NEW: ages. FanGraphs' decimal current age runs a year or more ahead of the board's integer a on 117 records —
+    birthdays passed since the June AGE FIX, or a season-age convention; the FanGraphs birth date is now stored on
+    eng.bd for the fix, which touches the growth ramp and is a separate step.
+  - NEW: a graduate's GNFV is FanGraphs alone once the prospect outlets stop listing him (Basallo, Griffin, Tolle, ...
+    all read 1 src / Low). That is the data, not a defect, but the confidence column should be read that way.
+  - NEW: three T4-tagged veterans (Triston McKenzie, Jhonkensy Noel, Jacob Berry) sit at the FG floor; the tag is wrong,
+    not the value — Player_Classifications_Review.xlsx is where that gets fixed.
+  - R phase-out INSIDE the return season (spec 3.8) is still not coded; the second-season half-weight and the 0.85
+    workload factor on a mid-season return remain judgement calls; the Hit% base recalibration is a back-test gate item.
+  - Evidence rule for IL pitchers with more than 15 appearances (per-game logs); starting pitchers' appearances are G
+    rather than GS in the rate multiplier; 23 players outside ESPN's 3,000-player pool hold last build's appearances.
+  - 10 name/age bridge mismatches (Jake Rogers, Chadwick Tromp, Hayden Birdsong, Albert Suarez, Porter Hodge, Carlos
+    Rodriguez, Orlando Ribalta, Josh Simpson, Jose Devers, Yunior Marte) treated as no record.
+  - 16 MEDIUM news-facts entries still await review; Martin and Stewart carry review flags.
+  - season_roll_lambda_v50.21.py is staged but NOT run; it needs --apply --confirm-season-complete after the World Series.
+
+================================================================================
 GORDO NATION TRADE CALCULATOR — v51.5  A RELEASE IS NOT A DEMOTION (2026-09-16)
   Same pull and data window as v51.0-v51.4. Week 22 data. F = 1.0872; absorption 0.90. No weekly
   refresh ran. Methodology v11 stands.
