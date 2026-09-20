@@ -1,3 +1,234 @@
+GORDO NATION TRADE CALCULATOR — v51.9  NOTHING LEFT TO RELEASE (2026-09-20)
+  Same pull and data window as v51.0-v51.8: scoringPeriod 173, matchup period 22 — the championship
+  round — one week in (SP167-173 complete, Sep 7 - Sep 13). Week 22 data. F = 162/149 = 1.0872;
+  September absorption 0.90. No weekly refresh ran. Methodology v11 stands.
+  Service worker: gordo-calc-v84-2026-09-13-v51.9.  GN_BUILD v51.9, GN_DATA_THROUGH 2026-09-13.
+
+  v51.9 is a RENDER build like v51.8: one branch inside one section of the Player Inspector, and
+  nothing else. PLAYERS is byte-identical to v51.7 and v51.8, and so is every one of the 7,048,645
+  bytes of code outside renderInspector.
+  Run with patch_ui_v51_9.py --apply and bump_build_v51_1.py v51.9, then stamp.py --apply.
+  Acceptance: verify_calc.py FAIL 0 (WARN 1, the standing designation-lag warning), verify_v51_9.js
+  PASS, and render_check_v51_9.js PASS — an A/B of the rendered panel HTML against v51.8.
+
+================================================================================
+WHAT CHANGED IN v51.9 — a release that releases nothing should not print a second ceiling
+
+  HOW THIS STARTED. Spot-checking v51.8 through the live inspector at the commissioner's request.
+  Emmet Sheehan's panel read
+
+      = Peak RA (ceiling, risk-adjusted)     939
+        Bust-risk-off release cap            no scouted ceiling on file — release uncapped
+      = Peak RA (ceiling, bust-risk-off)     938   Y2, age 27
+
+  — the released ceiling one point BELOW the risk-adjusted one, which reads as though releasing risk
+  cost him value. Exactly the misreading v51.8 was built to remove, reappearing at the other end of
+  the scale.
+
+  WHY IT HAPPENED. Two things are true of Sheehan and of 51 others:
+
+    * He has nothing to release. Of the 52, 49 are production-basis records, 2 vet and 1 tool; their
+      mean matrix bust is 0.002 and the largest on the list is 0.10. The bust-risk-off view IS the
+      risk-adjusted view for them.
+    * The two figures are not the same statistic. `r` is peak-season RA at the player's true peak age
+      (26 hitters / 27 pitchers); the grid's maximum is the best of the ten years actually listed.
+      For a 26-year-old SP those land in different years, and both are rounded. Sheehan's unrounded
+      gap is 0.88 of a point — the number was right and the presentation was wrong.
+
+  WHAT THE PANEL DOES NOW. When the released peak does not come out ABOVE the risk-adjusted ceiling,
+  the cap row, the released-peak row and the long note are replaced by one line — "there is nothing
+  left to release on this record ... so the ten-year grid below is the same view as the chain above",
+  with both figures and the reason they differ — and the ceiling row drops its ", risk-adjusted"
+  qualifier. The panel is then the risk-adjusted panel plus one sentence. 52 of 1,116 prospect panels
+  take this path; the other 1,064 are untouched.
+
+  The released peak is now computed ONCE, in renderInspector's locals, and both the row label and the
+  block below read it, so the label and the rows cannot disagree about which case the panel is in.
+
+  THE GATE. verify_v51_9.js: PLAYERS byte-identical; 7,048,645 bytes outside renderInspector
+  identical bar the GN_BUILD stamp; fadeAdjustedTj identical over 21,180 cells x 2 modes; the
+  partition is 1,064 full / 52 suppressed, and the suppressed cohort is asserted to be the one with
+  nothing to release (matrix bust max 0.100, mean 0.0019) and within 3 points of its own ceiling
+  (worst -2); and the hoisted _relPeak reproduces the v51.8 inline computation for all 1,116.
+  render_check_v51_9.js renders the SAME player in BOTH builds and diffs the section's innerHTML:
+  571 panels, 519 byte-identical, 52 changed, 52/52 correct suppressed cases (cap row gone, second
+  ceiling gone, qualifier dropped, explanatory line exactly once), no page errors in either build.
+
+  WHAT DOES NOT CHANGE. Any valuation, and every panel that was showing a real release. No stored
+  field, no trajectory, no dollar figure, no function outside the render template.
+
+================================================================================
+GORDO NATION TRADE CALCULATOR — v51.8  THE CEILING LINE FOLLOWS THE TOGGLE (2026-09-20)
+  Same pull and data window as v51.0-v51.7: scoringPeriod 173, matchup period 22 — the championship
+  round — one week in (SP167-173 complete, Sep 7 - Sep 13). Week 22 data. F = 162/149 = 1.0872;
+  September absorption 0.90. No weekly refresh ran. Methodology v11 stands.
+  Service worker: gordo-calc-v83-2026-09-13-v51.8.  GN_BUILD v51.8, GN_DATA_THROUGH 2026-09-13.
+
+  v51.8 is a RENDER build: three rows added to one section of the Player Inspector, and nothing
+  else. PLAYERS is byte-identical to v51.7 and so is every one of the 7,048,653 bytes of code
+  outside renderInspector.
+  Run with patch_ui_v51_8.py --apply and bump_build_v51_1.py v51.8, then stamp.py --apply.
+  Acceptance: verify_calc.py FAIL 0 (WARN 1, the standing designation-lag warning), verify_v51_8.js
+  PASS, and render_check_v51_8.js PASS against the live DOM.
+
+================================================================================
+WHAT CHANGED IN v51.8 — two ceilings, both named, on the same panel
+
+  HOW THIS STARTED. The complaint that survived v51.7. The inspector printed
+
+      = Peak RA (ceiling)      664
+
+  from the risk-ON chain, and three sections below it a ten-year grid that tops out at 1,488. The
+  <h4> over the grid did say "bust-risk-off view", but nothing restated the ceiling in released
+  units, so the only available reading of the panel was that the trajectory had broken its own
+  ceiling. It had not. With bust risk off the curve climbs toward the UNdiscounted scouted ceiling,
+  and the panel never showed that number anywhere.
+
+  WHAT THE PANEL SAYS NOW. When FADE_MODE is on AND the player is T3/T4 — exactly the condition the
+  grid switches basis on, asserted to be the same predicate — the existing row gains a qualifier
+  and three rows follow it:
+
+      = Peak RA (ceiling, risk-adjusted)                                             664
+        Bust-risk-off release cap — scouted ceiling x pace (tc 1349 x sc 1.15 ...)   1551
+      = Peak RA (ceiling, bust-risk-off)                       1488   Y7, age 26
+      [note: which chain is which, and which one the grid below is on]
+
+  Outside that condition the row is character-for-character what it always was, which the gate
+  checks against a 193-player control sample of every other tier.
+
+  HOW THE NUMBER IS DERIVED. It is not derived. The released peak is read off fadeAdjustedTj — the
+  same function that fills the grid — and the maximum cell taken, so the ceiling and the grid
+  cannot disagree by construction. The cap row names whichever term is actually binding: the
+  scouted ceiling for 950 of the 977 capped prospects, the banked Pure for the 27 whose 19.6
+  ratchet carried them past their scouting grade (gnReleaseCap floors the cap at pc — Dalton
+  Rushing reads "banked Pure x pace (pc 1464 x pm 1.000; above the scouted 1463)"). The 139
+  prospects with no eng.tc on file get "no scouted ceiling on file — release uncapped" rather than
+  a fabricated bound.
+
+  THE WIDEST GAPS THIS NOW MAKES LEGIBLE. Deep T4 arms, where the risk-adjusted number is almost
+  all bust and the released number is almost all scouting grade:
+
+      Chalniel Arias     22 T4   risk-adj   23   bust-risk-off  570 (Y6)   cap  597
+      Marcus Phillips    22 T4   risk-adj   31   bust-risk-off  737 (Y6)   cap  784
+      Thatcher Hurd      23 T4   risk-adj   33   bust-risk-off  730 (Y6)   cap  813
+      Ethan Salas        20 T3   risk-adj  664   bust-risk-off 1488 (Y7)   cap 1551
+
+  THE GATE. verify_v51_8.js: PLAYERS byte-identical; every byte outside renderInspector identical
+  bar the GN_BUILD stamp; fadeAdjustedTj identical over 21,180 cells x 2 modes; the released peak
+  is the max cell and sits under its printed cap for all 1,116 T3/T4 (tightest headroom 13.6 pts,
+  Alexander Almonte); and the two predicates match. render_check_v51_8.js drives the real page in
+  headless Chromium and cross-checks the DOM: 231 prospect panels and 193 controls, printed ceiling
+  == grid max on every one, no page errors. Panels rendered both ways are in "Claude outputs/" as
+  Ethan_Salas_Inspector_v51.8_risk-adjusted.png and _bust-risk-off.png.
+
+  WHAT DOES NOT CHANGE. Any valuation. No stored field, no trajectory, no dollar figure, no
+  function outside the render template. The $ row on this panel remains the risk-adjusted
+  peak-season dollar, which is what it has always been and what the new note now says it is.
+
+================================================================================
+GORDO NATION TRADE CALCULATOR — v51.7  THE RELEASED HIT% AGES TOO (2026-09-20)
+  Same pull and data window as v51.0-v51.6: scoringPeriod 173, matchup period 22 — the championship
+  round — one week in (SP167-173 complete, Sep 7 - Sep 13). Week 22 data. F = 162/149 = 1.0872;
+  September absorption 0.90. No weekly refresh ran. Methodology v11 stands.
+  Service worker: gordo-calc-v82-2026-09-13-v51.7.  GN_BUILD v51.7, GN_DATA_THROUGH 2026-09-13.
+
+  v51.7 changes ONE EXPRESSION, in fadeAdjustedTj, and only in the bust-risk-off view. No valuation
+  input moves: PLAYERS is byte-identical to v51.6, every stored ceiling, trajectory, Hit%, injury
+  factor and dollar figure is untouched, and the risk-adjusted view is untouched.
+  Run with patch_ui_v51_7.py --apply and bump_build_v51_1.py v51.7, then stamp.py --apply.
+  Acceptance: verify_calc.py FAIL 0 (WARN 1, the standing designation-lag warning, unchanged from
+  v51.6) and verify_v51_7.js PASS on all six invariants.
+
+================================================================================
+WHAT CHANGED IN v51.7 — the bust-risk-off view released the bust and then froze Hit% at today's age
+
+  HOW THIS STARTED. The commissioner, 19 Sep, off the player inspector: Ethan Salas' ten-year
+  trajectory shows years above his ceiling, is that a bug. It is not. Salas is a 20-year-old T3 at
+  MLB Honeymoon whose stored ceiling is discounted twice over — pc 930 = tc 1349 x sc 1.15 x matur
+  0.60 — and whose Hit% 0.714 carries the 0.42 matrix bust. With the Ceiling-Fade switch OFF his
+  trajectory tops out at 664, exactly his Peak RA, and never exceeds it. With the switch ON, the
+  Aug 25 ruling releases all three suppressors on the promotion ladder, so the curve climbs toward
+  the UNdiscounted scouted ceiling — max(pc, tc x sc) x pm = 1551 — and peaks at 1488 in Y7, his
+  age-26 year. That is the switch working. 1,064 of the board's 1,116 T3/T4 players read the same
+  way, and a sweep of all of them found no release-cap breach anywhere. The complaint that does
+  stand is presentational: the panel prints "Peak RA (ceiling)" from the risk-ON chain while the
+  grid below it switches to the risk-OFF basis, and the two numbers are not comparable.
+
+  THE DEFECT THE QUESTION TURNED UP. fadeAdjustedTj has two Hit% branches. The branch for a player
+  with NO bust on file eases toward healthyBaseJS(yearAge, role) and therefore ages. The branch for
+  a player WITH a bust on file — 977 of them, which is every prospect that matters — read
+
+      hit = clamp(currentHit + base * (buste0 - busteK))
+
+  and carried no age term at all. yearAge was computed six lines above and never used. So the view
+  released the bust correctly and then held Hit% at today's age band for all ten years, while the
+  engine's own risk-adjusted trajectory ages it on the healthy-base bands:
+
+      Dalton Rushing  (25, C)    engine tj/tjp  0.795 -> 0.775 -> 0.755     fade-on  0.957 flat
+      Parker Messick  (25, SP)   engine tj/tjp  0.940 -> 0.910 -> 0.880     fade-on  0.940 flat
+      TJ Rumfield     (25, 3B)   engine tj/tjp  0.960 -> 0.940 -> 0.920     fade-on  0.960 flat
+
+  This is the CALC FIX of 31 Aug — "trajectory Hit% now ages on the healthy-base bands instead of
+  freezing at today's value" — landing in engine.py and never reaching this recomputation. The two
+  views of the same player have disagreed about aging ever since, in one direction: the released
+  view was always the generous one.
+
+  THE FIX. Age the released Hit% by the ratio of the year's healthy base to today's, applied after
+  the existing clamp:
+
+      hitFull = clamp(currentHit + base * (buste0 - busteK))            <- unchanged
+      ageBand = healthyBaseJS(yearAge, role) / healthyBaseJS(currentAge, role)
+      hit     = max(0.20, hitFull * ageBand)
+
+  Ratio form rather than healthyBaseJS(yearAge) * (1 - busteK) on purpose: at k = 0 the ratio is 1
+  by construction, so the Current cell cannot move for any player, including the handful whose
+  stored eng.base disagrees with the JS band table. healthyBaseJS is non-increasing in age, so
+  ageBand <= 1 and the 0.96 clamp still binds. busteK <= buste0 and matFaded >= mat, so the released
+  cell still dominates the risk-adjusted one: releasing risk does not subtract value.
+
+  IS THE BAND RATIO THE RIGHT CORRECTION? Tested, not assumed. Reconstruct each stored tj[k] from
+  tjp[k] two ways — Hit% frozen at today (what v51.6 did) and Hit% aged on the bands (what v51.7
+  does) — with the injury roll-off divided out, since tj carries it and tjp does not. Over the
+  8,748 trajectory cells of the 972 prospects with a bust on file:
+
+      Hit% frozen at today   MAE 3.34 pts against the engine
+      Hit% aged on the bands MAE 1.26 pts, median gap 0.51 pts
+
+  A median gap of half a point is what two rounded integers produce. On the cleanest cases the match
+  is exact: Messick's engine ratios read 0.9402 / 0.9103 / 0.8796 against SP bands 0.94 / 0.91 /
+  0.88, and Sal Stewart, Cole Young and Konnor Griffin all step 0.96 -> 0.94 in the year they turn
+  29. The engine ages on these bands; the fade path now ages on the same ones.
+
+  WHAT IT COSTS. -1.03% on the 10-year bust-risk-off sum across the 977 affected records, -0.58%
+  across the whole board, and it only ever took the number down — the old behaviour could only
+  overstate. The correction is largest for players who cross the most bands inside ten years:
+
+      Braxton Garrett    28 SP T3   2964 -> 2790   -5.9%
+      Connor Noland      27 SP T4   3080 -> 2934   -4.7%
+      Brandon White      27 SP T4   3883 -> 3705   -4.6%
+      Triston McKenzie   28 RP T4   1241 -> 1186   -4.4%
+      Brendan Beck       27 SP T3   3677 -> 3513   -4.4%
+      Ethan Salas        20 C  T3  11741 -> 11715  -0.22%
+
+  Salas, who raised it, barely moves: at 20 he crosses one band inside ten years, in Y10.
+
+  THE GATE (verify_v51_7.js, in the build folder). Loads fadeAdjustedTj out of both builds and runs
+  six invariants over all 2,118 players and 21,180 cells: year 0 identical in both modes; the
+  risk-adjusted view untouched and still equal to the stored tj; no release-cap breach; the only
+  change is Hit% and it is exactly the band ratio, with a no-bust player not moving at all; the
+  released cell still dominating the risk-adjusted one (worst overhang 1.04 pts, on Edgardo
+  Henriquez Y3, inside the 1.5-pt integer-rounding tolerance); and the band reconstruction beating
+  the frozen one against the engine. PASS on all six.
+
+  WHAT DOES NOT CHANGE. The risk-adjusted view, which reads the stored tj. Year 0 in both views.
+  The release cap, the ladder clock, the peak clock, the bust release schedule, the maturation
+  schedule, the injury module, the options ledger and every dollar figure on the board.
+
+  STILL NOT COVERED. The panel still prints "Peak RA (ceiling)" from the risk-ON chain above a grid
+  that may be on the risk-OFF basis, with nothing restating the ceiling in released units. That is
+  the thing that actually prompted the question and it is a labelling change, not a valuation one.
+
+================================================================================
 GORDO NATION TRADE CALCULATOR — v51.6  THE PROSPECT BOARD, RE-READ (2026-09-17)
   Same pull and data window as v51.0-v51.5: scoringPeriod 173, matchup period 22 — the championship round —
   one week in (SP167-173 complete, Sep 7 - Sep 13). Week 22 data. F = 162/149 = 1.0872; September absorption

@@ -11,7 +11,7 @@ const GN_HISTORY_DATES = ["2026-06-12", "2026-06-15", "2026-06-17", "2026-06-20"
 const RAW_PER_DOLLAR = 526.03;
 // v50.20: build constants the weekly script updates alongside RAW_PER_DOLLAR. Absorption is read from
 // the methodology 13 month table on the data-through date, never hand-typed into the display code.
-const GN_BUILD = 'v51.6';
+const GN_BUILD = 'v51.9';
   const GN_PACE_BASIS = 'rate';  // v50.22: pm compares rate to rate; see methodology 13;
 const GN_INJURY_MODULE = 'Durability v2.2';  // v51.0: injury priced as its own multiplier (p.im); Hit% carries no injury term. v51.1: p.im is the asset multiplier
 const GN_INJURY_DELTA = 0.90;   // v51.1: deferral discount per season the production is pushed back (asset headline)
@@ -276,7 +276,18 @@ function fadeAdjustedTj(player, yearIdx) {
     const buste0 = Math.min(Math.max(0, e.mb + prox0) * phf, 0.95);
     // move only the bust component of Hit%. (v51.0: Hit% no longer carries durability, IL or
     // outlier terms -- injury rides separately on gnInjFactor below and is not released either.)
-    hit = Math.min(0.96, Math.max(0.20, currentHit + base * (buste0 - busteK)));
+    // v51.7: the released Hit% ages on the healthy-base bands, the same way the engine's own
+    // risk-adjusted trajectory does. The CALC FIX of Aug 31 ("trajectory Hit% now ages on the
+    // healthy-base bands instead of freezing at today's value") went into engine.py and never
+    // reached this recomputation, so the bust-risk-off view released the bust and then held
+    // Hit% at today's age band for all ten years -- Rushing read 0.957 flat where the engine
+    // ages him 0.795 -> 0.775 -> 0.755. Ratio form, applied after the clamp, so year 0 is
+    // arithmetically identical for every player including the few whose stored eng.base
+    // disagrees with the band table. busteK <= buste0 and matFaded >= mat, so the released
+    // cell still dominates the risk-adjusted one: releasing risk does not subtract value.
+    const hitFull = Math.min(0.96, Math.max(0.20, currentHit + base * (buste0 - busteK)));
+    const ageBand = healthyBaseJS(yearAge, role) / healthyBaseJS(currentAge, role);
+    hit = Math.max(0.20, hitFull * ageBand);
   } else {
     // no bust on file: ease toward the age/role healthy base, but never below where the
     // risk-adjusted view already has him - releasing risk must not subtract value
@@ -2333,6 +2344,19 @@ function renderInspector(p) {
   const typeLabels = {'T1':'T1 (Established peak vet)','T2':'T2 (Past-peak vet)','T3':'T3 (Young MLB-tested)','T4':'T4 (Pure prospect)','T5':'T5 (Depth)'};
   // v51.0: the injury module's figures for the header, the RA section and the injury section
   const inj = p.inj || null; const im = (p.im != null) ? p.im : 1;
+  const _fadeOn = FADE_MODE === 'on' && (p.t === 'T3' || p.t === 'T4');   // v51.8: the grid
+  // below switches basis under exactly this condition; the ceiling row follows it.
+  // v51.9: compute the released peak ONCE, here, so the row label and the rows below cannot
+  // disagree about which case the panel is in. _relShow is false when the release does not
+  // actually lift the ceiling -- 52 records with no bust and no maturation hold left, where
+  // printing a 'bust-risk-off' figure a point under the risk-adjusted one reads as though
+  // releasing risk cost value. It did not: r is peak-season RA at the true peak age, the grid
+  // maximum is the best of the ten years listed, and both are rounded.
+  const _relCells = _fadeOn ? (p.tj || []).map((_, k) => fadeAdjustedTj(p, k)) : null;
+  let _relBi = 0;
+  if (_relCells) for (let k = 1; k < _relCells.length; k++) if (_relCells[k] > _relCells[_relBi]) _relBi = k;
+  const _relPeak = (_relCells && _relCells.length) ? Math.round(_relCells[_relBi]) : null;
+  const _relShow = _fadeOn && _relPeak != null && _relPeak > r;
   const injCost = Math.max(0, 1 - im); const injBand = gnInjBand(injCost);
   const injOnEspn = /^(IL-|OUT)/.test(String(p.il || ''));
   const sub = (l,v)=>`<div class="formula-row sub"><span class="label">${_iesc(l)}</span><span class="value">${_iesc(v)}</span></div>`;
@@ -2674,7 +2698,52 @@ function renderInspector(p) {
         <div class="formula-row"><span class="label">× Hit% (final)</span><span class="value">×${p.h.toFixed(3)}</span></div>
         <div class="formula-row subtotal"><span class="label">= Healthy RA (no injury term)</span><span class="value">${Math.round(p.pc*pm*p.h)}</span></div>
         <div class="formula-row"><span class="label">× Injury asset multiplier (Durability v2.2)</span><span class="value">×${im.toFixed(3)}${injCost>0 ? ` (−${(injCost*100).toFixed(0)}%, ${injBand})` : ' (untouched)'}</span></div>
-        <div class="formula-row bold"><span class="label">= Peak RA (ceiling)</span><span class="value">${r}</span></div>
+        <div class="formula-row bold"><span class="label">= Peak RA (ceiling${_relShow ? ', risk-adjusted' : ''})</span><span class="value">${r}</span></div>
+        ${(() => {
+          // v51.8: when the grid below switches to the bust-risk-off basis, restate the ceiling
+          // in the same units. Without this the panel shows a 664 ceiling above a curve that
+          // peaks at 1488 and looks like it has broken it. Read the peak off fadeAdjustedTj -
+          // the function that fills the grid - so the two can never disagree.
+          if (!_fadeOn || _relPeak == null) return '';
+          // v51.9: the release did not lift the ceiling -- say so in one line instead of
+          // printing a second ceiling that sits at or below the first.
+          if (!_relShow) return '<div class="formula-row note"><span class="value">'
+            + 'Bust risk is off, but there is nothing left to release on this record \u2014 no '
+            + 'scouting bust and no maturation hold remain \u2014 so the ten-year grid below is the '
+            + 'same view as the chain above. (Its best year reads ' + _relPeak + ' against the '
+            + 'ceiling\u2019s ' + r + ': the ceiling is peak-season RA at age 26 / 27, the grid shows '
+            + 'the best of the ten years listed, and both are rounded.)</span></div>';
+          const _bi = _relBi, _peak = _relPeak;
+          const _when = (_bi === 0 ? 'Current' : 'Y' + (_bi + 1)) + ', age ' + ((p.a || 25) + _bi);
+          const _e = p.eng || {};
+          const _cap = gnReleaseCap(p);
+          let _capRow;
+          if (_cap == null) {
+            _capRow = '<div class="formula-row sub"><span class="label">Bust-risk-off release cap</span>'
+                    + '<span class="value">no scouted ceiling on file — release uncapped</span></div>';
+          } else {
+            const _sc = (_e.sc != null) ? _e.sc : 1;
+            const _tcsc = _e.tc * _sc;
+            _capRow = '<div class="formula-row sub"><span class="label">Bust-risk-off release cap — '
+                    + (p.pc > _tcsc
+                       ? 'banked Pure × pace (pc ' + pc + ' × pm ' + pm.toFixed(3)
+                         + '; above the scouted ' + Math.round(_tcsc) + ')'
+                       : 'scouted ceiling × pace (tc ' + Math.round(_e.tc) + ' × sc '
+                         + _sc.toFixed(2) + ' × pm ' + pm.toFixed(3) + ')')
+                    + '</span><span class="value">' + Math.round(_cap) + '</span></div>';
+          }
+          return _capRow
+            + '<div class="formula-row bold"><span class="label">= Peak RA (ceiling, bust-risk-off)'
+            + '</span><span class="value">' + _peak + '  <span style="font-weight:400;color:#6e6d68;">'
+            + _when + '</span></span></div>'
+            + '<div class="formula-row note"><span class="value">The chain above is the '
+            + 'risk-adjusted one, and the $ figure below is its peak-season value. With bust risk '
+            + 'off — the basis the ten-year grid below is on — the Aug 25 ruling releases the '
+            + 'matrix bust, the level-proximity penalty and the maturation hold on the promotion '
+            + 'ladder, so the curve climbs toward the scouted ceiling instead and tops out at '
+            + _peak + ' in ' + _when + '. Neither is the more correct number: they answer '
+            + 'different questions, and the grid below answers the second one.</span></div>';
+        })()}
         ${(() => { const _sl = gnInjSeasonLine(p); if (_sl == null || Math.abs(_sl - im) <= 5e-4) return ''; const _cy = parseInt(GN_DATA_THROUGH.slice(0,4),10) + 1; return `<div class="formula-row"><span class="label">${_cy} season line (×${_sl.toFixed(3)})</span><span class="value">${Math.round(p.pc*pm*p.h*_sl)}${_sl === 0 ? ' — out all season' : ''}</span></div><div class="formula-row note"><span class="value">The headline is what the asset is worth now; the ${_cy} line is what he gives this coming season (the trajectory's Current cell, and what a 1-season window on the Trade Desk should be read against).</span></div>`; })()}
         <div class="formula-row"><span class="label">$ Value = RA ÷ ${RAW_PER_DOLLAR.toFixed(2)}</span><span class="value">$${(p.r/RAW_PER_DOLLAR).toFixed(2)}</span></div>
         <div class="formula-row note"><span class="value">Identity check: ${pc} × ${pm.toFixed(3)} × ${p.h.toFixed(3)} × ${im.toFixed(3)} = ${Math.round(p.pc*pm*p.h*im)} RA. Peak season = age 26 (hitters) / 27 (pitchers).</span></div>
