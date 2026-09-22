@@ -1,3 +1,358 @@
+GORDO NATION TRADE CALCULATOR — v51.12  GNFV IS NO LONGER A CONSENSUS OF SCOUTS ALONE (2026-09-21)
+  Same pull and data window as v51.0-v51.11: scoringPeriod 173, matchup period 22, week 22 data.
+  F = 162/149 = 1.0872; September absorption 0.90. No weekly refresh ran.
+  GN_BUILD v51.12, GN_DATA_THROUGH 2026-09-13.  RAW_PER_DOLLAR 535.77 -> 535.80.
+  T4 risk-adjusted value +3.4%; 453 of 687 T4 records repriced, 234 left as they were.
+  Acceptance: verify_calc.py FAIL 0 (WARN 1, the standing designation-lag warning).
+
+  Methodology v15 records this build: §21 and §21.1 are new, and §11, §13, §15 and §19 amended.
+
+================================================================================
+1. WHAT CHANGED, IN ONE SENTENCE
+
+  A prospect's value used to come entirely from scouting grades — the §7 curve turned a
+  consensus FV into a ceiling and the §11 matrix turned tool grades into a bust. From v51.12
+  a SECOND grader reads what he actually did in the minor leagues, and the two are blended
+  slot by slot rather than one replacing the other.
+
+================================================================================
+2. PRODUCTION VALUE (PV)                          gn_pv_v51_12.py, §21
+
+  Two surfaces, both fit on 11,379 prospect-seasons from 2019 and 2021-2023 carrying 2,244
+  arrivals, hitters and pitchers in one frame but never in one pool:
+
+    PV CEILING   what he is worth at peak IF he arrives, in Gordo Nation fantasy points,
+                 fit as the 80th QUANTILE of best MLB season among the men who did arrive.
+    PV ARRIVAL   the probability he reaches the majors at all, a calibrated logistic.
+
+  Four inputs, all read off the line: percentile within (kind x level x season x role) on the
+  RATE not the volume; age for level, struck on prospects only and clamped to [-5, +4]; the
+  level; and playing time as a rank.
+
+  THE QUANTILE IS NOT A DETAIL. A ceiling is an upper reach, not an expectation. A mean
+  regression put only 55% of arrivals below their own "ceiling" and compressed the whole grid
+  to FV 36-48. The 80th-quantile fit puts 80.0% below it and recovers FV 43-57.
+
+  MEASURED, leave-one-anchor-year-out so nothing is scored on its own fit:
+    PV                                    rho 0.4187   (hitters 0.4569, pitchers 0.3889)
+    tool architecture, read charitably    rho 0.3179   (its ceiling replaced by PV's, so
+                                                        only the Hit% swap is being tested)
+    its level skeleton alone              rho 0.1777
+  Of the 200 players PV ranks highest, 80.0% reached the majors and 47.0% posted a 600-point
+  MLB season, against 19.7% and 5.8% for the cohort at large.
+
+================================================================================
+3. THE TWO-SLOT BLEND                             apply_pv_blend_v51_12.py, §21.1
+
+  The two sides are good at OPPOSITE things, measured on the 453 board T4s carrying both:
+
+                       10th      90th    spread
+    tool ceiling        415      1080     2.60x    scouting separates CEILINGS
+    PV ceiling          587       942     1.60x
+    PV arrival         0.133     0.772    5.80x    production separates ARRIVAL
+    scout 1 - bust     0.280     0.728    2.60x
+
+  A box score cannot see the raw power or the fastball that makes a 70, so it compresses the
+  top end. The bust matrix, floored at 0.20, cannot express the range of arrival risk that
+  actually exists — which is what §11 already says about itself. Hence:
+
+    CEILING SLOT    0.65 scouting + 0.35 production
+    ARRIVAL SLOT    0.30 scouting + 0.70 production
+
+  WHY PRODUCTION'S SHARE IS SO LARGE. The five outlets agree with each other at rho 0.656,
+  which makes them worth 1.38 INDEPENDENT OPINIONS at a consensus reliability of 0.905 — the
+  2nd through 5th source buy mostly redundancy. PV agrees with their consensus at 0.531, BELOW
+  what they share with each other. PV is not a sixth opinion. It is a second one.
+
+  THE WEIGHTS ARE CHOSEN, NOT FIT, AND THIS BUILD SAYS SO. The closed form needs three numbers
+  and we have two: PV's correlation with realised value (0.419) and the two sides' correlation
+  with each other (0.531). The third — how well a scouting grade predicts arrival — cannot be
+  measured, because the project holds ONE vintage of grades (2026-09-17) and there is no way to
+  score a 2019 grade against a 2019 player. Across every plausible setting of it PV earns 44%
+  to 54% and the blend beats either side alone; 65/35 and 70/30 average into that band. Weekly
+  GNFV vintage snapshots begin with this build so the weights can be fit in a season's time.
+
+================================================================================
+4. THREE THINGS TESTED AND REJECTED
+
+  A PACE TERM FOR T4. Tried again on the new footing, at four absorptions and on both a raw
+  and a level-neutral ratio. Every one made the fit worse. A prospect's year-over-year rate
+  change correlates -0.035 with what he became, because a large jump usually means he repeated
+  a level. The §13 gate stays closed — now for a measured reason rather than an argued one.
+
+  A DURABILITY TERM. Minor-league availability does not carry forward: it predicts MLB
+  availability at rho +0.075 for pitchers and -0.081 for hitters. Playing time DOES predict
+  arrival at +0.263, but that is clubs giving innings to the men they mean to promote —
+  opportunity, not health — so it enters as a FEATURE of both surfaces (+0.0164, CI [+0.0118,
+  +0.0208]) and not as a multiplier outside them. §15.2's carve-out is untouched: a prospect
+  with a known current injury still carries A_known and S, and nothing here could test that,
+  because the minor-league pull holds no IL history.
+
+  A PER-CELL RELIABILITY WEIGHT. PV's reliability runs from 0.513 at AA hitters to 0.032 at
+  Rookie pitchers, which invites a weight that follows it. Tested, it LOSES at every setting —
+  0.4324 against 0.3920 where the scouting side reads 0.25, 0.6345 against 0.6249 where it
+  reads 0.55 — and the fixed arm was even given the oracle advantage of being chosen against
+  the truth. The reason is familiar: a calibrated expectation already prices its own noise, so
+  a reliability weight on top charges the same risk twice. It is the §9/§11 double-count in a
+  new costume. Calibrate once, weight once.
+
+================================================================================
+5. WHERE PV ABSTAINS, AND WHY THAT IS NOT A WEIGHT
+
+  Coverage is a hard rule. Where PV has no input its share goes to the scouts entirely:
+
+    58   no 2026 minor-league line
+    89   under 200 PA (hitters) or 150 BF (pitchers). Split-half reliability of a percentile
+         is flat from 60 PA up (full-season rho 0.877-0.889) and only collapses below that,
+         so the floor is about measurement, not taste.
+    83   Rookie ball. PV reads rho 0.207 there for hitters and 0.032 for pitchers.
+     4   fewer than 15 comparable cohort seasons. A fitted surface will draw anywhere; this
+         is what stops it.
+   453   repriced, covering 73% of T4 dollars.
+
+  THE HONEST COST: PV is silent on exactly the players a dynasty league spends most on — the
+  elite teenager with 120 plate appearances at a new level. Four of the nine rostered T4s
+  abstain, including two of the most valuable prospects on the board.
+
+================================================================================
+6. TWO DEFECTS CAUGHT DURING THE BUILD
+
+  THE QUADRATIC AGE TERM TURNED BACK UP AT THE FAR END. A 2019 AAA pitcher twenty years OLD
+  for his level, sitting at the 31st percentile, priced out at 1,115 points; the whole
+  +6-and-older band priced 37.8 against an actual 3.3. §4 sends a T4 over 30 to T5 so the live
+  board never sees these men, but a surface must not lean on a rule outside itself.
+  Age-for-level is clamped to [-5, +4], which costs 0.001 in rho and removes the tail.
+
+  THE 2026 AGE BASELINE HAD TO BE STRUCK ON PROSPECTS ONLY. 64.8% of qualifying 2026 AAA
+  pitchers have already debuted, and including them drags that level's median a full year
+  older — which would have made every AAA arm read a year young against the scale the surfaces
+  were trained on.
+
+================================================================================
+7. WHAT WAS DELIBERATELY NOT DECIDED
+
+  THE T4 POOL'S MEAN ARRIVAL IS HELD WHERE IT WAS, at 0.4940, by a x1.1215 scale on the blend.
+  PV is calibrated to a 19.7% cohort base rate while the scouting bust sits near 0.50, so
+  blending raw would have marked the WHOLE prospect class down against the veterans. That is a
+  separate ruling about how T4 stands against T1/T2/T3 and it is not taken here. This build
+  redistributes inside the prospect pool and leaves its aggregate alone. The scale factor is
+  printed by the apply script and recorded in pv_blend_report_2026-09-13.json.
+
+  ALSO OUTSTANDING: PV is calibrated in rank but not in level — priced against realised value
+  it runs a ratio near 0.59 and not flat across deciles (0.49 to 0.77). RAW re-floats so the
+  level is harmless; the shape is not. An isotonic recalibration is the obvious next step and
+  has not been done.
+
+================================================================================
+8. FILES
+
+  gn_pv_v51_12.py             the two surfaces, the coverage rules, the season-line reducer.
+                              numpy and pandas only — no scikit-learn at runtime.
+  pv_fit_export.py            fits and exports the coefficients. Verified against the fitter
+                              at 1.1e-16 on arrival and 0 on the ceiling.
+  pv_model_v51_12.json        the exported surfaces. The board cannot move because a library
+                              version moved underneath it.
+  pv_cohort_v51_12.csv        11,379 prospect-seasons, the training record.
+  pv_milb_2026.csv            the 2026 minor-league lines, both kinds, reduced.
+  apply_pv_blend_v51_12.py    the blend, the re-float, the invariants.
+  patch_v51_12.py             verify_calc.py learns the blend; the Inspector explains it.
+  pv_blend_report_2026-09-13.json   what moved and by how much.
+
+================================================================================
+  Everything below this line is the v51.11 and v51.9 build notes, carried forward unchanged.
+================================================================================
+
+
+GORDO NATION TRADE CALCULATOR — v51.11  THE CEILING STOPS PAYING FOR THE INJURY TWICE (2026-09-21)
+  Same pull and data window as v51.0-v51.9: scoringPeriod 173, matchup period 22, week 22 data.
+  F = 162/149 = 1.0872; September absorption 0.90. No weekly refresh ran.
+  Service worker: gordo-calc-v85-2026-09-13-v51.11.  GN_BUILD v51.11, GN_DATA_THROUGH 2026-09-13.
+  RAW_PER_DOLLAR 526.03 -> 535.77.  Board RA 823,347 -> 836,943 (+1.7%); 470 records up, 26 down.
+  Acceptance: verify_calc.py FAIL 0 (WARN 1, the standing designation-lag warning).
+
+  Methodology v11 needs four amendments: 13.1 rebuilt, 14.1 added, the v51.1 asset headline
+  superseded, and 20.31's "engage at the roll" given the code path it never had.
+
+================================================================================
+1. THE SS13.1 SEASON-ROLL CARRY IS REBUILT       season_roll_lambda_v51.11.py
+
+  v51.10 widened the clamp to -0.55/+0.20 on a rank-correlation refit and the levels it
+  produced were indefensible: pool RAW -12.4%, 178 of 483 rows cut by more than 30%, Aaron
+  Judge -49%, Acuna -41%, Will Smith -45%, Sean Murphy -45%.
+
+  WHY. pace = YTD x 162/team_games is VOLUME-based. A man who missed half the year annualises
+  against the CALENDAR, not against his own playing time. Judge scored 526 points in 64 games
+  -- 8.2 per game, better than Vlad's 7.2 -- and paced 572 against a Pure of 1,686: residual
+  -66%. The residual is measured against the career PEAK, a maximum, so the pool median is
+  -0.30 and 28% sit below -0.55. LAMBDA 1.00 with a -0.55 floor does not single out decliners;
+  it drags most of the board to the floor.
+
+  THE UNCOMFORTABLE PART. On rank the clamp is still better: rho 0.5431 against 0.4982 for the
+  blend, n=2,463 pairs held out by year, bootstrap gap -0.0460 CI [-0.0602, -0.0311]. It is
+  nevertheless a DURABILITY term wearing a ceiling's clothes, and that is measurable. Give both
+  anchors the same availability term and the advantage evaporates -- clamp minus blend runs
+  +0.0449 at k=0, +0.0021 at k=0.7, -0.0042 at k=1.0. On the 550 pairs who were FULLY AVAILABLE
+  last year, where a markdown can only mean real decline, the blend edges it: 0.6644 against
+  0.6630, both over peak's 0.6350. The clamp only wins where it re-prices injury, which SS15
+  already prices in Hit% and SS12/SS20.15 prices again in the multiplier -- rate-based since
+  v50.22, with its own confidence weight. The blend's multiplier reproduces that existing pm at
+  Spearman 0.74, half the pool within 0.05, which is a validation and not a coincidence.
+
+  WHAT REPLACES IT.
+      av        = min(playing-time share, 1 - IL_days/186), floored at 0.15
+      rate_form = pace / av                       a full season AT HIS OWN RATE
+      w_eff     = W x av                          trusted in proportion to the evidence
+      mult      = [(1-w_eff)*exp + w_eff*min(rate_form, exp*CAP_UP)] / exp
+  W = 0.75, CAP_UP = 1.25 (a maximum lift of +18.75%, consistent with the retired CARRY_CAP of
+  0.20 -- the ratchet owns upside). W is set on the fully-available players, where rho peaks at
+  exactly 0.75 and falls after; on the full pool it keeps creeping to 1.00, but that extra is
+  availability leaking back in.
+
+  The docstring's "PENDING: games-played gate" is withdrawn. GP is in the feed (1,289 of 1,315
+  carry-eligible records) and the blend uses it through av, so an IL-shortened season no longer
+  reads as decline. --strict survives as an opt-in hard gate.
+
+2. THE RATCHET AND THE FLOOR NOW FIRE AT THE ROLL
+
+  55 rows were pinned at the career-peak cap. They are two defects, not one.
+
+    14  banked to-date ALREADY exceeds the prior full-season peak -- Elvis Alvarado 1.44x,
+        Zebby Matthews 1.28x, Dylan Crews 1.27x -- and SS20.17 says the ratchet "now fires for
+        ALL surpassers". It had not. None carried eng.rch.
+
+    41  regressed veterans at pm 1.27-1.50 whose banked total sits well BELOW their career
+        peak. Kenley Jansen banked 489 against a 1,320 peak with Pure regressed to 363. SS19.6
+        condition (1) is RIGHT not to fire. Their instrument is the SS20.12 recency floor, and
+        SS20.31 says in terms: "the other 18 engage automatically at the roll when the
+        multiplier resets, which is when they need it." No code path did that. banked_elsewhere()
+        only ever SKIPPED players who already carried a RECENCY FLOOR note.
+
+  Both are restored at the roll, as a MAX over the three routes rather than a precedence order.
+  Both are upward instruments and neither may cut, which is what the SS19.6 crossover condition
+  means; a strict order sent Randal Grichuk and Tyrone Taylor to a floor BELOW their carry and
+  cut them 30%, the exact failure the condition exists to prevent.
+
+  Dry run: routes carry 448 / ratchet 20 / floor 15. Eleven rows cut by more than 30% against
+  240 under v51.10's clamp on the same rows. Kenley Jansen +66%, Sonny Gray +51% (the case
+  SS20.31 names as the reason the floor's scope was extended to T1), George Springer +57%,
+  Jake McCarthy +46%, Dylan Cease $3.65 -> $4.24.
+
+  ALSO FIXED IN THE WRITE PATH. v51.10 rebuilt tj as tjp x Hit%(age+k) alone, dropping the
+  injury factor the rest of the pipeline carries -- so the roll would have silently un-priced
+  every injured player on the one run a year that rewrites the whole board. The invariant had
+  the same hole and would not have caught it. Both now use the full identity.
+
+3. THE INJURY ASSET MULTIPLIER IS NO LONGER A SCALAR PRODUCT     apply_injury_v2.py
+
+  v51.1 built the asset headline as
+
+      ia = (1 + R) x V x S x (1 - A_rec) x 0.90^defer
+
+  while the module ALSO carried a correct year-by-year season line. Hunter Greene:
+
+      f = [0.000, 0.6542, 0.8375, 0.9054, ...]     2027 / 2028 / 2029 / 2030+
+      2028 = S x (1+R) x V = 0.9054 x 0.85 x 0.85 = 0.654      correct
+      2029 = S x (1+R2)    = 0.9054 x 0.925       = 0.838      correct
+      2030+= S                                     = 0.905     correct
+
+  The product takes penalties that belong to 2028 alone -- the -15% rate hit and the x0.85
+  workload, both of which this module's own note says apply "on the 2028 share he is back for"
+  -- and charges them against all ten years, then adds a deferral discount to a year already
+  zeroed. It over-penalised 509 of 2,080 records and under-penalised 5. Every one of the
+  fourteen worst was UCL / Tommy John.
+
+      ia = SUM_k f[k] w[k] / SUM_k w[k],   w[k] = tjp[k] x Hit%(age+k) x att(age,k)
+
+  The share of a player's dynasty value the injury costs, with each year weighted by the value
+  actually at risk in it. Checked against the league's own history -- 1,247 player-seasons with
+  a healthy baseline and a measured follow-up -- a season lost to injury costs the CEILING 6.9%
+  and total value 15.6%, or x0.863 / x0.782 with a survivorship correction. Tommy John read
+  x0.526 on a +1/+2 window and x0.890 on +2/+4: the short window measures the missed year and
+  the partial return, not the settled level, which is the same censoring shape that once taught
+  the prospect model that low-level players never arrive.
+
+  Hunter Greene $1.44 -> $1.72. Justin Martinez +45%, Cade Horton +28%, Pablo Lopez +26%,
+  Cole Ragans +25%. Judge, Acuna, Soto and Witt move by 1% or less -- their ia was already
+  0.98-0.99, and their drops were never the injury term.
+
+4. SS14.1 ATTRITION                              gn_attrition_v51_11.py, hazard_fit.py
+
+  tj[k] = tjp[k] x Hit%(age+k) x inj_factor(k) x att_factor(age, k)
+
+  Nothing in the trajectory asked whether the player is still in the league in year k. Hit%
+  answers "will he be healthy"; this answers "will he still be playing". Against 6,899
+  anchor-to-year+k pairs from 2019-2026 (2020 is absent from the feed and is excluded, or every
+  2019 anchor records a false non-survival at k=1):
+
+      years out        1      2      3      4      5
+      survival     0.905  0.795  0.701  0.612  0.520
+      curve shape  0.922  0.954  0.987  1.041  1.028      <- on survivors
+
+  The decline curve is ACCURATE, slightly conservative past year 3. All of the shortfall is
+  players leaving the majors, and the undiscounted ten-year cumulative therefore over-projects
+  realised five-year production by 29% (3,397 against 2,634 over 347 anchors with a full
+  window). SS20.31's worry that lambda and a steeper curve would both correct the same measured
+  gap does not apply: this is a third quantity.
+
+  NOT A FLAT DISCOUNT. Attrition is violently age-dependent -- 0.770 five-year survival at 24
+  against 0.110 at 34+, sevenfold. A flat 0.90^k over-charges the young by 8% and under-charges
+  the old by 12% on the ten-year cumulative, a twenty-point spread in exactly the wrong
+  direction for the commonest dynasty trade there is. The v51.1 deferral WAS that flat discount,
+  charged to the injured alone; it is withdrawn and replaced by this, applied to everyone.
+
+  THE SURFACE. Logistic in (k, age, k*age, k^2, age^2) inside the observed horizon k <= 5,
+  which wins on leave-one-anchor-season-out MAE (0.2819 against 0.2850 for a smoothed empirical
+  surface) and is 2.9x better than a chained one-year hazard on the age-band table. A chained
+  hazard cannot express frailty and predicted 0.483 five-year survival for the 31-33 band
+  against 0.308 observed, 0.327 against 0.110 for 34+. Beyond k=5 the survivor is AGED FORWARD
+  with the one-year conditional survival at his attained age, scaled by a frailty factor of
+  0.913 phased in over two years; conditional rates are capped at the attained-age hazard
+  inside the horizon, which removes the k^2 term's upward turn (unconstrained it read 0.988
+  survival in year 10 for a twenty-year-old against 0.882 in year 4). Monotone in k and, past
+  peak age, in age: zero violations.
+
+  SCOPE. SS14 trajectory only. RA is the one-year headline -- SS20 names YEARS=1 as in-season
+  trade talk -- and att_factor(p, 0) is 1.0 for everyone by construction, so RA is untouched
+  except through the injury weighting of item 3.
+
+  THE FADE VIEW TOO. fadeAdjustedTj() rebuilds the trajectory client-side from tjp, so it
+  carries att_factor as well. v51.0 found this once already with the injury term and left the
+  reason in the code: the recomputed view must carry every factor the pipeline applies, "or
+  the bust-risk-off toggle would silently release injury risk along with the scouting bust".
+  The fade view is the PROSPECT view, where the ten-year horizon and the largest attrition
+  exposure on the board both live.
+
+================================================================================
+DISCLOSURE.  Org RA: Dirty Spikes +2.9%, MidwestBears +2.1%, Balking Dead +1.7%, High Cheddar
+  +1.2%, River Cats +1.1% (Hunter Greene), C-Town Liquors +1.0%, KC Gray Hotdogs +1.0%,
+  Kansas Sunflower Seeds +1.0%. The commissioner's own club is tied for the smallest gain.
+
+STILL OPEN.
+  * pm reaches 1.50 while every banking instrument caps lower -- the carry at +18.75%, the
+    floor at pace x 0.85 -- so the hottest overperformers lose value at every roll by design.
+    The remaining large markdowns are all this: Luis Campusano (pm 1.500), Tyrone Taylor
+    (1.448), Christian Encarnacion-Strand (1.411), Emilio Pagan (1.388). This is the "four
+    mutually inconsistent trust weights" SS20.31 already deferred to the offseason. It wants a
+    ruling, not a patch.
+  * The attrition surface rests on one anchor season at the five-year horizon (n=347). The
+    ranking gain over the undiscounted cumulative is +0.0200 with a 95% CI of [-0.0014,
+    +0.0428] -- it straddles zero and is not claimed. The level correction and the age
+    distribution are what the change rests on.
+  * The Tommy John recovery figures rest on 12-17 players per window. The direction is
+    consistent across all four windows; the level is soft.
+  * Pitcher MLE, the in-season velocity trend, historical GNFV vintages and a longer prospect
+    outcome window are all still open from the 20 September studies.
+
+RUN ORDER TO REPRODUCE
+  python3 hazard_fit.py                          # -> attrition_table_v51.11.json
+  python3 patch_v51_11.py --apply                # apply_injury_v2 / update_calc_weekly / verify_calc
+  python3 patch_fade_att_v51_11.py --apply       # calc/gn-app.js fade view
+  python3 make_roll_v51_11.py --apply            # -> season_roll_lambda_v51.11.py
+  python3 apply_injury_v2.py --apply             # re-price the board, re-float RAW
+  python3 bump_build_v51_1.py v51.11
+  python3 stamp.py --apply
+  python3 verify_calc.py                         # expect FAIL 0, WARN 1
+  python3 season_roll_lambda_v51.11.py calc/gn-app.js       # dry run only; the season is not over
 GORDO NATION TRADE CALCULATOR — v51.9  NOTHING LEFT TO RELEASE (2026-09-20)
   Same pull and data window as v51.0-v51.8: scoringPeriod 173, matchup period 22 — the championship
   round — one week in (SP167-173 complete, Sep 7 - Sep 13). Week 22 data. F = 162/149 = 1.0872;
