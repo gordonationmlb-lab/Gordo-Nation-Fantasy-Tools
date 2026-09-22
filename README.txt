@@ -1,3 +1,284 @@
+GORDO NATION TRADE CALCULATOR — v51.13  v51.12 CORRECTED — EVERY PLAYER PRICED ON HIS OWN TIER'S TERMS (2026-09-22)
+  Same pull and data window as v51.0-v51.12: scoringPeriod 173, matchup period 22, Week 22 data.
+  F = 162/149 = 1.0872; September absorption 0.90. No weekly refresh ran.
+  Service worker: gordo-calc-v86-2026-09-13-v51.13.  GN_BUILD v51.13, GN_DATA_THROUGH 2026-09-13.
+  RAW_PER_DOLLAR 535.74 -> 536.61.
+  Acceptance: verify_calc.py FAIL 0 (WARN 2 — the standing designation-lag warning, and 9 T3s
+  on a veteran basis carried over from the 25 August audit, awaiting a ruling).
+  Run with vendor_mlb_pitching_v51_13.py, then patch_v51_13.py --apply, then bump_build_v51_1.py
+  v51.13, then build_v51_13.py --apply, then apply_injury_v2.py --apply, then
+  resync_ceiling_workbook_v51.13.py --apply, then stamp.py --apply.
+
+  Methodology v16 records this build. No new framework: every change below corrects v51.12, or a
+  defect found while correcting it. An adversarial review of the first candidate (five reviewers,
+  every finding re-checked by a second agent) is folded in.
+
+================================================================================
+1. WHAT CHANGED, IN ONE SENTENCE
+
+  v51.12 was rebuilt from the v51.11 board with its defects corrected: the player types are
+  reconciled with §4 on evidence read by MLBAM id, every moved player is priced on his new tier's
+  terms and his real age, and Production Value reads a 2026 minor-league line the way its cohort
+  was read.
+
+  Why a rebuild and not a patch: v51.12 scaled Pure by a ratio and rounded, so it cannot be
+  un-blended in place. build_v51_13.py starts from the v51.11 board (extracted verbatim from
+  commit 6b548e1 as PLAYERS_2026-09-13_v51.11_base.json) and applies the v51.12 work again. v51.12
+  itself was first replayed from that base and matched the shipped board on every field of all
+  2,118 records, so every difference between v51.12 and v51.13 is one of the corrections below.
+
+================================================================================
+2. ERRATA — WHAT v51.12 SHIPPED THAT ITS README DID NOT SAY
+
+  - Three follow-ups shipped under the v51.12 number after its README was written: v51.12b (a
+    tier reconciliation of 29 records), and v51.12c/d (the Inspector's Production Value rows
+    moved out of dead code). None is in the v51.12 README below.
+  - RAW_PER_DOLLAR: the v51.12 header says 535.77 -> 535.80. The build shipped 535.74 — v51.12b
+    moved it after the header was written.
+  - The service-worker cache was never bumped. v51.12 shipped as 'gordo-calc-v85-2026-09-13-v51.11'
+    because its apply script wrote GN_BUILD itself, so bump_build_v51_1.py refused to run. Pages
+    and scripts are network-first, so returning visitors still got v51.12's data; the break was in
+    identity. verify_calc.py only checked that build.json's own (stale) string appeared in the
+    worker. It now checks that the name carries the build and moved.
+  - The v51.12 header has no "Service worker:" line, so stamp.py refused it.
+  - One line of the Inspector was edited by hand after patch_v51_12d.py and is in no script.
+    patch_v51_13.py anchors on the shipped text.
+
+================================================================================
+3. PLAYER TYPES (§4) — THE RECONCILIATION, REDONE                    build_v51_13.py steps 1-2
+
+  EVIDENCE BY ID. gn_mlb_people_2026.csv is a new pull from the MLB Stats API (pull_mlb_people_
+  v51_13.py, 2026-09-22): birth date, MLB debut date and organisation for 8,101 players — everyone
+  in the minor-league file and the MLB roster list by id, plus every other board T3/T4 by name
+  search (a long IL stint leaves a player in neither list). v51.12b joined birthdates and debuts by
+  bare name, and its debut years came from the PITCHING pull only, so it could not see a hitter's
+  debut. MLB TIME is now read from every source the build holds: the MLBAM debut date, the MLB
+  pitching seasons 2019-2026 (vendored as gn_mlb_pitching_seasons_2019_2026.csv), the MLB seasons
+  2023-2026 (backtest/), and the board's own ESPN MLB points. A debut counts whenever it happened
+  in 2026 — the same season-granular reading the PV cohort uses — so José Rodríguez (2026-09-18) and
+  Bo Davidson (2026-09-21) are T3 though both debuted after the stat cutoff.
+  THE MATCH IS GUARDED. A board record takes an MLBAM id only when the name (accents, suffixes,
+  '(Ath)'-style tags and a nickname table normalised), the kind and the age agree; the organisation
+  breaks a tie; a surviving tie abstains. The board's age is wrong on a handful of records, so a
+  candidate outside the two-year window is still accepted when something independent corroborates
+  him — the record's own birth date (eng.bd; 827 matches rest on it), its organisation (2), its MLB
+  line (Orlando Ribalta: 358 FP on the board, 358 on his MLBAM line) or, for a hitter, his exact
+  position (CJ Stubbs). gn_mlb_birthdates_2026.csv is a ROSTER list, not a debut list, and is not
+  read as evidence of MLB time.
+
+  THE RULES, peak age read on OPENING DAY (2026-03-25) for every test:
+    T3 (tool) with no MLB time on record   -> T4 (§4's converse, tested first)
+    T4 with MLB time on record              -> T3 below peak, T5 at or past it
+    T3 at or past peak, production basis    -> T1 (T1 against T2 is the §19.2 test, at the roll)
+    T3 at or past peak, tool basis          -> T5 (a tool ceiling is a projection, not a peak)
+  51 records move (v51.12b moved 29):
+    T3->T4 4   Jaxon Wiggins, Blake Mitchell, Ryan Clifford, Jacob Reimer — prospects carried as
+               MLB-stage T3s with no MLB debut, no MLB season and no ESPN MLB points.
+    T4->T3 16  the five v51.12b made (Harrington, Church, Aguiar, José Rodríguez, McDaniels), plus
+               Eduarniel Núñez (26 on opening day; v51.12b read his board age, 27, and sent him to
+               T5), the five hitters who debuted in 2026 with no ESPN id (Cameron Cauley, Jack
+               Brannigan, Leonardo Bernal, Emmanuel Rodriguez, Scott Bandura), Jhonkensy Noel
+               (debut 2024), Bo Davidson, and three pitchers on long IL stints whom no people list
+               carried (Cristian Mena, McCade Brown, Ky Bush — MLB innings in 2024-25).
+    T4->T5 3   Triston McKenzie, Hayden Harris, Blaine Crim.
+    T3->T1 8   the six v51.12b made, plus Matt Svanson and Orlando Ribalta — both at peak by birth
+               date, below it by board age (26 and 24; really 27 and 28).
+    T3->T5 20  the fifteen v51.12b made, plus Josh Simpson and Bryce Teodosio (board age below peak,
+               birth date at it), and Bryan Torres, CJ Stubbs and Tyler Samaniego — three the guard
+               had rejected on board ages three to four years wrong.
+  A MOVED RECORD IS PRICED ON ITS BIRTH DATE: its board age is corrected to the MLBAM figure (age on
+  30 June, §20.18) before the new tier's terms apply, since the healthy base, the veteran clock and
+  attrition all read it. Twelve moved records carried a wrong age (Ribalta 24 -> 28, Stubbs 25 -> 29).
+
+  EACH MOVE PRICED ON ITS NEW TIER'S TERMS. v51.12b changed the label and the Hit% rule and left
+  everything else, so the Inspector printed "Career-best undefined FP" on 18 records and "begins
+  age undefined" on 6.
+    -> T4: maturation and proximity re-staged on the 2026 minor-league level (§9, §11), no MLB phase,
+       and Production Value then reads him like any prospect. Jacob Reimer $0.89 -> $0.30, Blake
+       Mitchell $0.68 -> $0.26.
+    -> T3: the §10 phase test on cumulative 2025+2026 FP — all sixteen are Honeymoon, with a
+       debutant's 2026 points read by id where ESPN does not carry him yet — so the phase factor
+       x0.80 on the bust, the Honeymoon tool cap 0.85, maturation re-staged to MLB Honeymoon 0.60,
+       the MLB proximity bucket; Pure rebuilt on the tool chain rather than scaled. No PV block.
+       Harrington $0.28 -> $0.54, Noel $0.10 -> $0.37, Bernal $0.56 -> $0.76.
+    -> T5: §5 prices depth at career best x 1.05, x1.15 at C/2B/3B; §20.27 exempts depth from
+       maturation. The Hit% follows how the career best was built, as the native depth records'
+       does: a completed season takes the flat 0.50 of the June reclassification cohort (§10);
+       the 2026 line annualised takes §20.21's max(0.20, 0.5 x reliability), PA/250 or IP/60, as
+       the 2026 adds built the same way do — "so a hot cameo is discounted rather than annualised
+       into a phantom regular". 12 take the flat 0.50, 11 the reliability rule. career_best is the
+       best MLB season in league scoring, floored at zero, with no Pure floor (§5 states none): five
+       price at $0.00. The tool-era fields retire into eng.tier_fix.retired. Eduardo Valencia (KC
+       Gray Hotdogs) $0.63 -> $0.10: 200 FP in 100 PA annualise to 217, at a reliability of 0.40.
+       TWO TO LOOK AT. Triston McKenzie (1,565 in 2022) goes $0.09 -> $1.53 and Braxton Garrett
+       (1,184 in 2023) $0.31 -> $1.14. Neither threw a meaningful MLB inning in 2026. This build
+       reads them by §4's clause that a player with only a marginal 2026 line is T5 depth, which is
+       how the board already prices faded regulars (Mike Clevinger, T5 on 1,589 from 2018, $1.55).
+       §19.3's basis test reads them the other way: each once posted a season far past 70% of his
+       tool ceiling, which makes him production-basis, and a production-basis T3 at peak graduates
+       to a veteran clock — about $2.55 and $1.94. A ruling for the commissioner.
+    -> T1: the regression clock the season roll reads (pa, rs, ry, rm, cl), which v51.12b claimed
+       but never wrote, so the roll would have skipped all six. The growth multiplier falls away at
+       graduation (§19.1): Matt Svanson carried x1.05, $0.80 -> $0.76. Alex Lange is NOT a peak-age
+       graduate — 30, peak 2023 at 27 — so he carries ry 3 (x0.830), the age-30 base 0.91 (v51.12b
+       read a stale 0.92) and a pace multiplier the rate engine re-derives (0.726 -> 0.788): $1.02 ->
+       $0.90. The trajectories are rebuilt on the veteran regression curve.
+  Eleven T3s reached peak age during the season (Will Warren, Luis Garcia Jr., Emerson Hancock,
+  Oswald Peraza, Andrew Alvarez, Tyler Callihan, Trey Lipscomb, Brock Rodden, Eduarniel Núñez,
+  Rafael Flores Jr., Zach McCambley). They are T3 by the opening-day rule and graduate at the roll,
+  and the decision spine now says so rather than "deferred league-wide". 411 of the 413 T3s have a
+  birth date on file; Jonathan Harris and Zach Thornton do not.
+  Tiers: T1 527, T2 280, T3 413, T4 672, T5 226 (v51.12: 525, 280, 413, 679, 221).
+
+================================================================================
+4. PRODUCTION VALUE (§21) — THE 2026 LINE READ AS THE COHORT WAS    gn_pv_v51_13.py, step 4
+
+  The MODEL is unchanged. What changed is how a 2026 line becomes its four inputs, and each fix
+  was measured by first reproducing all 453 of v51.12's PV blocks exactly:
+    - POPULATION. The cohort's rate percentile and playing-time rank were ranked over qualifying
+      rows only (at or above 200 PA / 150 BF, and for pitchers only, before the MLB debut). v51.12
+      ranked one line per player — all 7,542, qualifying or not. Qualifying prospects averaged a
+      playing-time rank of 0.79 against a trained scale of 0.50 (now 0.54 hitters, 0.57 pitchers),
+      and AAA pitchers ranked 11-13 points low against a field of debuted arms. The cohort applied
+      NO debut filter to hitters, so neither does the scorer: filtering 2026 hitters alone would
+      create a new mismatch rather than close one.
+    - AGE FOR LEVEL is age minus the cohort's FIXED median per level (hitters R18/A21/A+23/AA24/
+      AAA26, pitchers R19/A22/A+23/AA24/AAA26), read from the cohort file rather than re-struck.
+    - PLAYING TIME is summed within one kind. The 2026 file's tot_den adds hitting PA to pitching
+      BF on 733 rows.
+    - WHICH LEVEL: the qualifying level with the most PA or BF, ties to the higher level. v51.12's
+      unstable sort placed ten tied pitchers arbitrarily, moving others' percentiles with them.
+    - SUPPORT within kind. The guard that stops a fitted surface drawing where it has no data counted
+      cohort seasons at the level across hitters and pitchers, although both inputs it compares are
+      struck within kind. Counted within kind, 12 more records fall under 15 and abstain (Wei-En Lin
+      34 -> 11, Ryan Sloan 52 -> 13, Jesus Made 18 -> 14).
+    - WHOSE LINE: by MLBAM id, under the guard of §3. v51.12 told four prospects they had no 2026
+      line (Dom Keegan, Cam Cauley, Leo Bernal, Zach Root — nicknames), scored Cleveland's
+      19-year-old shortstop Gabriel Rodriguez on a 22-year-old pitcher's line, and scored Detroit's
+      Jake Miller on Cleveland's. The 441 nameless rows are now reachable.
+  THE ARRIVAL CAP. Blended arrival is a probability, so it is capped at 1.0, and the scale that
+  holds the T4 pool's mean is SOLVED UNDER THE CAP: x1.179485 holds 0.4877 exactly, with 7 records
+  at the cap. v51.12 scaled x1.1215 with no cap and shipped five arrivals above 1.0 (Wei-En Lin
+  1.032); four of them carried a Hit% above their own healthy base.
+  IDEMPOTENT. Each block stores its pre-blend Pure and trajectory (pv.pc_tool, pv.tjp_tool), so a
+  re-run recomputes from them. v51.12's script scaled the current Pure and would have compounded it
+  on a second run (437 records, measured); it now refuses on a blended board.
+  RESULT: 434 of 672 T4s blended (70.2% of T4 dollars); 238 abstain — 92 under the PA/BF floor,
+  88 Rookie ball, 37 no 2026 line, 18 thin support, 3 whose name matches only a different player.
+  T4 risk-adjusted value 91,686 -> 91,417: eleven records left the tier (1,780 RA), four joined it
+  (638), and the 668 that stayed rose 873 RA under the corrected PV.
+
+================================================================================
+5. DEPTH HIT% (§10, §20.21)                                                   step 3
+
+  30 native depth records carried an IL designation added back on top of a Hit% floor that had
+  absorbed it: an injury term inside Hit%, which v51.0 retired. verify_calc.py never checked depth
+  Hit%, so nothing caught it. They are reset to the rule — 0.50, or max(0.20, 0.5 x rel) with rel
+  read unrounded from the record's own ADD note. -177 RA across 30 free agents; Bobby Miller $0.99
+  -> $0.90 is the largest.
+
+================================================================================
+6. THE PIPELINE                                           patch_v51_13.py, apply_injury_v2.py
+
+  - apply_injury_v2.py runs AFTER the rebuild and knows the blend. As shipped, a whole-board re-run
+    rebuilt 438 blended prospects' Hit% from the scouting bust alone while its own gate read ALL
+    CLEAR. This run changed Hit% on no record, recomputed the asset multiplier on 33 (the new T5s
+    lose the tool carve-out — Braxton Garrett's 2023 surgery now counts, x0.983 — and trajectories
+    that moved re-weight it), and moved r on 3. A same-build re-run no longer restates the v50
+    removals on records whose first note never did.
+  - update_calc_weekly.py: (1) a phase promotion re-blends a PV record instead of reverting it, and
+    re-stages its stored pre-blend Pure AND trajectory; (2) the step-0 bridge learns nicknames, so
+    ESPN's "Leo Bernal" and "Cam Cauley" can finally link; (3) its rate-engine test read only
+    'PACE v50.x (' tags — two records carried only a v51.0 tag and the NEXT refresh would have
+    rewritten them on a counting basis (measured in a scratch refresh: Justin Martinez r 794 -> 384,
+    Andruw Monasterio 531 -> 521); (4) it UPDATES build.json instead of rewriting it, which had
+    dropped ten keys, injury_module among them, silently switching two verifier checks off.
+  - apply_gnfv_v51_6.py refuses on a blended board (a GNFV refresh would discard the blend), and its
+    trajectory now carries the §14.1 attrition factor — without it every run had refused on 1,111
+    trajectory invariants since v51.11. The v51.12 appliers refuse to run a second time.
+  - verify_calc.py gains the gates v51.12 slipped past — depth Hit%; every PV derivation, exactly,
+    and arrival in [0, 1]; tier against basis; MLB time against tier (a T4 with it, a T3 without);
+    the fields each basis's Inspector chain reads; the injury carve-out against the basis; the
+    README identity card; the service-worker cache — and exits non-zero on any FAIL, an unparseable
+    literal included. Run against v51.12 as shipped, it reports FAIL 5.
+  - stamp.py checks the RAW an identity card states; bump_build_v51_1.py dates the build.
+  - The Inspector: the depth Hit% chain printed the reliability factor without its x0.50 (41 records
+    showed a "further adjustment" they never had); the depth and veteran chains no longer print
+    "undefined"; a residual that is the June re-pace (REPACE v20) is named in both views; the flow
+    tree gains the §21.1 rows it never had (on 423 of v51.12's 453 blended records its Hit%
+    arithmetic did not reach its stated result, and the ceiling blend read as "proximity"); the decision spine reads opening-
+    day age and the debut on record; the PV rows show the cap and the name a line was listed under.
+  - The value charts no longer draw a player with an MLB debut on record as a pure prospect.
+
+================================================================================
+7. WHAT MOVED
+
+  RAW 535.74 -> 536.61. The anchor pool (ESPN-bridged records with r > 0) fell from 1,395 records
+  and 747,362 RA to 1,391 and 746,423: four tier-moved records now price at zero and leave it, so
+  its mean rises. Of the records whose r did not change, 232 read a cent lower and 1,405 the same.
+  Rostered players whose value moved: Eduardo Valencia (KC Gray Hotdogs) $0.63 -> $0.10; Ryan
+  Sloan (C-Town Liquors) $1.03 -> $0.93; Jesus Made (River Cats) $1.11 -> $1.18; Charlie Condon
+  (C-Town) $0.77 -> $0.82; Seth Hernandez (C-Town) $0.45 -> $0.50; Franklin Arias (River Cats)
+  $1.23 -> $1.25. Nobody else rostered moves by more than the cent.
+
+================================================================================
+8. NOT FIXED HERE — FOUND WHILE BUILDING IT, AND LEFT FOR A RULING OR A LATER BUILD
+
+  - McKenzie and Garrett: T5 depth or a veteran clock (§3). A ruling.
+  - A June re-pace factor (REPACE v20) rides inside four Pures that §5 does not provide for: Gary
+    Sanchez's depth Pure (x1.048, Balking Dead) and three of the new T1s, carried from their T3 days
+    (Dreyer x1.114, Mlodzinski x1.093, Lange x1.066). In a production-basis T3's Pure it is the
+    documented §14 T3 re-pace (68 records); sixteen native veterans carry the note, but their Pures
+    were rebuilt since and no longer hold it. Removing it from the four moves rostered players. A
+    ruling; the Inspector now names it wherever it is the residual.
+  - The season roll (season_roll_lambda_v51.11.py) cannot write: it sets r without im and its own
+    invariant refuses (253 violations). It also skips ratcheted veterans outright and never advances
+    the clock it reads. Offseason work; v51.13 does not claim the clock runs.
+  - Depth career bests are never refreshed (the ratchet skips depth): 71 of the 203 native records
+    have a 2026 annualised line above their stored career best, and the new T5s whose career best
+    is the 2026 line will go stale the same way.
+  - Nine T3s sit on a veteran basis (the 25 August audit carry-over). verify_calc warns on them.
+  - PV's hitter cohort has no debut filter and asymmetric arrival definitions. The scorer mirrors
+    the model as trained; the fix is a refit, which needs scikit-learn on another machine.
+  - Board ages: of the records matched to an MLBAM id, 195 carry a board age that differs from
+    their birth date under the §20.18 convention (5 by two years or more). The records this build
+    moves were corrected; the rest need the age audit before the season roll, which reads them.
+  - Methodology v16 ships as .docx only; this machine has no LibreOffice for the PDF.
+
+================================================================================
+9. THE CEILING WORKBOOK — ONE COPY, RE-SYNCED TO v51.13     resync_ceiling_workbook_v51.13.py
+
+  The workbook had not been synced since v51.6, and its script could no longer find a source: it
+  looked for dated copies at the league root, which were archived on 20 September, and since the
+  22 September reorganisation its "league root" resolves to 2026/. It is now re-synced to v51.13
+  and kept as ONE file, Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED.xlsx in this folder (the
+  commissioner's call, 22 Sep).
+  - No dated copies are written, and none at the league root. The stale league-root copy (a
+    v50.19 workbook) is no longer tracked.
+  - From v51.13 on, git history holds each version of this file. The dated v51.0-v51.6 copies
+    were never committed. They survive in the build zips; GN_v51.6_wk22_2026-09-17.zip holds
+    all five.
+  - Every other copy of the workbook was removed: 63 files, dated or not, from the older build
+    folders, Archive/ and Claude outputs/. They were staged in _to_delete/ and then moved to the
+    Trash. notes/ceiling_workbook_copies_removed_2026-09-22.txt lists each one. outputs/ and
+    uploads/ keep theirs, since they are live pipeline inputs.
+  - 1_Player_Inputs refreshed from this build; 2_Org_Rankings recomputed (River Cats 53,563 still first, KC Gray Hotdogs 52,835 second).
+  - The sync's guards admitted exactly what v51.13 changed on purpose, and still refuse anything
+    else: eight ages corrected from MLBAM birth dates (with CJ Stubbs' healthy base, which follows
+    from his age) and the phase cells of 30 players §4 moved between tiers.
+  - 12_Prospect_Consensus_FV takes this build's values beside the 17 September grades. Its source
+    json still carried v51.6's $, Pure and Hit%, so rebuilding it as v51.6 did would have printed
+    v51.6 values under a v51.13 heading. A last column shows Production Value, or why it abstains.
+  - 0_README's framework summary now follows Methodology v16; the one it replaces described v10.
+  - A same-build re-run changes nothing, 0_README included. That tab keeps this pass's record.
+  One-time source for this pass: --from=Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED_v51.6.xlsx.
+  From now on the script reads and rewrites the one file.
+
+================================================================================
+Everything below this line is the v51.12 README, carried forward unchanged.
+================================================================================
+
+
 GORDO NATION TRADE CALCULATOR — v51.12  GNFV IS NO LONGER A CONSENSUS OF SCOUTS ALONE (2026-09-21)
   Same pull and data window as v51.0-v51.11: scoringPeriod 173, matchup period 22, week 22 data.
   F = 162/149 = 1.0872; September absorption 0.90. No weekly refresh ran.
