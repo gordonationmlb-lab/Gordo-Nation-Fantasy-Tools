@@ -1,166 +1,131 @@
-GORDO NATION TRADE CALCULATOR — v51.15  THE YOUNG STOP LEAVING THE LEAGUE EARLY (2026-09-23)
-  Built on v51.14. Same pull and data window: scoringPeriod 173, matchup period 22, Week 22 data.
-  Rosters through 2026-09-22 (scoringPeriod 182), unchanged from v51.14. No weekly refresh ran.
-  Service worker: gordo-calc-v88-2026-09-13-v51.15.  GN_BUILD v51.15, GN_DATA_THROUGH 2026-09-13,
-  GN_ROSTERS_THROUGH 2026-09-22.
-  Acceptance: verify_v51_15.js PASS (6 checks); verify_calc_v51_15.py FAIL 0 (WARN 2, both standing);
-  render_check_v51_15.js 2,118 panels x 2 fade modes, 0 problems, 0 page errors.
-  RAW_PER_DOLLAR 536.61 -> 536.52.
+GORDO NATION TRADE CALCULATOR — v51.17  AGES FIXED BEFORE THE ROLL; EVERY CELL SAYS ITS SEASON (2026-09-23)
+  Built on v51.16. Same pull and data window: scoringPeriod 173, matchup period 22, Week 22 data.
+  Rosters through 2026-09-22 (scoringPeriod 182). No weekly refresh ran.
+  Service worker: gordo-calc-v90-2026-09-13-v51.17.  GN_BUILD v51.17, GN_DATA_THROUGH 2026-09-13,
+  GN_ROSTERS_THROUGH 2026-09-22, GN_INJ_OPENING 2027-03-25.
+  RAW_PER_DOLLAR 538.17 -> 538.06.
+  Acceptance: verify_calc.py FAIL 0 (WARN 2, both standing); see section 6.
+  Written into calc/ and build.json like v51.16; package.py made GordoNation_Calculator_v51.17/ and its zip.
 
 ================================================================================
-1. WHAT PROMPTED IT
+1. WHY
 
-  Commissioner, 23 Sep, off the Player Inspector: Jackson Holliday is 22, four seasons short of his
-  age-26 peak, and every cell of his ten-year trajectory is lower than the one before it.
-
-      v51.14   925   914   882   836   805   714   610   465   356   272
-
-  The playing curve underneath it does ramp -- tjp x Hit% x injury reads 925, 982, 1026, 1076,
-  1130 at 26, then 1072, 1019, 918, 844, 777. All of the decline is the §14.1 attrition term that
-  v51.11 added, P(still producing in MLB in year k):
-
-      tj[k] = tjp[k] x Hit%(age+k) x inj_factor(k) x att(age, k)
-
-  Holliday is not special. Of the 923 players two or more seasons short of peak whose playing
-  curve rises, 901 had an expected curve that never once exceeded year 0.
+  Commissioner's rulings of 23 Sep 2026, made while fixing the season roll:
+    - "Current" (trajectory index 0, the Inspector's Current cell, the value charts' now-point) is the 2026
+      season until the season roll; the roll is what moves it to 2027.
+    - The board ages that disagree with MLB birth dates are fixed BEFORE the roll, their lines rebuilt, so
+      the roll shifts correct ages.
+    - The pre-roll board is not repriced for the injury module's one-year offset: inj.f[0] is the 2027 line
+      (the module's opening day is 2027-03-25), so until the roll the Current (2026) cell carries it. The
+      labels say so; the roll lines them up without touching inj.f.
 
 ================================================================================
-2. THE DEFECT -- the young rows were the chained hazard the fit had rejected
+2. AGES                                                        fix_ages_v51_17.py
 
-  hazard_fit.py fitted a logistic in (k, age, k*age, k^2, age^2) and then applied two one-sided
-  constraints. Both bind on the young, and both in the wrong direction:
+  The board age is the MLB season age -- age on 30 June 2026 (§20.18; the date the board fits best: 30 June
+  disagrees on 239 records, opening day on 691). Birth dates by MLBAM id (gn_mlb_people_2026.csv), then
+  v51.13's guarded name match, then FanGraphs eng.bd. 239 ages disagreed; 238 are corrected.
+      T4 168 (149 a year younger), T3 35, T1 21, T2 8, T5 6; 206 are below peak age once fixed.
+      Off by two or more: Luis Hernández (T4) 23 -> 17 (the June age fix had matched a different Luis
+      Hernández), Bradgley Rodriguez (T3) 26 -> 22, Javier Sanoja and Jack Wenninger (T1) 3 years younger,
+      Caden Scarborough, Zach Fruit, Trey Gregory-Alford (T4) and Austin Warren (T1) by two.
+  Every changed line is rebuilt on its corrected age with v51.16's methods: the growth ramp below peak age
+  (peak cell = Pure x pace), the age curve at or past it, a veteran's line re-indexed by his regression
+  year with the cliff re-timed; PV-blended T4s through their pre-blend line (§21). 235 lines rebuilt.
+  Where the corrected age changes the price, it follows: a production record's growth factor g(age), the
+  Hit% healthy-base band, a veteran's regression clock. Every pre-peak production record now carries
+  eng.g == g(a), which the season roll's growth step reads.
 
-  (1) Every in-horizon year was capped at the one-year hazard of a FRESH anchor of the attained
-      age. It was meant to remove the k^2 upturn. For ages 19-25 it binds on every year from k=2
-      (from k=1 at 23-25), so those rows ARE the chained one-year hazard -- the form the same
-      file's docstring rejects. The comment beside the cap says the young's risk is "front-loaded
-      (does he stick?)". Front-loaded risk means a survivor's later years are SAFER than a fresh
-      anchor's. The cap forbids exactly that.
+  RA MOVERS (33: 9 up, 24 down, net -159):
+      Bradgley Rodriguez   26 -> 22   542 ->  646   growth 1.05 -> 1.25
+      Trevor Williams      33 -> 34   491 ->  416   clock ry 6 -> 7
+      Brady Singer         30 -> 29   769 ->  836   clock ry 3 -> 2
+      TJ Rumfield          25 -> 26  1360 -> 1295   growth 1.05 -> 1.00
+      Luke Keaschall       23        1150 -> 1202   his Pure still carried g(24) from the June age fix
+      Cade Smith           26 -> 27  1086 -> 1035   growth 1.05 -> 1.00
+      Jose Urquidy         30 -> 31   612 ->  563   Luis Torrens 29 -> 30   601 -> 553   Keegan Thompson 30 -> 31  600 -> 552
+      Walbert Urena        23 -> 22  1111 -> 1157   Emerson Hancock 27  853 -> 812 (June age fix, growth never removed)
+      Tony Gonsolin -21, Josh Rojas -14, Chase Silseth -13, Luke Jackson +13, Max Schuemann -12,
+      Daniel Schneemann -11, Trey Sweeney -10, Logan Evans -10, David Sandlin +8, and 11 more by 5 or less.
+  Board ten-year sum 5,496,951 -> 5,500,332 (+0.06%).
 
-  (2) One pooled frailty factor, 0.913 (the median over ages 19-43), was carried into the tail for
-      every age. Ages 19-28 each fit a horizon ratio of 1.01-1.12: their survivors are sturdier
-      than a fresh anchor of the attained age, not frailer.
+  ONE BANKED PEAK WITHOUT ITS GROWTH FACTOR. Max Muncy (Ath), T3 production, 23: the in-season ratchet
+  banked his 2026 to-date total as the ceiling with g(age) left out (Pure 337 = peak 337) and started his
+  regression clock at 23. §19.3/§19.6 price a pre-peak production ceiling at best season x g(age):
+  Pure 337 -> 387.5, clock start 23 -> 27, RA 269 -> 310. He is the only record the rule matches.
 
-  Age 22, years 1-5:         the fit   0.930  0.899  0.870  0.852  0.849
-                             v51.14    0.930  0.859  0.777  0.713  0.665
-  Observed, <=24 band (Deferral_Discount_Ruling.md §4):
-                                       0.926  0.872  0.871  0.807  0.770
-  v51.11's own docstring says "0.770 five-year survival at age 24". It shipped 0.675 for 24.
-
-================================================================================
-3. HOW IT WAS FIXED WITHOUT THE ORIGINAL DATA           attrition_fix_v51_15.py
-
-  discount_pairs.csv, the 6,899 pairs the surface was fitted on, was never saved to the league
-  folder. It is not needed: every cell of the v51.11 table where no constraint bound IS the
-  logistic, so an OLS on the logit of those cells returns the coefficients.
-
-      63 unconstrained cells, max |error| 0.00008 (four-decimal rounding is 0.00005)
-      ROUND TRIP: the v51.11 rules applied to the recovered fit reproduce all 325 shipped cells
-      to within 0.0001, and the pooled frailty to 0.9129 exactly.
-
-  The correction relaxes each constraint only where an age's own fit contradicts it:
-      fr(a) = [s(a,5)/s(a,4)] / h(a+4)     the age's fitted horizon ratio
-      in-horizon  fr(a) >= 1 (ages 19-28): capped at 1.0, i.e. monotone in k -- all the k^2
-                  upturn ever needed. Ages 29+ keep the attained-age cap.
-      tail        frailty(a) = clip(fr(a), 0.913, 1.0): 1.0 for 19-28 (the raw attained-age
-                  hazard, NOT their fitted excess), 0.985 at 29, 0.943 at 30, 0.913 from 31.
-  Ages 31-43 are byte-identical to v51.11. Every cell is >= its v51.11 value. Monotone in k and,
-  past 27, in age: zero violations.
-
-  Against the observed band table (each band weighted by the age mix of the 4,689 qualified MLB
-  player-seasons 2019-2024 in the xFP Anchor Study files -- a proxy for the anchors' own mix,
-  which went with discount_pairs.csv):
-      mean |error|, all 25 cells     v51.11 0.0288   v51.15 0.0206
-      mean |error|, <=24 band        v51.11 0.0651   v51.15 0.0191
-  0.0206 is, to rounding, the 0.0204 hazard_fit.py reports for the logistic -- that figure was the
-  fit's, before the cap; the shipped surface was never re-scored after it.
+  HELD OR FLAGGED (for the commissioner):
+    - Five T1s are now below peak age by birth date: Javier Sanoja 23, Ben Williamson 25, Victor Vodnik 26,
+      Angel Zerpa 26, Jack Wenninger 24. They stay T1, their lines flat until their regression start;
+      Wenninger also has no MLB debut on record, so §4 would read him as a T4.
+    - Two MLBAM ids are on the board twice: 687209 (Zach Maxwell, Zachary Maxwell) and 678606 (Jose Ferrer,
+      José A. Ferrer). Zachary Maxwell's age fix is held until membership is settled.
+    - Four birth dates differ between MLBAM and FanGraphs (Zach Fruit, David Davalillo, Trey Gregory-Alford,
+      McCade Brown); MLBAM is used. They, with Zachary Maxwell, are build.json age_audit.residual -- the
+      season roll refuses unless its own age check finds exactly these.
+    - 45 records have no birth date from any source (Kershaw, Darvish, Pablo Lopez, Santander, Rizzo ...);
+      a people-pull top-up for T1/T2/T5 names needs network access.
 
 ================================================================================
-4. WHAT MOVES                                          apply_attrition_v51_15.py
+3. THE APP SAYS WHICH SEASON EACH CELL IS                 patch_season_aware_v51_17.py
 
-  tj on 1,650 records (everyone aged 19-30). Year 0 on none: att(age, 0) = 1 by construction.
-  The asset multiplier ia weights its years by attrition (v51.11), so 380 injured records re-weight
-  and 92 of them move RA -- all up, by 1-13 points: Hunter Greene 922 -> 935, Cade Horton
-  673 -> 685, Chase Dollander 867 -> 878. 66 dollar figures move, by 1 to 3 cents.
-
-  RAW_PER_DOLLAR, re-floated by the standing rule (mean r over the eid-bridged pool, r > 0):
-      536.61 shipped -> 536.40 on v51.14 as it stands -> 536.52
-  The first step is v51.14's: it bridged four eids and, being roster-only, did not re-float.
-  This build's own effect is +0.12.
-
-  Ten-year expected RA (the Cumulative and single-year views; the headline is year 1 and is not):
-      age <=22   +20.8%     23-25 +12.4%     26-28 +3.5%     29-30 +0.8%     31+  0.0%
-      board      3,873,745 -> 4,168,655 (+7.6%)
-  Players aged 24 or under whose expected curve ever rises above year 0: 15 -> 483.
-
-      Jackson Holliday 22   v51.14   925  914  882  836  805  714  610  465  356  272
-                            v51.15   925  914  922  936  962  910  813  679  569  477
-      Konnor Griffin   20   v51.14  1106 1028 1006  983  949  899  828  671  547  417
-                            v51.15  1106 1028 1043 1068 1109 1162 1120  993  887  740
-
-  Holliday's Y2 cell still sits under his Current cell: his playing curve rises 6.2% (925 -> 982)
-  and a 7% chance of being out of the majors next season takes back slightly more. From there the
-  curve climbs to his age-26 peak, as it should.
-
-  DISCLOSURE. Org ten-year expected RA: C-Town Liquors +12.0%, River Cats +11.5%, KC Gray
-  Hotdogs +6.3%, High Cheddar +5.1%, Kansas Sunflower Seeds +4.6%, Dirty Spikes +3.4%, Balking
-  Dead +3.4%, MidwestBears +2.3%. The commissioner's own club gains the most, because it holds the
-  youngest core. Org RA (the headline) moves by 0 to +19 points.
+  No value changes on any record the age fix did not touch (228,744 getValue results, 4,236 Inspector
+  panels, every chart config compared against v51.16).
+  - Trajectory cells read 'Current / 2026', 'Y2 / 2027' ... with the year on its own line; the star, the
+    age line and the value are where they were.
+  - Injury year labels read GN_INJ_OPENING (build.json injury_opening), not data-through + 1. Until the roll
+    the Inspector says the Current (2026) cell carries the module's 2027 line; after it, that they align.
+  - Every label that means "the current season" reads GN_NOW_Y ('2026 pace', 'banked 2026 to-date', the
+    Options Tracker heading, the 2026 view button); dated history keeps its dates.
+  - Ready for the roll: when GNDAILY carries a season stamp the season view becomes the frozen '2026 season
+    (final)' archive drawn on its own RAW; when GNROS carries one, ROS mode is switched off with a note; the
+    recency-floor block reads the roll's eng.rf and the archived 2026 pace.
+  - build.json gains injury_opening, season 2026 and age_audit {season 2026, build v51.17, residual}.
 
 ================================================================================
-5. THE INSPECTOR
+4. THE WORKBOOK
 
-  The grid printed tj under "RA, ramping toward peak then regressing" -- a promise the numbers
-  stopped keeping in v51.11, and the reason the question was asked. Each cell now carries:
-      top    expected RA -- unchanged in meaning, and what every $ and cumulative view uses
-      grey   the playing curve alone: the cell / gnAttFactor(p, k)
-  and a note row under the grid gives the attrition by year for the player's age. The same holds
-  in the bust-risk-off view, where the grey line is the released curve before attrition.
+  Re-synced by resync_ceiling_workbook_v51.17.py (v51.16's, admitting exactly the corrected ages and the
+  repriced records, read from the v51.16 board).
+  2_Org_Rankings recomputed (River Cats 54,334 still first, KC Gray Hotdogs 50,802 second).
+
+================================================================================
+5. THE SEASON ROLL (built, not run)
+
+  season_roll.py replaces season_roll_lambda_v51.11.py (withdrawn; its --apply always refuses) and
+  make_roll_v51_11.py (withdrawn). It advances the whole board a season -- ages, regression clocks,
+  trajectories shifted a year, pace multipliers reset, Hit% re-assembled at the new age, the §4 tier moves,
+  injury weights recomputed on the shifted lines -- and runs §13.1's carry, unchanged, where it applies.
+  It writes only to --out; promotion to calc/ is a separate step after verify_calc.py --roll is FAIL 0 and
+  the commissioner's OK. It refuses before the season is complete, without this age audit, or on any
+  identity it cannot prove. Rehearsed on copies of the board; to be run on the final 2026 pull.
 
 ================================================================================
 6. GATES
 
-  attrition_fix_v51_15.py   recovery error, round trip, monotonicity, 31+ identical, never below
-                            v51.11, and the <=24 band must improve -- or nothing is written.
-  apply_attrition_v51_15.py round-trip guard (v51.14's board re-serialises byte-identically);
-                            old-surface guard (tj, ia and r of all 2,118 records reproduce from the
-                            v51.11 surface BEFORE anything changes); then tj, r, im == ia, ia inside
-                            its season lines, d == r/RAW, 31+ unmoved, year 0 unmoved, no cell down.
-  verify_v51_15.js          1  every byte outside the six intended edits and renderInspector identical
-                            2  GN_ATT == attrition_table_v51.15.json; 31-43 identical to v51.14
-                            3  the risk-adjusted grid reads tj; 31+ and year 0 untouched (21,180 cells)
-                            4  bust-risk-off moved by exactly att_new/att_old (10,850 T3/T4 cells);
-                               the released cell still dominates, worst overhang 0.95 pts; the
-                               release cap holds, tightest headroom 13.6
-                            5  the grey line == tjp x Hit% x injury, within rounding
-                            6  renderInspector: only the h4, the grey line and the note row changed
-  verify_calc_v51_15.py     verify_calc_v51_14.py with the attrition import moved to v51.15.
-                            FAIL 0, WARN 2 -- line for line what v51.14 prints in the same harness,
-                            bar the build, RAW and cache stamps. Negative control: the v51.14 gate
-                            (v51.11 surface) run on this build FAILS 1,570 tj and 68 ia records.
-  render_check_v51_15.js    headless Chromium over http, every panel in both fade modes: top line
-                            == fadeAdjustedTj, grey == top / gnAttFactor (blank in Current), the note
-                            names the right age and nine percentages, no h4 promises the ramp.
-                            2,118 panels, 21,180 cells per mode, 0 problems, 0 page errors.
-                            Renders: Claude outputs/v51.15 - Attrition Young Rows/.
+  build_v51_17.py   round trip; v51.16 guard (tj, ia, r reproduce); after: tj, r, im == ia, d, every ramp at
+                    its peak age, every T3-T5 line past peak on its age curve, no line moved on a record
+                    whose age and price did not; every patch anchor matched once.
+  Browser sweep     both pages over http from a scratch copy: 2,118 panels x 2 bust-risk modes, 42,360
+                    cells equal fadeAdjustedTj, each cell's age and season right, one ★ at the peak index
+                    (2,113; five players aged 16-17 peak past the grid), every value-over-time line equal to
+                    the grid; no page errors.
+  verify_calc.py    FAIL 0, WARN 2 -- the standing designation-lag warning and the 9 T3s on a veteran basis.
+                    New since v51.16: it checks GN_INJ_OPENING against build.json and the injury feed, derives
+                    its season dates from build.json, and has a --roll mode for the season roll.
 
 ================================================================================
-7. NOT DONE, AND STILL OPEN
+7. STILL OPEN
 
-  * The old-age direction. Ages 33+ fit horizon ratios of 0.89 down to 0.48 -- their own fit says
-    the tail is STEEPER than the pooled 0.913 charges. That is real and would cut veterans. It
-    wants its own ruling, not a rider on a young-player fix.
-  * Quality. The surface is age-only: an everyday 22-year-old and a September call-up of the same
-    age carry the same exit rate, and for a prospect the clock starts now rather than at arrival.
-    Conditioning on the anchor season needs discount_pairs.csv rebuilt -- and saved this time.
-  * build.json still carries v51.13 expectations (shared workspace). build_v51.15.json holds this
-    build's; verify_calc_v51_15.py was run in a copy with it as build.json, calc/ as this build
-    plus gn-history.js, and this README as the only README*.txt.
-  * The CEILING workbook and Issue 24 were NOT re-synced. Headline RA moved on 92 records by at
-    most 13 points; the multi-year views moved as above.
+  * The five T1s below peak age, the duplicate MLBAM records and the four birth-date conflicts (section 2).
+  * Before the roll: the final 2026 pull and weekly refresh, the injury module re-run on the post-season
+    feed, the regular season's end date in build.json, then season_roll.py.
+  * How pace multipliers reopen in 2027 (the weekly script; the roll resets them all to 1.00).
+  * McKenzie/Garrett, REPACE and the 9 T3s on a veteran basis (from v51.13).
 
 RUN ORDER TO REPRODUCE
-  python3 attrition_fix_v51_15.py --write        # -> attrition_table_v51.15.json, gn_attrition_v51_15.py
-  python3 apply_attrition_v51_15.py --apply      # -> ../GordoNation_Calculator_v51.15/
-  node verify_v51_15.js ../GordoNation_Calculator_v51.14/gn-app.js ../GordoNation_Calculator_v51.15/gn-app.js attrition_table_v51.15.json
-  python3 verify_calc_v51_15.py                  # in a copy, see section 7
+  python3 build_v51_17.py --apply            # calc/ (backups *.pre-v51_17), build.json, board, report
+  cp README_v51.17.txt calc/README.txt       # README_v51.16.txt moved to notes/
+  python3 resync_ceiling_workbook_v51.17.py --apply
+  python3 verify_calc.py
+  python3 package.py --apply

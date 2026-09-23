@@ -325,7 +325,7 @@ body, html { background: transparent; }
   <div class="tc-header">
     <div>
       <p class="tc-title">Gordo Nation Dynasty Trade Calculator</p>
-      <p class="tc-sub"><span id="playerCount">2,118</span> players. Mode: <span id="modeLabel">Risk-Adj</span>. v51.15 &middot; data through Sep 13, 2026 &middot; rosters through Sep 22, 2026.</p>
+      <p class="tc-sub"><span id="playerCount">2,118</span> players. Mode: <span id="modeLabel">Risk-Adj</span>. v51.17 &middot; data through Sep 13, 2026 &middot; rosters through Sep 22, 2026.</p>
     </div>
     <div class="controls">
       <button class="btn" id="clearAll">Clear</button>
@@ -436,7 +436,7 @@ body, html { background: transparent; }
   </div>
 
   <div class="legend">
-    Top slider: RA-to-Pure blend (0% = single-year Risk-Adj, 100% = single-year Pure Ceiling on the same pace basis the Pure trajectory uses). Bottom slider: Career years (1-10). At 1, it shows the single-season value. At 10, it shows expected RA summed across the next 10 seasons (career value); in Single season mode it shows the engine's own year-10 trajectory, with no floor under a year a player has aged out of. Combine the two for "5-year career value at 30% Pure blend" etc. Verdict: the percentage is of the LARGER side — under 5% reads as fair, 5 to 15% a slight edge, above 15% a clear win. A gap worth less than five cents of value is called even rather than graded.
+    Top slider: RA-to-Pure blend (0% = single-year Risk-Adj, 100% = single-year Pure Ceiling on the same pace basis the Pure trajectory uses). Bottom slider: Career years (1-10). At 1, it shows the headline RA — the asset value, which for a player below his peak age is his peak-season value (the Inspector marks that season ★). At 10, it shows expected RA summed across his ten trajectory seasons, Current (<span data-gn-y="0">2026</span>) through <span data-gn-y="9">2035</span> (career value); in Single season mode it shows the engine's own year-10 trajectory, with no floor under a year a player has aged out of. Combine the two for "5-year career value at 30% Pure blend" etc. Verdict: the percentage is of the LARGER side — under 5% reads as fair, 5 to 15% a slight edge, above 15% a clear win. A gap worth less than five cents of value is called even rather than graded.
   </div>
 
   <div class="charts-section">
@@ -463,7 +463,7 @@ body, html { background: transparent; }
         <div class="chart-box-title">Injury discount — RA removed, stacked by player</div>
         <div class="chart-canvas-wrap"><canvas id="injuryRiskChart" role="img" aria-label="Injury discount, stacked by player. Pick players to see the breakdown.">Injury discount, stacked by player. Pick players to see the breakdown.</canvas></div>
         <div class="no-data-msg" id="injuryRiskEmpty">Pick players to see the injury discount breakdown</div>
-        <div class="history-note">Each colored segment is one player's injury discount on his asset value: his healthy RA (Pure × Pace × Hit%) minus his risk-adjusted RA — what the Durability v2.2 module takes off (rate after a return, the UCL workload factor, survival, recurrence load, and a 0.90-per-season deferral discount for production pushed back by a long absence; the coming season's availability itself is priced on the season line, not the headline). Color = share of value removed: Yellow under 5% (low), Orange 5–15% (moderate), Red 15–35% (high), Purple 35%+ (extreme). Players the module leaves untouched (×1.00) are left off. Bar height = total RA a side is giving up to injury.</div>
+        <div class="history-note">Each colored segment is one player's injury discount on his asset value: his healthy RA (Pure × Pace × Hit%) minus his risk-adjusted RA — what the Durability v2.2 module takes off (rate after a return, the UCL workload factor, survival and recurrence load, with each season's line weighted by what he produces that season, so a season lost to injury counts zero at its share of the ten; no time discount). Each player keeps his color from the value chart; the legend gives his band — low under 5%, moderate 5–15%, high 15–35%, extreme 35%+ — and the share removed. Players the module leaves untouched (×1.00) are left off. Bar height = total RA a side is giving up to injury.</div>
       </div>
       <div class="chart-box full">
         <div class="chart-box-title-row">
@@ -532,7 +532,7 @@ body, html { background: transparent; }
   <div class="inspector-section">
     <div class="inspector-box">
       <div class="inspector-header">
-        <h3 class="inspector-title" style="margin:0">Options Tracker — 2026 AAA options</h3>
+        <h3 class="inspector-title" style="margin:0">Options Tracker — <span data-gn-daily-y>2026</span> AAA options</h3>
         <div class="inspector-search-wrap">
           <input type="text" class="inspector-search" id="optionsSearch" placeholder="Search any player..." autocomplete="off" aria-label="Options tracker: search any player">
           <div class="inspector-results" id="optionsResults"></div>
@@ -604,7 +604,7 @@ body, html { background: transparent; }
         <div class="opt-filter-note">Ledger rebuilt from the full ESPN transaction log through the Aug 24 deadline processing, extended from the league activity feed through Sep 13 &middot; parse verified against the whole-season feed, 1,102 of 1,102 stored events reproduced &middot; tap a button to list players, tap a player to open their record.</div>
       </div>
       <div id="optionsBody">
-        <div class="inspector-empty">Search for any player to see their 2026 AAA option status and transaction history. Moves that burn an option are shown in red.</div>
+        <div class="inspector-empty">Search for any player to see their <span data-gn-daily-y>2026</span> AAA option status and transaction history. Moves that burn an option are shown in red.</div>
       </div>
     </div>
   </div>

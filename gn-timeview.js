@@ -3,16 +3,31 @@
  window.GN_TIMEVIEW='career';
  function hasShape(p){ return p && p.eid!=null && !!GNDAILY.shape[String(p.eid)]; }
  function seasonSeries(p){
-   var base=(MODE==='dollar')?(p.d||0):(p.r||0);
+   // v51.17: in season p.d / p.r as before; the offseason archive draws on the closed season's own anchor
+   var base=(MODE==='dollar')?(gnDailyD(p)||0):(gnDailyR(p)||0);
    var D=GNDAILY.days, out=new Array(D);
    var sh=hasShape(p)?GNDAILY.shape[String(p.eid)]:null;
    for(var i=0;i<D;i++) out[i]= sh? base*(1+sh[i]/100) : base;
    return out;
  }
  window.__gnSeasonSeries=seasonSeries;
+ // v51.17: the season this view shows is GNDAILY's own (GN_DAILY_Y). Once the season roll has moved Current on,
+ // GNDAILY is the closed season's frozen archive (e.g. '2026 season (final)'): the same pace path, day by day,
+ // drawn on each record's final RA of that season and that season's RAW where the roll archived them
+ // (gnDailyAnchor), else on today's headline RA -- and labelled as the archive it is.
+ function dailyTitle(){
+   return GN_DAILY_FINAL
+     ? 'The '+gnDailyName()+': his '+GN_DAILY_Y+' pace path day by day, drawn on '
+       + (GN_DAILY_R_ARCHIVED ? 'his final '+GN_DAILY_Y+' RA ($ at the '+GN_DAILY_Y+' RAW '+GN_DAILY_RAW.toFixed(2)+')' : 'today\u2019s headline RA')
+       + ' \u2014 the Career view plots the season-by-season trajectory from Current ('+GN_NOW_Y+')'
+     : 'The headline RA day by day through the '+GN_DAILY_Y+' season \u2014 the Career view plots the season-by-season trajectory';
+ }
  function seasonOptions(unit,legendSize){
    return { responsive:true, maintainAspectRatio:false, interaction:{mode:'nearest',intersect:false},
      plugins:{ legend:{position:'bottom',labels:{font:{size:legendSize||10},boxWidth:12}},
+       // v51.16: this view is the headline RA day by day; the Career view's GN_NOW_Y point is the Current cell
+       subtitle:{ display:true, color:'#6e6d68', font:{size:10,style:'italic'}, padding:{bottom:4},
+         text:dailyTitle() },
        tooltip:{callbacks:{ title:function(items){return items.length?GNDAILY.dates[items[0].dataIndex]:'';},
          label:function(c){return c.dataset.label+': '+gnChartNum(unit, c.parsed.y);} }} },
      scales:{ y:{ ticks:{font:{size:10},callback:function(v,i,ticks){return gnAxisTick(unit,v,ticks);}}, beginAtZero:false,
@@ -44,13 +59,12 @@
    var flat=all.filter(function(p){ return !hasShape(p); }).length;
    var opts=seasonOptions(unit,10);
    if(flat){
-     opts.plugins.subtitle={ display:true, color:'#6e6d68', font:{size:10,style:'italic'}, padding:{bottom:4},
-       text: flat===all.length
+     opts.plugins.subtitle.text=[opts.plugins.subtitle.text, flat===all.length
          ? (all.length===1 ? 'No daily history for this player; the line is flat at today\'s value'
                            : 'No daily history for any picked player; the lines are flat at today\'s value')
-         : flat+' of '+all.length+' picked players have no daily history; those lines are flat at today\'s value' };
+         : flat+' of '+all.length+' picked players have no daily history; those lines are flat at today\'s value'];
    }
-   gnDescribeChart('playerChart', 'Player value over time, 2026 season view. '+GNDAILY.dates[0]+' to '
+   gnDescribeChart('playerChart', 'Player value over time, '+gnDailyName()+' view. '+GNDAILY.dates[0]+' to '
      +GNDAILY.dates[GNDAILY.days-1]+', '+gnValueAxisTitle()+'. '+all.length+(all.length===1?' player: ':' players: ')
      +gnArcNames(all)+'.'+(flat?' '+flat+' with no daily history.':''));
    try{ if(chartPlayer){chartPlayer.destroy();}
@@ -60,8 +74,8 @@
      // a blank card with nothing on screen and nothing in the console, which is exactly the
      // shape of a "the chart is just blank sometimes" report nobody can reproduce.
      chartPlayer=null;
-     if(window.console&&console.error) console.error('2026 player-value chart failed to render:',err);
-     gnNoData(em,'The 2026 view could not be drawn ('+((err&&err.message)||'unknown error')+'). Switch back to Career.');
+     if(window.console&&console.error) console.error(GN_DAILY_Y+' player-value chart failed to render:',err);
+     gnNoData(em,'The '+gnDailyLabel()+' view could not be drawn ('+((err&&err.message)||'unknown error')+'). Switch back to Career.');
    }
  };
  window.gnRenderArcTeam=function(){
@@ -90,12 +104,11 @@
    var flatN=allPicked.filter(function(p){ return !hasShape(p); }).length;
    var opts=seasonOptions(unit,10);
    if(flatN){
-     opts.plugins.subtitle={ display:true, color:'#6e6d68', font:{size:10,style:'italic'}, padding:{bottom:4},
-       text: flatN===allPicked.length
+     opts.plugins.subtitle.text=[opts.plugins.subtitle.text, flatN===allPicked.length
          ? 'No daily history for any picked player; the totals are flat at today\'s value'
-         : flatN+' of '+allPicked.length+' picked players have no daily history; their share of the totals is flat' };
+         : flatN+' of '+allPicked.length+' picked players have no daily history; their share of the totals is flat'];
    }
-   gnDescribeChart('teamTotalChart', 'Team total over time, 2026 season view. '+GNDAILY.dates[0]+' to '
+   gnDescribeChart('teamTotalChart', 'Team total over time, '+gnDailyName()+' view. '+GNDAILY.dates[0]+' to '
      +GNDAILY.dates[GNDAILY.days-1]+', '+gnValueAxisTitle()+'. Side A '+state.A.length+', Side B '+state.B.length
      +' players.'+(flatN?' '+flatN+' with no daily history.':''));
    try{ if(chartTeamTotal){chartTeamTotal.destroy();}
@@ -103,8 +116,8 @@
    }catch(err){
      // CHT-5: as above -- surface the failure instead of hiding it behind a blank card.
      chartTeamTotal=null;
-     if(window.console&&console.error) console.error('2026 team-total chart failed to render:',err);
-     gnNoData(em,'The 2026 view could not be drawn ('+((err&&err.message)||'unknown error')+'). Switch back to Career.');
+     if(window.console&&console.error) console.error(GN_DAILY_Y+' team-total chart failed to render:',err);
+     gnNoData(em,'The '+gnDailyLabel()+' view could not be drawn ('+((err&&err.message)||'unknown error')+'). Switch back to Career.');
    }
  };
  function addToggle(canvasId){
@@ -119,7 +132,9 @@
    sp.setAttribute('aria-label','Chart time range, applies to both value charts');
    sp.title='Switches both value-over-time charts';
    sp.innerHTML='<button data-v="career" class="on" aria-pressed="true">Career</button>'
-              + '<button data-v="season" aria-pressed="false">2026</button>';
+              + '<button data-v="season" aria-pressed="false"'
+              + (GN_DAILY_FINAL ? ' title="'+gnDailyName()+' \u2014 a frozen archive; Current is '+GN_NOW_Y+'"' : '')
+              + '>'+GN_DAILY_Y+(GN_DAILY_FINAL ? ' final' : '')+'</button>';
    title.appendChild(sp);
  }
  addToggle('playerChart'); addToggle('teamTotalChart');
@@ -143,7 +158,7 @@
    if(_tv==='season'||_tv==='career') GN_TIMEVIEW=_tv; }catch(e){}
  gnSyncTimeview();
  // the charts were drawn by tryRenderCharts before this block replaced the two render functions, so
- // a restored 2026 view has to redraw them. Chart.js may not have loaded yet, in which case
+ // a restored season view has to redraw them. Chart.js may not have loaded yet, in which case
  // tryRenderCharts calls these same wrappers itself and reads the restored view.
  if(GN_TIMEVIEW==='season'){ try{ gnRenderArcPlayer(); gnRenderArcTeam(); }catch(e){} }
 })();
