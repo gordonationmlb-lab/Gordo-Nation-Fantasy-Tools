@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><title>Gordo Nation Trade Calculator</title>
 <script src="gn-boot.js"></script>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://gc.zgo.at; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://gordonation.goatcounter.com; connect-src 'self' https://baseballsavant.mlb.com https://gordonation.goatcounter.com; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0B2C5C">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Gordo Calc"><meta name="mobile-web-app-capable" content="yes">
@@ -135,6 +135,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;op
  #gnDeadlineInner .gn-dl-count{margin-left:auto;background:#0B2C5C;border:2px solid #E5A227;border-radius:8px;padding:4px 12px;font-weight:900;font-size:17px;white-space:nowrap;font-variant-numeric:tabular-nums;}
  #gnDeadlineInner .gn-dl-body{margin-top:6px;font-size:13.5px;line-height:1.45;}
  #gnDeadlineInner .gn-dl-body b{color:#FFE9A8;}
+ /* v51.19: the countdown badge may wrap on a phone (it held the page 15-55 px wider than a 320-360 px screen) */
+ @media (max-width:400px){#gnDeadlineInner .gn-dl-count{white-space:normal;max-width:100%;text-align:center;}}
  </style>
  <div id="gnDeadlineInner">
   <div class="gn-dl-head"><span>&#9888;&#65039; TRADE DEADLINE &mdash; trades must be ACCEPTED by SATURDAY, AUG 22 @ 12:00 PM (NOON) CT</span>
@@ -325,7 +327,7 @@ body, html { background: transparent; }
   <div class="tc-header">
     <div>
       <p class="tc-title">Gordo Nation Dynasty Trade Calculator</p>
-      <p class="tc-sub"><span id="playerCount">2,118</span> players. Mode: <span id="modeLabel">Risk-Adj</span>. v51.17 &middot; data through Sep 13, 2026 &middot; rosters through Sep 22, 2026.</p>
+      <p class="tc-sub"><span id="playerCount">2,118</span> players. Mode: <span id="modeLabel">Risk-Adj</span>. v51.19 &middot; data through Sep 13, 2026 &middot; rosters through Sep 22, 2026.</p>
     </div>
     <div class="controls">
       <button class="btn" id="clearAll">Clear</button>
@@ -512,6 +514,10 @@ body, html { background: transparent; }
     </div>
     <div class="history-note" id="historyNote"></div>
   </div>
+
+  <!-- Player Compare (gn-compare.js): up to five players side by side, every priced figure the Inspector's own;
+       Statcast shown as context only, never priced, fetched by the browser from Baseball Savant. -->
+  <div id="gnCompare"></div>
 
   <div class="dual-grid">
   <div class="inspector-section">
@@ -702,6 +708,219 @@ input[type=range],.slider-input{accent-color:#C9A227;}
 <script id="gn-ros-v46" src="gn-ros-v46.js"></script>
 
 <script id="gn-a11y-keys" src="gn-a11y-keys.js"></script>
+
+<style id="gn-compare-css">
+/* Player Compare (gn-compare.js). Light only, like the rest of the page (:root{color-scheme:light}).
+   The table scrolls inside its own box so its header row and label column can stay put; on a narrow
+   screen the first player column is pinned beside the labels and the others snap past it. The table box
+   is the ONLY thing that scrolls sideways, at any width from 320 px up: it is position:relative (and a
+   size container), so nothing inside it -- the screen-reader-only labels included -- can widen the page.
+   Column sizes: 150 + 3 x 170 fits the ~690 px box of a 780 px window, 150 + 5 x 170 the ~1190 px box of a
+   1280 px one; wider boxes stretch the columns. gn-compare.js (fitColumns) sets --gc-colw on the box from its real
+   width: a little over narrows the columns (five fit at ~1024 px), more than that sizes them so the box holds a
+   whole number beside the pinned first column, and scroll snapping lands on column edges -- no half-hidden column
+   with its buttons showing next to the pinned one. The box, borders included, is at most the screen height below
+   the masthead. */
+#gnCompare{margin-top:16px;--gc-lab:150px;--gc-colw:170px}
+.gc-box{padding:14px}
+.gc-hd{display:flex;align-items:baseline;gap:10px 14px;flex-wrap:wrap;margin-bottom:10px}
+.gc-hd h3{margin:0}
+.gc-count{font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--color-text-secondary);letter-spacing:.06em;text-transform:uppercase}
+.gc-hd-btns{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.gc-pick{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.gc-dd{position:relative;flex:1 1 260px;max-width:440px;min-width:0}
+.gc-dd .inspector-search{width:100%;box-sizing:border-box}
+.gc-dd .results{max-height:320px}
+.gc-dd .result-item.gc-inc{opacity:.55;cursor:default}
+.gc-set{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-family:var(--font-display);font-size:11px;color:var(--nl-navy);margin:2px 0 4px;padding:7px 9px;background:var(--nl-cream);border:1px solid var(--nl-line);border-radius:6px}
+.gc-set .gc-sl{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px}
+.gc-pair{display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0}
+.gc-pair-blend{flex:0 1 auto}
+.gc-set .toggle button{font-size:11px;padding:4px 9px}
+.gc-set .toggle.gc-inert{opacity:.55}
+.gc-yrs{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--nl-navy);border-radius:4px;background:var(--nl-paper)}
+.gc-yrs b{min-width:2.2em;text-align:center;font-variant-numeric:tabular-nums}
+.gc-step{border:0;background:transparent;color:var(--nl-navy);font-weight:900;font-size:14px;line-height:1;padding:3px 8px;cursor:pointer}
+.gc-step:disabled{opacity:.4;cursor:not-allowed}
+.gc-step[aria-disabled="true"]{opacity:.4;cursor:default}
+.gc-set input[type=range]{width:110px}
+.gc-ro{color:var(--color-text-secondary);min-width:6.5em}
+.gc-setline{font-size:11px;color:var(--color-text-secondary);font-style:italic;margin:0 0 8px}
+.gc-opts{display:flex;gap:6px 16px;flex-wrap:wrap;align-items:center;font-size:11.5px;margin-bottom:8px;font-family:var(--font-display);color:var(--nl-navy)}
+.gc-opts label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.gc-link{border:0;background:transparent;color:var(--nl-navy);font:inherit;font-family:var(--font-display);font-size:11.5px;font-weight:700;text-decoration:underline;text-underline-offset:2px;cursor:pointer;padding:2px 0}
+.gc-miss{font-size:11.5px;color:#8a5a08;background:#fbeccb;border-left:3px solid var(--nl-gold);padding:5px 8px;margin:0 0 8px}
+.gc-restore{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12px;color:var(--nl-navy);background:var(--nl-cream);border:1px solid var(--nl-line);border-left:3px solid var(--nl-navy);padding:6px 9px;margin:0 0 8px}
+.gc-restore[hidden]{display:none}
+.gc-restore .btn{font-size:11px;padding:4px 10px}
+.gc-empty{font-size:12px;color:var(--color-text-secondary);font-style:italic;text-align:center;padding:14px 8px}
+/* an empty comparison is one line and a search box: the settings, options and footer wait for a player */
+#gnCompare:not(.gc-has) .gc-set,#gnCompare:not(.gc-has) .gc-setline,#gnCompare:not(.gc-has) .gc-opts,#gnCompare:not(.gc-has) .gc-foot,
+#gnCompare:not(.gc-has) .gc-hd-btns{display:none}
+/* an add button with nothing to add (no picks, no Inspector player, or already full) steps aside */
+.gc-pick>.btn:disabled{display:none}
+.gc-foot{font-size:11px;color:var(--color-text-secondary);font-style:italic;margin:8px 0 0}
+.gc-scroll{position:relative;box-sizing:border-box;container-type:inline-size;overflow:auto;max-height:min(82vh,1600px);max-height:calc(100dvh - var(--gc-mast,130px) - 16px);border:1px solid var(--nl-line);border-radius:6px;background:#fff;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;min-width:0;
+  scroll-snap-type:x proximity;scroll-padding-left:calc(var(--gc-lab) + var(--gc-colw))}
+.gc-table td:not(.gc-a),.gc-table thead th:not(.gc-a):not(.gc-rh){scroll-snap-align:start}
+.gc-scroll:focus-visible{outline:2px solid #C9A227;outline-offset:2px}
+.gc-table{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:12px;width:max(100%,calc(var(--gc-lab) + var(--gc-n) * var(--gc-colw)))}
+.gc-table col.gc-col-lab{width:var(--gc-lab)}
+.gc-table th,.gc-table td{padding:6px 8px;border-bottom:1px solid rgba(11,44,92,.08);vertical-align:top;text-align:left;background:#fff;min-width:0;overflow-wrap:break-word}
+.gc-table thead th{position:sticky;top:0;z-index:3;background:var(--nl-paper);border-bottom:2px solid var(--nl-navy)}
+.gc-table .gc-rh{position:sticky;left:0;z-index:2;background:var(--nl-paper);font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--nl-navy);border-right:1px solid var(--nl-line)}
+.gc-table thead .gc-rh{z-index:5}
+.gc-table .gc-a{position:sticky;left:var(--gc-lab);z-index:1;box-shadow:inset -1px 0 0 var(--nl-line),6px 0 6px -4px rgba(11,44,92,.25)}
+.gc-table thead .gc-a{z-index:4}
+.gc-rh i{font-style:normal;font-weight:400;color:var(--color-text-secondary)}
+.gc-rs{display:block;font-weight:400;font-size:10px;color:var(--color-text-secondary);font-family:var(--font-serif);font-style:italic;line-height:1.35;margin-top:2px}
+.gc-rh-d{font-weight:400;font-style:italic;font-size:10.5px}
+.gc-x,.gc-gx{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin:0 5px 0 0;border:1px solid var(--nl-navy);border-radius:3px;background:#fff;color:var(--nl-navy);font-weight:900;font-size:12px;line-height:1;cursor:pointer;padding:0;vertical-align:-3px}
+.gc-gx{border-color:rgba(255,255,255,.6);background:transparent;color:#F1ECDD}
+.gc-x:focus-visible,.gc-gx:focus-visible,.gc-ib:focus-visible,.gc-blk:focus-visible,.gc-link:focus-visible{outline:2px solid #C9A227;outline-offset:1px}
+.gc-g th{background:var(--nl-navy);color:#F1ECDD;font-family:var(--font-display);font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;padding:6px 8px}
+.gc-g th i{font-family:var(--font-serif);font-weight:400;letter-spacing:.01em;text-transform:none;font-size:11px;opacity:.85}
+.gc-gt{position:sticky;left:8px;display:inline-block;max-width:calc(100vw - 66px);max-width:calc(100cqw - 16px)}
+/* full-width note cells (Statcast intro, loading/failed, Show all): the text stays in the visible box */
+.gc-stick{position:sticky;left:8px;display:block;max-width:calc(100vw - 66px);max-width:calc(100cqw - 16px)}
+.gc-g2 th{background:var(--nl-cream-2);color:var(--nl-navy);font-family:var(--font-display);font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;padding:4px 8px}
+.gc-g.gc-g-sc th{background:var(--nl-cream-2);color:var(--nl-navy);border-top:2px dashed var(--nl-navy)}
+tbody.gc-sc td,tbody.gc-sc th.gc-rh{background:#f7f4ea}
+.gc-scnote{font-size:11px;line-height:1.5;color:var(--color-text-secondary)}
+.gc-scnote b{color:var(--nl-navy)}
+.gc-num{font-variant-numeric:tabular-nums;font-weight:700;color:var(--nl-ink)}
+.gc-big{font-size:14px;font-family:var(--font-display);font-weight:900;color:var(--nl-navy)}
+.gc-sub{display:block;font-size:10.5px;line-height:1.35;color:var(--color-text-secondary);margin-top:2px}
+.gc-mut{color:var(--color-text-secondary);font-size:11px}
+.gc-d{display:block;font-size:10.5px;color:var(--color-text-secondary);font-variant-numeric:tabular-nums}
+.gc-best{box-shadow:inset 3px 0 0 var(--nl-gold)}
+.gc-table .gc-a.gc-best{box-shadow:inset 3px 0 0 var(--nl-gold),inset -1px 0 0 var(--nl-line),6px 0 6px -4px rgba(11,44,92,.25)}
+.gc-bst{color:#9C7C1B;font-size:10px;margin-left:4px}
+.gc-sum td,.gc-sum th{background:#fcfaf4}
+.gc-tot td{border-top:1px solid var(--nl-line)}
+.gc-band{display:inline-block;font-family:var(--font-display);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#16233a;padding:0 5px;border-radius:3px;margin-left:6px;vertical-align:1px}
+.gc-flag{display:inline-block;font-family:var(--font-display);font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;background:var(--nl-gold);color:#16233a;padding:1px 5px;border-radius:2px;margin-top:3px;cursor:help}
+.gc-flagnote{font-size:10.5px;line-height:1.45;background:rgba(229,162,39,.14);border-left:2px solid var(--nl-gold);padding:4px 7px;margin:6px 0 0}
+.gc-warn{color:#8a5a08;font-weight:700}
+.gc-steps{font-variant-numeric:tabular-nums;font-weight:600;color:var(--nl-navy);font-size:11px}
+.gc-ph{font-weight:400}
+.gc-pn{display:block;font-family:var(--font-display);font-weight:900;font-size:13px;color:var(--nl-navy);line-height:1.25}
+/* above 640 px a head's sub-lines keep one line each (full text in the title), so a long team name ("Kansas Sunflower
+   Seeds (MLB)", "Free agent (was ...)") cannot push that column's controls below the others' */
+@media (min-width:641px){#gnCompare .gc-table thead th.gc-ph .gc-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+/* the chip row is reserved in every head once any head has a chip, so names and controls line up */
+.gc-chips{display:flex;flex-wrap:wrap;align-items:flex-start;gap:3px 4px;min-height:14px;margin-bottom:3px}
+.gc-chips .gc-chipk{margin:0;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}   /* one line even in an 80 px column (320 px screens) */
+.gc-chipk{display:inline-block;font-family:var(--font-display);font-size:8.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;background:var(--nl-cream-2);color:var(--nl-navy);padding:1px 5px;border-radius:2px;margin:0 4px 3px 0}
+.gc-chipk.gc-side{background:var(--nl-navy);color:#F2D77E}
+.gc-chipk.gc-stale{background:var(--nl-gold);color:#16233a}
+/* per-column controls: one slim row of icon buttons (move left, move right, make first, inspect, remove) */
+.gc-hbtns{display:flex;flex-wrap:nowrap;gap:3px;margin-top:6px;align-items:center}
+.gc-ib{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:26px;height:24px;padding:0;border:1px solid var(--nl-line);background:#fff;color:var(--nl-navy);border-radius:4px;cursor:pointer}
+.gc-ib svg{display:block;pointer-events:none}
+.gc-ib:hover{background:var(--nl-cream);border-color:var(--nl-navy)}
+.gc-ib:disabled{opacity:.3;cursor:default;background:#fff;border-color:var(--nl-line)}
+.gc-ib.gc-rm{margin-left:auto;color:#8a1020}
+/* the same controls in an "Arrange" body row: shown instead of the head's on touch screens and phones */
+.gc-arr{display:none}
+.gc-arr .gc-hbtns{margin:0;flex-wrap:wrap;gap:4px}
+.gc-arr .gc-ib.gc-rm{margin-left:0}
+.gc-table .formula-section.gc-chain{padding:6px 7px;margin:0}
+.gc-chain .formula-row{font-size:11px;line-height:1.5}
+/* the Inspector lets a value take 70% of a row; in a narrow column that crushes the label to a letter a line */
+#gnCompare .gc-chain .formula-row{flex-wrap:wrap;column-gap:6px}
+#gnCompare .gc-chain .formula-row:not(.note)>.label{flex:1 1 7.5em;min-width:0}
+#gnCompare .gc-chain .formula-row:not(.note)>.value:not(:only-child){flex:0 1 auto;max-width:100%;margin-left:auto}
+.gc-chain .formula-row.sub{padding-left:8px}
+#gnCompare:not(.gc-notes-on) .gc-chain .formula-row.note{display:none}
+#gnCompare .gc-only-notes .formula-row.note{display:flex}
+.gc-chain .formula-notes{max-height:220px}
+#gnCompare .gn-spine{margin:0 0 6px}
+/* the decision sequence in a column: the name column may shrink and the outcome may wrap (at ~157 px, five
+   columns at 1024 px, a nowrap outcome pushed the step 2 px past its cell) */
+#gnCompare .gn-step{grid-template-columns:14px minmax(0,1fr) auto;gap:2px 6px;padding:5px 7px}
+#gnCompare .gn-step .gn-test{grid-column:2/-1;font-size:10.5px;min-width:0}
+#gnCompare .gn-step .gn-out{grid-column:3;grid-row:1;white-space:normal;text-align:right}
+#gnCompare .gn-warn{grid-column:1/-1}
+.gc-spark{display:block;width:100%;max-width:220px;height:40px}
+.gc-yr.gc-used td,.gc-yr.gc-used th{background:#fdf3d9}
+.gc-yr.gc-used td.gc-nouse{background:#fff}
+.gc-floored{color:#8a5a08}
+.gc-scv{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px}
+.gc-scn{font-variant-numeric:tabular-nums;font-weight:700;color:var(--nl-ink)}
+.gc-pb{display:inline-flex;align-items:center;gap:4px;cursor:help}
+.gc-pb-t{display:inline-block;width:52px;height:7px;background:#e4dfd0;border-radius:4px;overflow:hidden}
+.gc-pb-f{display:block;height:100%}
+.gc-pb b{font-size:10.5px;font-variant-numeric:tabular-nums;color:var(--nl-ink);min-width:1.6em}
+.gc-pb-m .gc-pb-t{outline:1px dashed #8d8772;outline-offset:1px}
+.gc-pb-none{font-size:10px;color:var(--color-text-secondary);font-style:italic}
+.gc-nis{font-style:italic;font-size:10.5px}
+.gc-yoy,.gc-gap{font-size:10.5px;color:var(--color-text-secondary);font-variant-numeric:tabular-nums}
+.gc-blks{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.gc-blk{border:1px solid var(--nl-line);background:#fff;color:var(--nl-navy);font-family:var(--font-display);font-size:10px;font-weight:700;border-radius:3px;padding:1px 6px;cursor:pointer;min-height:22px}
+.gc-blk[aria-pressed="true"]{background:var(--nl-navy);color:#F2D77E;border-color:var(--nl-navy)}
+.gc-sv{display:inline-block;margin-top:4px;font-family:var(--font-display);font-size:10.5px;font-weight:700;color:var(--nl-navy)}
+.gc-more td{background:#f7f4ea;text-align:left}
+.gc-insp-btn{font-size:11px!important;padding:4px 10px!important}
+.gc-tray{position:fixed;left:0;right:0;bottom:0;z-index:90;display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:var(--nl-navy);color:#F1ECDD;font-family:var(--font-display);font-size:12px;box-shadow:0 -3px 12px rgba(11,44,92,.3);border-top:3px solid var(--nl-gold)}
+.gc-tray[hidden]{display:none}
+.gc-tray-t{font-weight:900;letter-spacing:.14em;text-transform:uppercase;font-size:10px;color:#F2D77E}
+.gc-tchip{display:inline-flex;align-items:center;gap:2px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:0 2px 0 10px}
+.gc-tchip button{border:0;background:transparent;color:#F2D77E;font-size:15px;min-width:30px;min-height:30px;cursor:pointer}
+.gc-tray-n{margin-left:auto;font-weight:700;opacity:.8}
+.gc-tray .btn{padding:5px 14px}
+@keyframes gcPulse{0%,100%{box-shadow:0 -3px 12px rgba(11,44,92,.3)}50%{box-shadow:0 -3px 0 6px rgba(229,162,39,.55)}}
+.gc-tray.gc-pulse{animation:gcPulse .6s 1}
+body.gc-tray-on{padding-bottom:64px}
+/* touch screens (any width) and phones: 40 px targets; the column controls move to the Arrange row */
+@media (max-width:640px),(pointer:coarse){
+  .gc-table thead .gc-hbtns{display:none}
+  .gc-arr{display:table-row}
+  .gc-ib{width:auto;height:auto;min-width:40px;min-height:40px}
+  .gc-ib svg{width:16px;height:16px}
+  .gc-x,.gc-gx,.gc-blk,.gc-step,.gc-tchip button{min-width:40px;min-height:40px}
+  #gnCompare .btn,.gc-tray .btn,.gc-insp-btn{min-height:40px}
+  .gc-set .toggle button{min-height:42px;min-width:44px}
+  .gc-link,.gc-sv,.gc-opts label{display:inline-flex;align-items:center;min-height:40px}
+  .gc-opts input[type=checkbox]{width:20px;height:20px}
+}
+@media (max-width:640px){
+  /* the pinned first column plus exactly one scrolling column fill a phone's table box */
+  #gnCompare{--gc-lab:86px;--gc-colw:max(112px,calc((100vw - 60px - var(--gc-lab))/2))}
+  .gc-box{padding:10px 8px}
+  .gc-table{font-size:11.5px}
+  .gc-table th,.gc-table td{padding:5px 6px}
+  .gc-rs{display:none}
+  .gc-set{gap:6px}
+  .gc-set .toggle{width:auto}
+  .gc-set .toggle button{font-size:12px;flex:0 0 auto}
+  .gc-pair-blend{flex:1 1 100%}
+  .gc-set input[type=range]{width:auto;min-width:0;flex:1 1 120px}
+  .gc-step{font-size:16px}
+  .gc-hd-btns{margin-left:0;width:100%}
+  .gc-hd-btns .btn,.gc-pick>.btn{flex:1 1 auto}
+  .gc-pb-t{width:40px}
+  /* the tray is one row on a phone (it scrolls sideways if the names do not fit), not three */
+  .gc-tray{font-size:11px;flex-wrap:nowrap;overflow-x:auto;gap:6px}
+  .gc-tray-n{margin-left:0}
+  .gc-tray .gc-tchip{flex:0 0 auto}
+  /* ...and View, its main action, stays on screen at the right edge while the names scroll under it */
+  .gc-tray [data-gc-tray="view"]{position:sticky;right:0;flex:0 0 auto;box-shadow:12px 0 0 0 var(--nl-navy),-10px 0 8px -6px rgba(0,0,0,.35)}
+  /* the decision sequence in a ~115 px column: the outcome goes under the step name instead of being clipped */
+  #gnCompare .gn-spine-hd{flex-wrap:wrap;gap:2px 6px}
+  #gnCompare .gn-step{grid-template-columns:14px minmax(0,1fr)}
+  #gnCompare .gn-step .gn-nm,#gnCompare .gn-step .gn-test{grid-column:2}
+  #gnCompare .gn-step .gn-out{grid-column:1/-1;grid-row:auto;justify-self:start;text-align:left;white-space:normal;max-width:100%;font-size:10px;letter-spacing:.02em;padding-left:4px;padding-right:4px}
+}
+@media (prefers-reduced-motion:reduce){.gc-tray.gc-pulse{animation:none}}
+@media (forced-colors:active){.gc-pb-t{border:1px solid CanvasText}.gc-pb-f{forced-color-adjust:none}}
+@media print{.gc-tray,.gc-set,.gc-pick,.gc-hbtns,.gc-arr,.gc-restore,.gc-x,.gc-gx{display:none!important}.gc-scroll{max-height:none;overflow:visible}body.gc-tray-on{padding-bottom:0}}
+</style>
+<!-- Anonymous page and feature counts (GoatCounter; no cookies, the address after # is never sent, nothing from
+     localhost). count.v5.js is pinned by its SRI hash; the events are gn-track.js. -->
+<script async src="https://gc.zgo.at/count.v5.js" integrity="sha384-atnOLvQb9t+jTSipvd75X2yginT4PjVbqDdlJAmxMm+wYElFmeR6EmLP5bYeoRVQ" crossorigin="anonymous" data-goatcounter="https://gordonation.goatcounter.com/count"></script>
+<script id="gn-track-js" src="gn-track.js"></script>
+<script id="gn-compare-js" src="gn-compare.js"></script>
 
 <script src="gn-build-stamp.js"></script>
 </body></html>

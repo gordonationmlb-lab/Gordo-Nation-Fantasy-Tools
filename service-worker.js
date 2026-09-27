@@ -1,4 +1,4 @@
-const CACHE = 'gordo-calc-v90-2026-09-13-v51.17';
+const CACHE = 'gordo-calc-v92-2026-09-13-v51.19';
 const SHELL = [
   './', 'index.html', 'mobile.html', 'manifest.json',
   'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'apple-touch-icon.png',
@@ -8,14 +8,18 @@ const SHELL = [
   // 6.2 MB one: it holds PLAYERS/GNDAILY/GNROS/HISTORY/OPTIONS_DATA and all the logic,
   // and it is now shared by both pages instead of duplicated into each.
   'gn-boot.js', 'gn-install-tip.js', 'gn-buildlink.js', 'gn-app.js', 'gn-sw-register.js',
-  'gn-detail-v45.js', 'gn-timeview.js', 'gn-ros-v46.js', 'gn-a11y-keys.js', 'gn-build-stamp.js'
+  'gn-detail-v45.js', 'gn-timeview.js', 'gn-ros-v46.js', 'gn-a11y-keys.js', 'gn-build-stamp.js',
+  // v51.19: Player Compare, and the anonymous feature counts. Compare's Statcast context is not a file here at
+  // all: each browser fetches it from Baseball Savant when Compare needs it, and GoatCounter's count.js comes
+  // from gc.zgo.at -- both cross-origin, which the fetch handler below never intercepts, caches or precaches.
+  'gn-track.js', 'gn-compare.js'
 ];
 
 self.addEventListener('install', (e) => {
-  // Precache entry by entry, not with one addAll. addAll is all-or-nothing across all 18
+  // Precache entry by entry, not with one addAll. addAll is all-or-nothing across all 20
   // entries, so a deploy that dropped a single file left the cache created and EMPTY and the
   // worker never activated at all — measured, with register() still resolving and nothing in
-  // the console naming the cause. A worker holding 17 of 18 files is strictly better than no
+  // the console naming the cause. A worker holding 19 of 20 files is strictly better than no
   // worker, so note what is missing, say so once, and activate anyway. 'reload' skips the HTTP
   // cache here: a precache that stores what the browser already had defeats the point.
   e.waitUntil(
@@ -43,7 +47,9 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      // v51.19: every older gordo-calc-* store goes; Player Compare's Savant copies (gn-savant-*) stay -- the page
+      // keeps them for 12 hours and a week-old fallback, and a deploy is no reason to fetch them again
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k.indexOf('gn-savant-') !== 0).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
