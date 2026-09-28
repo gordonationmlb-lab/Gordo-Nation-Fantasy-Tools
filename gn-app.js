@@ -11,7 +11,7 @@ const GN_HISTORY_DATES = ["2026-06-12", "2026-06-15", "2026-06-17", "2026-06-20"
 const RAW_PER_DOLLAR = 537.96;
 // v50.20: build constants the weekly script updates alongside RAW_PER_DOLLAR. Absorption is read from
 // the methodology 13 month table on the data-through date, never hand-typed into the display code.
-const GN_BUILD = 'v51.19';
+const GN_BUILD = 'v51.20';
   const GN_PACE_BASIS = 'rate';  // v50.22: pm compares rate to rate; see methodology 13;
 const GN_INJURY_MODULE = 'Durability v2.2';  // v51.0: injury priced as its own multiplier (p.im); Hit% carries no injury term. v51.1: p.im is the asset multiplier
 const GN_UCL_WORKLOAD = 0.85;   // v51.1: return-season workload factor for UCL-class returns (IP per 30 days 20.7 -> 17.4)
@@ -2396,6 +2396,104 @@ function buildDecisionSpine(p,ctx){
  }catch(err){ return ''; }
 }
 
+// v51.20: THE INSPECTOR AT THE SEASON ROLL, AND THE RESIDUAL IT MAY NAME (build_v51_20.py inserts this block into gn-app.js
+// before buildInspectorTree; nothing here prices anything -- every figure it prints is one the record stores).
+// gnRollChain(p): the season roll's own Pure step, as season_roll.py (v51.20) stored it on the record (eng.roll): the figure
+//   the step starts from (the closing Pure; for a floor record's winning ratchet, the banked season), times each factor the
+//   roll multiplied -- the age step, the §13.1 carry, the §19.6 ratchet, the completed-season anchor, the regression, the
+//   cliff -- then the tier re-read's own factors. Used only while the record's Pure is still the roll's (eng.roll.pc1) and
+//   the roll closed the season before Current. A floor (the larger of two candidates: eng.roll.f is null) keeps its own
+//   floor rows, and a graduate priced anew (T5 on his MLB career best) his depth chain.
+function gnRcNum(v){ return (v == null) ? '—' : (Number.isInteger(v) ? String(v) : (Math.round(v * 10) / 10).toFixed(1)); }
+function gnRollOn(p){
+  const R = (p && p.eng || {}).roll;
+  if (!R || R.y !== GN_NOW_Y - 1 || R.pc1 == null || Math.abs((p.pc || 0) - R.pc1) > 0.05) return null;
+  return R;
+}
+function gnRollChain(p){
+  const R = gnRollOn(p);
+  if (!R || !Array.isArray(R.f) || !Array.isArray(R.start) || (R.tier && R.tier.anew)) return null;
+  const e = p.eng || {}, Y = R.y, Y1 = R.y + 1, f3 = x => (x == null ? '—' : Number(x).toFixed(3));
+  const S = { pc0: [`Pure at the close of the ${Y} season (before the ${Y} → ${Y1} season roll)`, `${Y} closing Pure`],
+              banked: [`Banked ${Y} season — a new career peak at the roll (§19.6)`, `Banked ${Y} (new peak)`],
+              pk: ['Career peak', 'Career peak'] }[R.start[0]] || [`Season-roll start (${R.start[0]})`, 'roll start'];
+  const lab = (k, f, i) => {
+    i = i || {};
+    if (k === 'step') {
+      const pr = [];
+      if (i.ry && i.ry[1] !== i.ry[0]) pr.push(`regression clock ${i.ry[0]} → ${i.ry[1]} yr past peak (REG ${f3(i.reg[0])} → ${f3(i.reg[1])})`);
+      else pr.push(i.ry && i.ry[0] === 0 ? `regression held flat (it begins at age ${i.rs})` : `regression clock stays at ${i.ry ? i.ry[0] : '?'} yr`);
+      if (i.cl && i.cl[1] !== i.cl[0]) pr.push(`Father-Time cliff ${f3(i.cl[0])} → ${f3(i.cl[1])}`);
+      return [`× Age step ${Y} → ${Y1}: ${pr.join('; ')} (§19.2)`, 'x age step'];
+    }
+    if (k === 'grow') return [`× Growth step, age ${i.a[0]} → ${i.a[1]}: growth ×${i.g[0].toFixed(2)} → ×${i.g[1].toFixed(2)} (§12)`, 'x growth step'];
+    if (k === 'flat') return [`× No age step (${i.b || 'this'} basis${i.b === 'tool' ? ': a tool grade moves only at the tier re-read' : (i.b === 'depth' ? ': a depth career best does not age' : '')})`, 'x no age step'];
+    if (k === 'carry') return [`× §13.1 season-roll carry: ${Y} pace ${i.pace} against expectation ${gnRcNum(i.exp)}, availability ${f3(i.av)}${i.il ? ` (${i.il} IL days)` : ''}${i.cap != null ? `, capped at the raw career peak ${i.cap}` : ''}`, 'x §13.1 carry'];
+    if (k === 'rat') return [`× §19.6 ratchet at the roll: the banked ${Y} season, ${gnRcNum(i.banked)} FP, over the peak it passed (${i.pk}${(i.rm != null && i.rm !== 1) ? ` × REG ${f3(i.rm)}` : ''})`, 'x ratchet (banked/peak)'];
+    if (k === 'reg') return [i.rs != null ? `× Regression clock re-anchored on the ${Y} season: ${i.ry} yr past the peak (it begins at age ${i.rs})` : `× Regression from the new peak: ${i.ry} yr past it`, 'x regression'];
+    if (k === 'cliff') return [`× Father-Time cliff, age ${i.a ? i.a.join(' → ') : p.a}`, 'x cliff'];
+    if (k === 'sc') return [`× Position scarcity (${p.p})`, 'x scarcity'];
+    if (k === 'anchor') {
+      if (i.revert) return [`× Reverted to the prior full-season peak, ${i.prior[0]} FP (${i.prior[1]}): the completed ${Y} season, ${gnRcNum(i.banked)} FP, fell below it (§19.6)`, 'x back to prior peak'];
+      if (i.banked == null) return [`× Completed-season anchor: no completed ${Y} total on record, so the to-date peak ${i.pk[0]} is kept`, 'x completed season'];
+      if (f === 1) return [`× Completed-season anchor: the banked ${Y} season is the peak, ${i.pk[1]} FP (§19.6)`, 'x completed season'];
+      return [`× Completed-season anchor: the banked ${Y} season, ${gnRcNum(i.banked)} FP, over the to-date peak ${i.pk[0]} (§19.6)`, 'x completed season'];
+    }
+    if (k === 'gdiv') return [`× Graduation T3 → T1: growth falls away (÷ ${Number(i.g).toFixed(2)}, §19.1)`, 'x grad: growth off'];
+    if (k === 'treg') return [`× Graduation T3 → T1: the veteran clock, ${i.ry} yr past peak (it begins at age ${i.rs})`, 'x grad: vet clock'];
+    return [`× Season-roll factor (${k})`, 'x roll factor'];
+  };
+  const rows = [];
+  // a scarcity or cliff factor of exactly 1 is not printed (it multiplies nothing); every other stored factor is
+  R.f.concat((R.tier && R.tier.f) || []).forEach(fr => {
+    if ((fr[0] === 'sc' || fr[0] === 'cliff') && fr[1] === 1) return;
+    const L = lab(fr[0], fr[1], fr[2]); rows.push({ list: L[0], tree: L[1], f: fr[1] });
+  });
+  const tf = e.tier_fix, T = R.tier;
+  let note = `Season roll ${Y} → ${Y1}${R.b ? ' (' + R.b + ')' : ''}: the ${Y1} Pure is the ${R.start[0] === 'pc0' ? `closing ${Y} Pure` : 'figure above'} times the roll's own step, each factor as the roll stored it on the record.`;
+  if (T) note += ` Tier re-read: ${T.from} → ${T.to}.`;
+  if (e.b === 'vet' && e.pk != null) note += ` The veteran basis now reads: peak ${e.pk} FP (${e.py != null ? e.py : '?'}), ${e.ry} yr past peak${e.rs != null ? ` (regression begins at age ${e.rs})` : ''}.`;
+  else if (e.b === 'prod' && e.pk != null) note += ` The production basis now reads: best qualifying season ${e.pk} FP (${e.py != null ? e.py : '?'}), growth ×${(e.g != null ? e.g : 1).toFixed(2)} at age ${p.a}.`;
+  if (T && T.to === 'T1' && tf && tf.retired && tf.retired.matur != null && tf.retired.matur < 1)
+    note += ` The §9 maturation ×${Number(tf.retired.matur).toFixed(2)} he carried as a T3 stays inside his Pure: a market incentive, kept by the commissioner's ruling of 27 September 2026.`;
+  return { start: { list: S[0], tree: S[1], v: R.start[1] }, rows, note };
+}
+// the depth chain of a graduate the roll priced anew (T3 -> T5 on his MLB career best, or a T4 over 30)
+function gnRollAnewNote(p){
+  const R = gnRollOn(p);
+  if (!R || !R.tier || !R.tier.anew) return '';
+  const A = R.tier.anew;
+  return `<div class="formula-row note"><span class="value">${_iesc(`Tier re-read at the ${R.y} → ${R.y + 1} season roll: ${R.tier.from} → ${R.tier.to}, priced anew on his MLB career best, ${A.cb} FP${A.cby ? ' (' + A.cby + ')' : ''}, × 1.05${A.sc && A.sc !== 1 ? ' × scarcity ' + Number(A.sc).toFixed(2) : ''} (§4). His ${R.y} Pure was ${gnRcNum(R.pc0)}.`)}</span></div>`;
+}
+// gnFloorNote(p): an in-season recency floor's stored basis -- the pace and peak it was SET on, from its note
+// ('RECENCY FLOOR v16: Pure A->B = min(pace P x0.85, peak K x0.9)'); the latest such note wins.
+function gnFloorNote(p){
+  const m = [...String(p.notes || '').matchAll(/RECENCY FLOOR v16: Pure ([\d.]+)->([\d.]+) = min\(pace ([\d.]+)x0\.85, peak ([\d.]+)x0\.9\)/g)];
+  if (!m.length) return null;
+  const x = m[m.length - 1];
+  return { from: parseFloat(x[1]), to: parseFloat(x[2]), pace: parseFloat(x[3]), pk: parseFloat(x[4]) };
+}
+// gnResidAttr(p, resid): a residual in a Pure chain is named only by a factor the record stores that equals it (to 0.006,
+// the June re-pace test): the REPACE v20 factor; a recency-floor lift recorded as 'Pure A -> B'; the park / speed-aging /
+// closer percentages, singly or together. null: nothing stored explains it (an unattributed residual).
+function gnResidAttr(p, resid){
+  const n = String(p.notes || ''), near = x => x > 0 && Math.abs(resid - x) < 0.006;
+  let m = n.match(/REPACE v20[^|]*?\(x([\d.]+)\)/);
+  if (m && near(parseFloat(m[1]))) return { list: '× June re-pace carried in Pure (REPACE v20 — see audit notes)', tree: 'x June re-pace (REPACE v20)' };
+  for (const x of n.matchAll(/recency floor Pure ([\d.]+)->([\d.]+)|RECENCY FLOOR v\d+[^|]*?Pure ([\d.]+)->([\d.]+)/gi)) {
+    const a = parseFloat(x[1] || x[3]), b = parseFloat(x[2] || x[4]);
+    if (a > 0 && near(b / a)) return { list: `× Recency-floor lift carried in Pure (Pure ${a} → ${b} — see audit notes)`, tree: 'x floor lift (notes)' };
+  }
+  const fac = [];
+  if ((m = n.match(/park\s+([A-Z]+):\s*([-+]?\d+(?:\.\d+)?)%/i))) fac.push(['park factor (' + m[1] + ')', 1 + parseFloat(m[2]) / 100, 'park']);
+  if ((m = n.match(/speed\s+age\d+:\s*([-+]?\d+(?:\.\d+)?)%/i))) fac.push(['speed-aging', 1 + parseFloat(m[1]) / 100, 'speed']);
+  if (/closer\s*\+?20%/i.test(n)) fac.push(['closer role', 1.20, 'closer']);
+  for (let mask = 1; mask < (1 << fac.length); mask++) {
+    const use = fac.filter((_, k) => mask & (1 << k));
+    if (near(use.reduce((a, x) => a * x[1], 1))) return { list: `× Documented adjustment (${use.map(x => x[0]).join(', ')})`, tree: 'x adj (' + use.map(x => x[2]).join(',') + ')' };
+  }
+  return null;
+}
 function buildInspectorTree(p,ctx){
   try{
   var e=p.eng||{}, n=p.notes||'', pc=ctx.pc, pm=ctx.pm, h=p.h, r=ctx.r, base=ctx.base, growth=ctx.growth, scar=ctx.scarcity;
@@ -2403,19 +2501,27 @@ function buildInspectorTree(p,ctx){
   // roll computes it (unless a ratchet fired at the roll and beat it: eng.rf.ratchet, the plain vet chain); it retires
   // the pace multiplier only in its own season (gnLockOn)
   var _rf0=(e.rf&&e.rf.y!=null)?e.rf:null, _rf=(_rf0&&_rf0.ratchet==null)?_rf0:null, rfEng=(e.b==='vet')&&(_rf0?!!_rf:/RECENCY FLOOR v16/.test(n));
-  var _fpace=_rf?((e['s'+_rf.y]||{}).pace||0):(p.pace||0), _fsc=(_rf&&e.sc&&e.sc!==1)?e.sc:1, rfRet=rfEng&&gnLockOn(p,'rf',/RECENCY FLOOR v16/);
+  // v51.20: an in-season (v16) floor reads the pace it was SET on, from its RECENCY FLOOR note, and the June 24 vet
+  // scarcity applied after it (gnFloorNote); it read today's pace, so 33 of its 38 chains did not reconcile
+  var _fn=(!_rf0&&rfEng)?gnFloorNote(p):null;
+  var _fpace=_rf?((e['s'+_rf.y]||{}).pace||0):(_fn?_fn.pace:(p.pace||0)), _fsc=(_rf&&e.sc&&e.sc!==1)?e.sc:((_fn&&e.sc&&e.sc!==1)?e.sc:1), rfRet=rfEng&&gnLockOn(p,'rf',/RECENCY FLOOR v16/);
   var pure=[];
   var run=null;
-  if(e.b==='vet'){
+  // v51.20: a rolled record's PURE column is the season roll's own step, as the roll stored it (gnRollChain)
+  var _rc=gnRollChain(p);
+  if(_rc){ pure.push([_rc.start.tree,gnRcNum(_rc.start.v)]); _rc.rows.forEach(function(q){ pure.push([q.tree,'x'+q.f.toFixed(4)]); }); }
+  else if(e.b==='vet'){
     pure.push([(e.rch?GN_NOW_Y+' to-date (ratchet)':'Peak season'),(e.pk!=null?e.pk+' FP':'peak')]); run=(e.pk!=null?e.pk:null);
     if(rfEng&&e.pk!=null){
       var _cl=(e.cl!=null&&e.cl<1)?e.cl:1, _reg=Math.round(e.pk*(e.rm!=null?e.rm:1)*_cl*_fsc);
       var _A=Math.round(_fpace*0.85), _B=Math.round(e.pk*0.90), _F=Math.min(_A,_B);
       pure.push(['x regr '+(e.rm!=null?e.rm.toFixed(3):'1.000')+(_cl<1?(' x cliff '+_cl.toFixed(2)):'')+(_fsc!==1?(' x sc '+_fsc.toFixed(2)):''),'= '+_reg]);
-      pure.push(['recency: '+(_rf?_rf.y+' ':'')+'pace '+_fpace+' x0.85','= '+_A]);
+      pure.push(['recency: '+(_rf?_rf.y+' ':'')+(_fn?'set-on ':'')+'pace '+_fpace+' x0.85','= '+_A]);
       pure.push(['recency: peak '+e.pk+' x0.90 (cap)','= '+_B]);
       pure.push(['floor = lesser of two','= '+_F]);
-      pure.push(['Pure = max(regr '+_reg+', floor '+_F+')','']); run=null;
+      var _F2=(_fn&&_fsc!==1)?Math.round(_F*_fsc):_F;
+      if(_fn&&_fsc!==1) pure.push(['x scarcity '+_fsc.toFixed(2)+' (24 Jun, after)','= '+_F2]);
+      pure.push(['Pure = max(regr, floor)','max('+_reg+', '+_F2+')']); run=null;   // v51.20: the numbers on their own line (a 4-digit pair was cut off at 31 characters)
     } else {
       if(e.rm!=null&&e.rm<1){pure.push(['x regression','x'+e.rm.toFixed(3)]); if(run!=null)run*=e.rm;}
       if(e.cl!=null&&e.cl<1){pure.push(['x Father-Time cliff','x'+e.cl.toFixed(3)]); if(run!=null)run*=e.cl;}
@@ -2426,11 +2532,11 @@ function buildInspectorTree(p,ctx){
   else if(e.b==='tool'){ var _tcv=(e.tc!=null?e.tc:pc); pure.push(['FV'+(e.fv||'?')+' tool ceiling',''+_tcv]); run=_tcv; var _sct=(e.sc!=null?e.sc:scar)||1; if(_sct!==1){pure.push(['x scarcity ('+p.p+')','x'+_sct.toFixed(2)]); run*=_sct;} if(e.bdisc!=null){pure.push(['x SP/RP/Wash '+(e.bw||''),'x'+e.bdisc]); run*=e.bdisc;} if(e.pv&&e.pv.tc_blend!=null&&e.tc){ var _rtb=(((1-e.pv.w_ceil)*e.tc+e.pv.w_ceil*e.pv.ceiling)/e.tc); pure.push(['x PV ceiling blend (§21.1)','x'+_rtb.toFixed(4)]); run*=_rtb; } }
   else if(e.b==='depth'){ if(e.cb==null&&e.tc!=null){ var _tbd=(e.pv&&e.pv.tc_blend!=null)?e.pv.tc_blend:e.tc; pure.push(['Tool ceiling (no career best)',''+_tbd]); run=_tbd; if(e.sc&&e.sc!==1){pure.push(['x scarcity ('+p.p+')','x'+e.sc.toFixed(2)]); run*=e.sc;} if(e.bdisc!=null){pure.push(['x SP/RP/Wash '+(e.bw||''),'x'+e.bdisc]); run*=e.bdisc;} } else { var _cbv=(e.cb!=null?e.cb:pc); pure.push(['Career best',''+_cbv]); run=_cbv; if(e.cb!=null){pure.push(['x1.05 (depth)','x1.05']); run*=1.05; if(e.sc&&e.sc!==1){pure.push(['x scarcity ('+p.p+')','x'+e.sc.toFixed(2)]); run*=e.sc;}} } }
   else { var _bm=n.match(/Pure\s*[\u00d7x]\s*([0-9.]+)/i); var _bwm=n.match(/blend\s+(\d+\/\d+\/\d+)/i); if(_bm){ var _bd=parseFloat(_bm[1]); var _rawc=Math.round(pc/_bd); pure.push(['Raw FV tool ceiling',''+_rawc]); run=_rawc; pure.push(['x SP/RP/Wash '+(_bwm?_bwm[1]:''),'x'+_bd.toFixed(2)+' (bullpen-risk discount, §12.4)']); run*=_bd; } else { pure.push(['Stored prospect ceiling (FV grade)',''+pc]); run=pc; } }
-  if(e.matur!=null&&e.matur<1){ pure.push(['x Maturation ('+(e.maturst||'')+')','x'+e.matur.toFixed(2)]); if(run!=null)run*=e.matur; }
-  if(!rfEng){
+  if(!_rc&&e.matur!=null&&e.matur<1){ pure.push(['x Maturation ('+(e.maturst||'')+')','x'+e.matur.toFixed(2)]); if(run!=null)run*=e.matur; }
+  if(!rfEng&&!_rc){
     var _run=null;
     for(var _qi=0;_qi<pure.length;_qi++){ var _v=''+pure[_qi][1]; var _mm=_v.match(/^x(\d*\.?\d+)/); if(_run===null){ var _an=_v.match(/-?\d[\d,]*(\.\d+)?/); if(_an)_run=parseFloat(_an[0].replace(/,/g,'')); } else if(_mm){ _run*=parseFloat(_mm[1]); } }
-    if(_run!=null && _run>0 && Math.round(_run)!==pc && !(e.b==='depth'&&Math.abs(_run-pc)<=1.1)){ var _resid=pc/_run; var _rpt=n.match(/REPACE v20[^|]*?\(x([\d.]+)\)/); if(_rpt&&Math.abs(_resid-parseFloat(_rpt[1]))<0.006){ pure.push(['x June re-pace (REPACE v20)','x'+_resid.toFixed(3)]); } else { var _cz=[]; if(/catcher\s+aging/i.test(n))_cz.push('C-aging'); if(/speed\s+age/i.test(n))_cz.push('speed'); if(/park\s+[A-Z]+:/i.test(n))_cz.push('park'); if(/proximity/i.test(n))_cz.push('proximity'); if(/closer/i.test(n))_cz.push('closer'); var _lbl=_cz.length?(' ('+_cz.join(',')+')'):(Math.abs(_resid-1)>0.01?' (see notes)':' (rounding)'); pure.push(['x adj'+_lbl,'x'+_resid.toFixed(3)]); } } }
+    if(_run!=null && _run>0 && Math.round(_run)!==pc && !(e.b==='depth'&&Math.abs(_run-pc)<=1.1)){ var _resid=pc/_run; var _at=gnResidAttr(p,_resid); pure.push([_at?_at.tree:('x adj'+(Math.abs(_run-pc)<=Math.max(1.1,0.5+0.001*Math.abs(pc))?' (rounding)':' (unattributed)')),'x'+_resid.toFixed(3)]); } }   // v51.20: named only by a stored factor (gnResidAttr); '(rounding)' only within the printed figures' rounding, max(1.1, 0.5 + 0.1% of Pure) FP
   pure.push(['= PURE CEILING',''+pc]);
   var hit=[];
   if(e.b==='vet'){ hit.push(['Healthy base (age '+p.a+')',base.toFixed(2)]); hit.push(['no injury term (v51.0)','see INJURY']); }
@@ -2547,22 +2653,25 @@ function gnInspectorHTML(p) {
   const engPure = (() => {
     const e = p.eng; if(!e) return '';
     const pkAgeTxt = isPitcher ? 'peak 27' : 'peak 26';
+    // v51.20: a residual is named only by a factor stored on the record that equals it (gnResidAttr: the REPACE v20
+    // factor, a recency-floor lift, the park / speed-aging / closer percentages); else it is an unattributed residual.
+    // It was named from any word in the notes: Manny Machado's x1.134, a June recency-floor lift (724 -> 822), read
+    // 'speed-aging, park factor' (two -5% terms), and 'MiLB proximity' named six residuals (§11 moves Hit%, not Pure).
     const residRow = (run) => {
       if(run==null||run<=0) return '';
       const resid=pc/run; if(Math.abs(resid-1)<=0.01) return '';
-      const n=p.notes||''; const cz=[];
-      if(/catcher\s+aging/i.test(n))cz.push('catcher aging');
-      if(/speed\s+age/i.test(n))cz.push('speed-aging');
-      if(/park\s+[A-Z]+:/i.test(n))cz.push('park factor');
-      if(/proximity/i.test(n))cz.push('MiLB proximity');
-      if(/closer/i.test(n))cz.push('closer role');
-      // v51.13: a T3-era 'REPACE v20 (Jun22) ... (xF)' factor rides inside some Pures (three of the
-      // T1 graduates, and Gary Sanchez's depth Pure). When the residual IS that factor, say so —
-      // it was being labelled 'closer role' or 'catcher aging' from other words in the notes.
-      const _rp = n.match(/REPACE v20[^|]*?\(x([\d.]+)\)/);
-      if (_rp && Math.abs(resid - parseFloat(_rp[1])) < 0.006) return sub2('× June re-pace carried in Pure (REPACE v20 — see audit notes)', '×'+resid.toFixed(3), 'sub');
-      return sub2('× Documented adjustment'+(cz.length?' ('+cz.join(', ')+')':' (see audit notes)'), '×'+resid.toFixed(3), 'sub');
+      const _at = gnResidAttr(p, resid);
+      return sub2(_at ? _at.list : '× Unattributed residual (see audit notes)', '×'+resid.toFixed(3), 'sub');
     };
+    // v51.20: a rolled record prints the season roll's own Pure step, as the roll stored it (gnRollChain, eng.roll)
+    const _rc = gnRollChain(p);
+    if (_rc) {
+      let x = sub2(_rc.start.list, `${gnRcNum(_rc.start.v)} FP`);
+      _rc.rows.forEach(q => { x += sub2(q.list, '×' + q.f.toFixed(4), 'sub'); });
+      x += sub2('= Pure ceiling', pc, 'subtotal');
+      x += `<div class="formula-row note"><span class="value">${_iesc(_rc.note)}</span></div>`;
+      return x;
+    }
     if (e.b === 'vet') {
       // v51.17: a floor the season roll set on the completed season is eng.rf = {y, v} (spec D8). Its pace is that
       // season's, archived in eng.s<y> (the live p.pace restarts at 0), and its regressed peak carries scarcity, as
@@ -2571,19 +2680,23 @@ function gnInspectorHTML(p) {
       // v16 floor and reads the live season as before.
       const _rf0 = (e.rf && e.rf.y != null) ? e.rf : null, _rf = (_rf0 && _rf0.ratchet == null) ? _rf0 : null;
       const rfEng = _rf0 ? !!_rf : /RECENCY FLOOR v16/.test(p.notes||'');
-      const _fy = _rf ? _rf.y : GN_NOW_Y, _fpace = _rf ? (((e['s' + _rf.y]) || {}).pace || 0) : p.pace;
-      const _fsc = (_rf && e.sc && e.sc !== 1) ? e.sc : 1, _fret = gnLockOn(p, 'rf', /RECENCY FLOOR/);
+      // v51.20: an in-season (v16) floor reads the pace it was SET on and the June 24 scarcity after it (gnFloorNote)
+      const _fn = (!_rf0 && rfEng) ? gnFloorNote(p) : null;
+      const _fy = _rf ? _rf.y : GN_NOW_Y, _fpace = _rf ? (((e['s' + _rf.y]) || {}).pace || 0) : (_fn ? _fn.pace : p.pace);
+      const _fsc = (_rf && e.sc && e.sc !== 1) ? e.sc : ((_fn && e.sc && e.sc !== 1) ? e.sc : 1), _fret = gnLockOn(p, 'rf', /RECENCY FLOOR/);
       let x = sub2(e.rch ? `Best production — ${GN_NOW_Y} to-date (in-season ratchet)` : 'Best career season (peak)', `${e.pk} FP (${e.py||'?'})`);
       if (rfEng && e.pk!=null) {
         const _cl=(e.cl!=null&&e.cl<1)?e.cl:1;
         const _reg=Math.round(e.pk*(e.rm!=null?e.rm:1)*_cl*_fsc);
         const _A=Math.round((_fpace||0)*0.85), _B=Math.round(e.pk*0.90), _F=Math.min(_A,_B);
         x += sub2(`× Age regression (${e.ry||'?'} yr past peak)${_cl<1?` × Father-Time cliff ×${_cl.toFixed(3)}`:''}${_fsc!==1?` × scarcity ×${_fsc.toFixed(2)}`:''}`, `×${(e.rm!=null?e.rm:1).toFixed(3)} → ${_reg}`, 'sub');
-        x += sub2(`Recency floor — ${_fy} pace ${_fpace} × 0.85`, `= ${_A}`, 'sub');
+        x += sub2(_fn ? `Recency floor — the ${_fy} pace it was set on (RECENCY FLOOR v16), ${_fpace} × 0.85` : `Recency floor — ${_fy} pace ${_fpace} × 0.85`, `= ${_A}`, 'sub');
         x += sub2(`Recency floor — career peak ${e.pk} × 0.90 (sanity cap)`, `= ${_B}`, 'sub');
         x += sub2('Recency floor = lesser of the two', `= ${_F}`, 'sub');
-        x += sub2(`= Pure ceiling = greater of (regressed ${_reg}, floor ${_F})`, pc, 'subtotal');
-        x += `<div class="formula-row note"><span class="value">Recency floor (§20.12${_rf ? `, set once at the season roll on the completed ${_fy} season` : ''}): this still-producing past-peak vet's regressed peak (${_reg}) ${(_rf && _reg >= _F) ? 'is at or above the floor, so the floor does not bind' : `fell below his demonstrated ${_fy} production, so Pure is floored to the lesser of 85% of ${_rf ? 'his ' + _fy : 'current'} pace and 90% of career peak`}. ${_fret ? 'Because current pace is now banked into Pure, the pace multiplier is retired to ×1.00 to avoid paying for it twice.' : `It binds on ${_fy} only, so it retires no pace multiplier in ${GN_NOW_Y}.`}</span></div>`;
+        const _F2 = (_fn && _fsc !== 1) ? Math.round(_F * _fsc) : _F;
+        if (_fn && _fsc !== 1) x += sub2(`× Position scarcity ×${_fsc.toFixed(2)} (§5/§15 — applied to vets on 24 June, after the floor was set)`, `= ${_F2}`, 'sub');
+        x += sub2(`= Pure ceiling = greater of (regressed ${_reg}, floor ${_F2})`, pc, 'subtotal');
+        x += `<div class="formula-row note"><span class="value">Recency floor (§20.12${_rf ? `, set once at the season roll on the completed ${_fy} season` : ''}): this still-producing past-peak vet's regressed peak (${_reg}) ${(_rf && _reg >= _F2) ? 'is at or above the floor, so the floor does not bind' : `fell below his demonstrated ${_fy} production, so Pure is floored to the lesser of 85% of ${_rf ? 'his ' + _fy + ' pace' : (_fn ? 'the pace it was set on (' + _fpace + ')' : 'current pace')} and 90% of career peak`}. ${_fret ? 'Because current pace is now banked into Pure, the pace multiplier is retired to ×1.00 to avoid paying for it twice.' : `It binds on ${_fy} only, so it retires no pace multiplier in ${GN_NOW_Y}.`}</span></div>`;
         return x;
       }
       let run=(e.pk!=null?e.pk:null);
@@ -2663,6 +2776,7 @@ function gnInspectorHTML(p) {
       // stored 4, printed 'Documented adjustment x0.952').
       if (run != null && Math.abs(pc - run) > 1.1) x += residRow(run);
       x += sub2('= Pure ceiling', pc, 'subtotal');
+      x += gnRollAnewNote(p);   // v51.20: a graduate the season roll priced anew says so
       return x;
     }
     return '';
