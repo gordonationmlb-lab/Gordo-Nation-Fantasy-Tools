@@ -1,354 +1,213 @@
-GORDO NATION TRADE CALCULATOR — v51.20  THE INSPECTOR AT THE ROLL; THE SEASON ROLL'S REVIEWS CLOSED (2026-09-27)
-  Built on v51.19. Same pull and data window: scoringPeriod 173, matchup period 22, Week 22 data.
-  Rosters through 2026-09-22 (scoringPeriod 182). No weekly refresh ran. No price or rank moved.
-  Service worker: gordo-calc-v93-2026-09-13-v51.20.  GN_BUILD v51.20, GN_DATA_THROUGH 2026-09-13,
-  GN_ROSTERS_THROUGH 2026-09-22, GN_INJ_OPENING 2027-03-25.
-  RAW_PER_DOLLAR unchanged at 537.96.
-  Acceptance: verify_calc.py FAIL 0 (WARN 2, both standing); see section 6.
-  Written into calc/ and build.json by build_v51_20.py like v51.19 (backups *.pre-v51_20); package.py made
-  GordoNation_Calculator_v51.20/ and its zip (21 files, as v51.19). Methodology v20
-  (Reference/Trade_Calculator_Methodology_v20.docx) records it. 394 Inspector panels change (section 2): the 38
-  in-season floor chains now print the figures their floor was set on, and 356 panels change a residual row's label
-  only. No priced field and no Trade Desk value moves.
-
+GORDO NATION TRADE CALCULATOR — v53.0  THE RATE-BASED ENGINE INSTALLED (2026-10-03)
+  Built on v52.0 by build_v53_0.py: every price is rebuilt on the rate-based engine, exactly the verified shadow
+  default H3|S2-lite|P-hold|T5a (the commissioner's "install now" of 3 Oct 2026; the Sitting B defaults stand, D-5).
+  Same data window: data through 2026-09-27 (scoringPeriod 187); TEAM_GAMES 162, F = 162/162 = 1.0000 (as v52.0).
+  Current stays the 2027 season (GN_NOW_Y 2027). 2026 is the newest history season of every price, shown as a greyed
+  "2026 actual" cell before 2027 (D-1). The 2026 season view stays the frozen v52 archive.
+  Service worker: gordo-calc-v96-2026-09-27-v53.0.  GN_BUILD v53.0, GN_DATA_THROUGH 2026-09-27,
+  GN_ROSTERS_THROUGH 2026-09-27. Injury line opens 2027-03-25 (the injury module is not re-run).
+  Model: model/gn_rate_model_v1_cur_refit_2000_2026.json (sha256 c7829868...), fitted on 2000-2026, 2020 excluded.
+  Acceptance on the staged folder ../v53_staging/v53.0: check_v53_0.py PASS, 0 disagreements; the e = 0 spike
+  (rate_engine.py) 0 mismatches; verify_calc_v53.py FAIL 0; render, values and compare checks pass.
+  RAW_PER_DOLLAR 510.28 -> 371.69.
 ================================================================================
-1. WHY
+1. WHAT v53.0 IS, IN PLAIN WORDS
 
-  The redesign plan's phase 0 (redesign/PLAN.md) lists what must be done before v52.0 ships. On 27 Sep the
-  commissioner ruled that the current engine, REG and g included, runs the 2026 -> 2027 roll as v52.0, and that the
-  old engine is frozen after v52.0 except for gate fixes. So the roll and its gates had to be finished now:
-  - the adversarial review of season_roll.py after its round-2 fixes and v51.18's carry-scope change (recorded as
-    never run). Two separate sessions ran it on 27 Sep, one on the rulings and the steps, the other on the gates and
-    edge cases. Together they found 10 material defects and 13 minor ones. An independent verification of this build
-    then found one more material gap and nine minor ones (section 3 has each, fixed or listed for a ruling);
-  - the Inspector at the roll. On a rolled board 442 Pure chains needed a 'documented adjustment' row, because the
-    roll's own Pure step was not in the chain, and 33 recency-floor chains already failed to reconcile (section 2);
-  - verify_calc.py's r identity was exact only under --roll. A hand edit of r by 1 passed it (section 6).
-  The commissioner's Sitting A answers (27 Sep: "approve the recommendations; D8 is a market incentive") govern the
-  redesign (redesign/DECISIONS.md). For this build they mean one thing: D8. The eight relievers who graduate at the
-  roll keep the §9 x0.80 inside their Pure. v51.20 leaves that as built, and the Inspector names it on their rolled
-  chain as a market incentive. They rule on nothing the roll lists in section 3: those questions are still open.
+  v52.0 priced a player from his best season: a "Pure ceiling" (his peak production), then cut it by a Hit% (the
+  chance he gets there) and an injury multiplier. v53.0 prices what a season is expected to be worth:
 
-================================================================================
-2. THE INSPECTOR                     gn-app.js (source: inspector_v51_20/gn-inspector-roll.js + build_v51_20.py)
+    Pure  = the expected healthy full season: his MLB scoring rate (FP per PA or per IP, blended over his last three
+            seasons and pulled toward the league by how much evidence there is) x a full season's playing time for
+            his role (a hitter's 153 games, a catcher's about 135, a starter's 32.5 starts, a reliever's 70 games),
+            x 1.15 at C, 2B and 3B (scarcity).
+    Hit%  = the share of that full season he is expected to play, including the chance he has left MLB (availability
+            x survival, from a model fitted on every MLB season 2000-2026). It can exceed 100% for an everyday
+            player (44 headlines do, Corbin Carroll highest at 117.77%).
+    RA    = Pure x Hit% x the injury multiplier, the same three-part identity as before.
 
-  (a) THE ROLL'S OWN STEP. season_roll.py now stores, on every record, the factors its Pure step multiplied
-      (eng.roll, section 3). The page prints them as the chain:
-        Pure at the close of 2026  x  age step / growth step / §13.1 carry / completed-season anchor / §19.6 ratchet /
-        regression / Father-Time cliff  x  the tier re-read's own factors (a graduate's growth falls away, the
-        veteran clock)  =  Pure
-      Every figure is one the roll stored (gnRollChain), and verify_calc.py --roll re-derives each of them (section 6).
-      A floor keeps its own rows, because its Pure is the larger of two figures and both are shown. A graduate priced
-      anew (T3 -> T5 on his MLB career best) keeps his depth chain and a note naming the tier re-read. A chain is used
-      only while the record's Pure is still the roll's (eng.roll.pc1) and the roll closed the season before Current;
-      after the first 2027 refresh moves a Pure, the record's own basis chain returns (section 7). On the rehearsed
-      rolled board (section 5), every chain reconciles in both views with no residual row.
-  (b) THE RECENCY FLOORS. An in-season floor (the RECENCY FLOOR v16 note) is shown on the pace it was SET on, from
-      its note, where v51.19 used today's pace. It also shows the June 24 vet scarcity, which was applied after the
-      floor was set. On v51.19, 33 of the 38 chains did not reconcile: Mike Trout's showed 841 for a Pure of 1,115,
-      Max Muncy's 865 for 1,122. Now all 38 do. The other 5 change their printed figures too (their set-on pace): Jake
-      Burger, Colin Holderman, Jake Bauers, Gregory Soto, Taylor Clarke. The flow tree's floor box prints its two
-      numbers on their own line; the old label was cut at 31 characters once both were four digits.
-  (c) THE RESIDUAL ROW. A residual is named only by a factor stored on the record that equals it (to 0.006, the June
-      re-pace test). Those factors are the REPACE v20 factor, a recency-floor lift recorded as 'Pure A -> B', and the
-      park, speed-aging and closer percentages (gnResidAttr). Anything else is an 'Unattributed residual' in the list
-      and '(unattributed)' in the tree. The old row named a cause from any word in the notes: Manny Machado's x1.134
-      read 'speed-aging, park factor', two -5% terms that cannot make x1.134; it is his June recency-floor lift,
-      724 -> 822. 'MiLB proximity' named six residuals that proximity cannot cause, since §11 moves Hit%, not Pure.
-      The tree reads '(rounding)' only for a gap the printed figures' rounding can make: the product of the printed
-      chain within max(1.1, 0.5 + 0.1% of Pure) FP of Pure, the checker's strict tolerance. As first built it said
-      '(rounding)' for any gap within 1%, which named gaps no rounding makes (the verification: Cole Carrigg's tree
-      printed 'FV47 tool ceiling 907' and x1.00 for a Pure of 905); 47 such boxes now read '(unattributed)'.
-  CHANGED PANELS ON THIS BOARD (inspector_equiv_v51_20.js; every other panel byte-identical in all four states):
-    floor chains (38): Aaron Bummer, Anthony Bender, Antonio Senzatela, Aroldis Chapman, Austin Hedges, Brett
-      Sullivan, Brooks Raley, Bryan Reynolds, Bryce Harper, Christian Vazquez, Colin Holderman, Connor Seabold,
-      Dominic Smith, Drew Pomeranz, Eduardo Rodriguez, Gregory Soto, Ildemaro Vargas, Jacob deGrom, Jake Bauers,
-      Jake Burger, Jameson Taillon, Joc Pederson, Jorge Lopez, Jorge Soler, Jose Altuve, Jose Berrios, Josh Bell,
-      Max Muncy, Mike Trout, Nolan Arenado, Ozzie Albies, Richard Lovelady, Ryne Stanek, Taylor Clarke, Tim Mayza,
-      Xander Bogaerts, Yimi Garcia, Yu Darvish -- only the list's Pure section and the tree's PURE column differ: the
-      pace the floor was set on, the floor, and the June 24 scarcity row.
-    residual relabels (356), the label only, the factor unchanged:
-      tree 'x adj (proximity)' / '(park)' / '(park,proximity)' / '(C-aging)' -> 'x adj (rounding)'              271
-      tree 'x adj (proximity)' -> 'x adj (unattributed)' (a gap rounding cannot make)                          37
-      tree 'x adj (rounding)' -> 'x adj (unattributed)' (a gap rounding cannot make)                           10
-      list 'Documented adjustment (see audit notes)' -> 'Unattributed residual'; tree '(see notes)' ->
-        '(unattributed)'                                                                                        23
-      list 'Documented adjustment (see audit notes)' -> 'Recency-floor lift carried in Pure (Pure A -> B)'      8
-      list 'Documented adjustment (MiLB proximity)' -> 'Unattributed residual'; tree -> '(unattributed)'          6
-      list 'Documented adjustment (speed-aging, park factor)' -> 'Recency-floor lift ...' (Manny Machado)        1
-    Residual rows stay 101 in the list (63 June re-pace, 29 unattributed, 9 floor lift) and 591 in the tree (439
-    rounding, 76 unattributed, 67 June re-pace, 9 floor lift). Every name, and each panel's from -> to labels, is in
-    build_report_v51_20.json (gates.inspector_equiv_v51_20.panels: by_class, detail).
-    Nothing changes in values: getValue and fmtValue are identical over 103 settings (218,154 checks), and PLAYERS,
-    GNDAILY, OPTIONS_DATA, RULE5 and RAW are byte-identical.
+  The headline (the one-number value) prices his peak-age season, counting the chance he has left MLB by then (H3):
+  the season k* = min(9, max(0, peak - a0 - 1)), peak 26 for hitters and 27 for pitchers. The ten-year line is the
+  same calculation season by season. pm (the pace multiplier) is 1.00 on every record.
 
-================================================================================
-3. THE SEASON ROLL: THE REVIEWS' DEFECTS, AND THE VERIFICATION'S                             season_roll.py
+  Who is priced how (2,118 records):
+    1,224  on MLB rates from scratch (S1)
+      216  prospects with MLB time, priced on MLB rates starting from their prospect value (S2-lite; the 198 tool T3s
+           with MLB time plus the 18 switched at the v52.0 pre-roll step)
+      675  prospects without MLB time: the v52.0 prospect price x kappa_P (P-hold, kappa_P 0.7284; it holds the
+           prospects' headline dollars where v52.0 had them)
+        3  held at their v52.0 values (no MLB id match: Jack Wenninger, Luis Ortiz, Jose A. Ferrer)
 
-  Fixed in the build (backups *.pre-v51_20; the header's v51.20 section has each one):
-  F1  In-season anchors take the COMPLETED season (§19.6: "only the actual banked total is used"; "the ratchet floors
-      at the prior full-season peak"). The anchor is round(banked). Pure moves by banked / the stored peak, as the
-      weekly re-anchor moves it. A season that fell below the prior full-season peak reverts to that peak and its old
-      clock. The roll kept max(peak, ef), a to-date high-water mark the season never finished at.
-  F3/D6  update_calc_weekly.py reads the locks season by season (lock_on). The roll's preflight refuses a source
-      whose weekly script still reads the notes alone. Otherwise the first 2027 refresh would have re-set
-      pm = 2 - 1/F on the 8 imports the roll closed, and retired the pm and blocked the ratchet of all 56 floor
-      records for the whole season.
-  F4/D5  The post-roll injury re-run instruction is gone. apply_injury_v2.py refuses a rolled board: it is not
-      season-aware, and on a rolled copy the review saw it reprice 31 records no ruling covers. A T5 graduate's
-      dropped carve-out is marked inj.tool_basis_at_roll (36 on the rehearsed roll).
-  F5  eng.roll on every record (section 2).
-  D1  S10 re-derives every class's Pure' from the pre-roll board with its own code, the §13.1 carry included. The IL
-      days the carry read go to DIR/season_roll_il_days_2026.json with the feed's sha256. verify_calc --roll re-derives
-      the carry value and route from the feed.
-  D2  verify_calc --roll derives each record's class itself. It re-derives the ratchet on every class, the F1
-      anchor, a production graduate's clock and a tool graduate's MLB career best. It requires every anchor line to be
-      rebuilt on the closed form, and eng.mid, eng.bd, eid, the roster fields and the audit notes to be kept.
-  D3  regular_season_end must be a date in season Y. The rolled build.json drops it and records
-      prior_regular_season_end, so a stale date cannot pass the next roll.
-  D4  verify_calc --roll FAILs a --fixture roll, an unapplied §19.3 switch, an incomplete season, and a folder whose
-      own end gate failed.
-  Minors fixed in the build:
-  - IL days are read by MLBAM id. The old name map missed every 'Jr.' and hyphenated name, so Ronald Acuna Jr.,
-    Bobby Witt Jr. and Vladimir Guerrero Jr. were carried as if never on the IL (see section 4).
-  - The carry needs an ESPN-pool record, as banked_total does (Joe Musgrove).
-  - avail() takes the pitcher branch only for pitchers.
-  - A structural preflight refuses a malformed record by name.
-  - A T5 graduate on a shared MLBAM id is refused (latent: the Maxwells, 687209).
-  - In a real roll, the injury feed and the MLB season file must post-date regular_season_end.
-  - A failed end gate marks DIR (ROLL_FAILED, build.json rolled.verify_roll). The README's acceptance line is stamped
-    only after the gate.
-  - A vet-basis T3 -> T1 graduate records its retired phase.
-  - pre_roll_basis_switch.py stamps the build it ran on.
-  AFTER THE BUILD'S INDEPENDENT VERIFICATION (27 Sep; none of these moves a price on this board: the rolled PLAYERS
-  of section 5 is byte-identical to the one the build rehearsed):
-  D7 (material, the one the verification found): the D7 warning looked only at in-season ratchets. Three more
-      veterans carry a June recency-floor lift inside Pure through the roll unflagged, against the 23 Sep ruling of no
-      permanent floor after the roll. The June T1 -> T2 audit wrote those floors in lower case ('recency floor Pure
-      A->B'), and season_marker('rf') reads only the upper-case v16 note, so the roll treats them as ordinary
-      veterans and its step or carry multiplies the lifted Pure. floor_lifted_anchor() now lists every veteran whose
-      Pure is more than 0.5% above its peak-derived Pure (peak x scarcity x rm x cliff) with a lift in its notes,
-      except a recency-floor class or a carry that took the floor route (both recompute the floor). All four go to
-      the commissioner under the one D7 ruling (section 7), each with its rolled figures; nothing is changed.
-      Gray, Springer and Machado carry the same kind of lift and are not listed: the carry's floor route won, so
-      their floor is recomputed (a what-if confirms their Pure' does not move).
-  - verify_calc --roll re-derives every eng.roll row, factor and printed figure from the pre-roll record, in the order
-    the roll writes them: the step's clock, REG and cliff; the growth ages and factors; the carry's pace, IL days,
-    availability, expectation, multiplier and cap; the anchor's banked total, peaks, revert and prior peak; the
-    ratchet's banked total, peak and rm; the tier re-read's rows, from / to and a fresh price's career best. Before,
-    only start x the product was held to Pure', so a swapped pair of factors or a wrong printed figure passed every
-    gate and would have been shown to the league. On the rehearsed board: 2,985 rows.
-  - The tree's '(rounding)' label (section 2 (c)).
-  - A panel whose list view has no Pure chain now FAILs verify (inspector_check counted it; nothing read the count).
-  - A record's own MLBAM id is never read by name for IL days: the name is for a record with no usable id of its own,
-    in season_roll's il_days, S10 and verify --roll. Before, Jose Devers (id 691410) took feed id 672701 by name and
-    Yunior Marte (805074) took 628708; both 0 days, so no price moved.
-  - The preflight refuses an in-season ratchet whose prior full-season peak is on no record (no eng.pk_prior, no
-    ratchet note, not a §19.3 switch). Such a record was anchored on its completed season with no revert test at all,
-    and S10 and verify passed it (the reviewers' case: Freddy Peralta with eng.rch set and no ratchet note).
-    eng.pk_prior = {pk, py} settles it (pk null when it passed no full-season peak). On today's board none is refused.
-  - The structural preflight refuses a PV-blended record without its blend fields, and verify_calc names a PV block
-    missing a field instead of raising KeyError (a --fixture roll and verify both used to crash on one).
-  - A third question for a ruling is listed by the roll (CAP, section 7): the carry won, capped at the career peak
-    from BEFORE the ratchet the same roll fired and recorded.
-  - Every pending record in the roll's report and README carries its figures as the roll leaves it.
-  Deferred, each because it moves a price and needs the commissioner's ruling (section 7): D7 (4 records), F2 (4),
-  CAP (3), the carry's Pure < 300 short-circuit (18) and its scarcity cap (13). The roll prints D7 as a WARN each and
-  lists D7, F2 and CAP in its report and its README section 6.
-  Not fixed, listed in section 7: on the live board the Inspector gate cannot catch a chain that stops reconciling
-  outside the 38 floors (a residual row absorbs it), and a rolled record's chain after the first 2027 Pure move.
+  What a manager sees: the Player Inspector shows the new chain (rate, playing time, Hit% = availability x survival,
+  injury), a greyed "2026 actual" cell before the ten seasons, and a link to the model-tables page
+  (gn-model-tables.html). The term-by-term detail loads on demand from gn-rate-detail.js. The Trade Desk, the
+  slider and Compare read the same numbers. The slider's Pure end applies to the one-season view only.
 
-================================================================================
-4. WHAT THE FIXES DO TO THE ROLL (dry runs of season_roll.py.pre-v51_20 and season_roll.py on the same copies)
+2. THE BOARD IMPACT (measured on the staged board against v52.0; $ = value / RAW)
+  Dollars as the page defaults compute them: headline $ = r / RAW; 5-year $ = max(sum tj[0..4], r) / RAW;
+  10-year $ = max(sum tj, r) / RAW. "Moved" = by five cents or more.
 
-  On the switched board of section 5: 26 records' rolled RA moves, net RA -375 (RAW' 502.84 -> 502.93); Payton Tolle's
-  Pure also differs by 0.1 of rounding, with his RA unchanged. On the unswitched v51.19 board (--fixture): the same
-  26, net RA -375 (RAW' 501.59 -> 501.69). The final data will differ. The 26:
-  - F1, 22 in-season anchors on the completed season. 3 revert to the prior peak: Matt Gage (192, 2025), Brandon
-    Lockridge (156, 2025), Chuckie Robinson (19, 2021). Kyle Harrison RA 1,128 -> 1,051, Sean Burke 1,183 -> 1,144,
-    Foster Griffin 1,014 -> 991. Cesar Prieto's completed 2026 total is 0 FP, so his import anchor goes to Pure 0
-    (RA 182 -> 0).
-  - The IL-day id fix, 3 carries: Acuna Jr. RA 1,278 -> 1,334, Witt Jr. 1,310 -> 1,341, Guerrero Jr. 1,113 -> 1,138.
-  - Joe Musgrove leaves the carry (off the ESPN pool): 231 -> 224.
-  These are the rules as written, not new rulings. The commissioner's OK on v52.0 covers them. The verification's
-  fixes move none of them and nothing else.
+    all 2,118     v52.0 (510.28)   v53.0 (371.69)     change     RAW held at 510.28     players moved
+    headline         $1,574.47        $1,615.30    +$40.82 (+2.6%)    $1,176.59 (-25.3%)    1,312 (731 up, 581 down)
+    5-year           $6,503.69        $6,216.76   -$286.93 (-4.4%)    $4,528.32 (-30.4%)    1,748 (626 up, 1,122 down)
+    10-year          $9,785.55        $8,696.19 -$1,089.35 (-11.1%)   $6,334.34 (-35.3%)    2,089 (521 up, 1,568 down)
 
-================================================================================
-5. THE REHEARSAL (scratch copies of this build; regular_season_end set in the copy only)
+  On the displayed (rounded) d, 1,325 players move by five cents or more on the headline.
 
-  The real final data is not in yet: no final ESPN pull, no final weekly refresh. The rehearsal therefore runs the
-  pre-roll order on a mirror of this folder with the v51.19 board (data through 2026-09-13). regular_season_end was
-  set to 2026-09-13 in the copy only (step 3's statsapi re-pull was not needed: the season file was built 2026-09-15).
-  With the real end, 2026-09-27, the real roll REFUSES, as it must, on 3 checks with nothing written: the data, the
-  injury feed and the MLB season file all predate the season end.
-   2. apply_injury_v2.py --apply: INVARIANTS ALL CLEAR, RAW 537.96 -> 537.97.
-   4. pre_roll_basis_switch.py: 11 switched (stamped v51.20), RAW 537.97 -> 539.43.   5. promoted.
-   6. apply_injury_v2.py --apply: RAW 539.43 -> 539.43.   7. README card restamped to 537.96 -> 537.97 -> 539.43.
-   8. verify_calc.py: FAIL 0 WARN 2. Inspector: 2,118 panels, 0 chains not reconciling (list and tree).
-   9. season_roll.py (real, --apply --confirm-season-complete): preflight PASS; weekly refresh season-aware.
-      - Carry 458: 425 carry, 17 ratchet, 16 floor; 256 marked down, 178 up, 45 capped at the career peak.
-      - Ratchet fired 30, won 27.
-      - Tier moves: T3 -> T1 production 59, T3 -> T5 tool 36, T3 -> T1 veteran 4, T1 -> T2 2.
-      - In-season anchors 232: 19 moved to the completed season, 3 reverted.
-      - RA 842,515 -> 790,695, RAW 539.43 -> 502.93 (pool 1,394).
-      - S10 ALL CLEAR.
-      - WARN D7 x4: Ketel Marte, Jose Ramirez, Michael Wacha, Matt Chapman. F2 listed (4). CAP listed (3).
-  10. verify_calc.py --roll: FAIL 0 WARN 2 (the roll ran it as its end gate, then it was run again by hand; the README
-      acceptance line was stamped from that verdict). It re-derived 2,118 classes, 458 carry values, 232 anchors, 59
-      graduate clocks, 36 career bests and 2,985 eng.roll rows.
-  THE INSPECTOR ON THE ROLLED BOARD: 2,118 panels in both views, 0 render errors, 0 undefined/NaN, 0 chains not
-  reconciling, and 0 residual rows in the list and 0 in the tree.
-  - 2,034 chains are the roll's own step.
-  - 36 are graduates priced anew (depth chain plus a note).
-  - 48 are floors (their own rows).
-  The v51.19 roll needed 442 'documented adjustment' rows on such a board.
-  Two more rehearsals on fresh mirrors of the finished build gave byte-identical rolled folders (all 28 files). The
-  rolled PLAYERS (sha256 fba70c45d982cbe9...) is also the one the build rehearsed before the verification's fixes.
-  NEGATIVE CHECKS (all on scratch copies):
-  - regular_season_end 2026-09-27: REFUSED, 3 checks. 2025-09-28 and 'TBD': REFUSED. Nothing written.
-  - A --fixture roll is not promotable. verify_calc --roll FAILs it 6 ways on the unswitched board and 5 on the
-    switched one: fixture (build.json and the report), its own failed gate (ROLL_FAILED, build.json and the report),
-    and on the unswitched board the switch not applied.
-  - r + 1 on one record: verify FAIL 1, live and rolled.
-  - The rolled board promoted over a copy of this folder: apply_injury_v2.py REFUSED; update_calc_weekly.py REFUSED
-    (build.json season 2027 is not GNDAILY_START's year); verify_calc.py FAIL 0 WARN 2 with 0 residual rows.
-  - Weekly locks on the rolled board: the notes alone give floor 56 and import 8; lock_on gives 0 and 0; eng.rch 0.
-  - The reviewers' edge cases (their em.py, 26 cases, each as a real and a --fixture roll): every corrupted record is
-    refused by name, including now a PV record without eng.pv.w_ceil (it raised KeyError before) and an in-season
-    ratchet with no prior peak on record (it rolled silently before); Zachary Maxwell graduating on the shared id
-    687209 is refused; no run ends in a traceback.
-  The reviewers' 38 output mutations (their vm.py, on this rehearsal): verify --roll catches all 38, baseline FAIL 0.
-  The reviewers' code mutations of season_roll.py (their cm.py: the 26, the build's 4 new ones, and one more for the
-  verification's IL rule; the id-keyed IL mutation re-anchored on the new line), each run as a real roll, 31 in all:
-  - 18 are stopped by S10 and 7 by the end gate (verify --roll), 2 are refused before anything is written (a GP_ and
-    a REG typo).
-  - 4 move no record on this board (0 records' r moved): the ratchet's +0.5 margin, T4 over 30, a graduate's growth
-    when g(a') = 1, and an own id the feed lacks falling back to the name.
-  - The id-keyed IL lookup, which moved no record either, is now caught by the per-row check: by name only, Will
-    Smith (two in the feed) prints no IL days where the feed has 82.
-  The verification's own poisons of the rolled board (its vpoison.py): the 7 that passed with FAIL 0 now FAIL -- Ketel
-  Marte's step and carry factors swapped (product unchanged); his carry's pace, IL days, availability and expectation;
-  his step's clock and REG; Brooks Lee's anchor banked total and peaks; Matt Gage's prior peak; Kumar Rocker's tier
-  clock and 'T9'; Dalton Rushing's career best. Grant Taylor's live eng.pk x1.2 still passes (section 7).
+  RAW falls from 510.28 to 371.69. The new engine prices an expected season, not a best season, so raw points fall.
+  RAW is the mean RA over the records with an ESPN id and RA > 0: 1,402 such records at v52.0, 1,445 now. Over the
+  same 1,402 the v53.0 mean would be 380.39; the rest of the fall comes from the 43 records that now price above zero
+  and join the pool (none leaves it).
 
-================================================================================
-6. GATES
+  After the re-float the headline total barely moves, but the 5-year and 10-year totals fall: the engine expects
+  fewer future seasons from the players on the board, mostly the older ones.
 
-  build_v51_20.py   guard: calc/ is the packaged v51.19 (folder and zip agree), PLAYERS ==
-                    PLAYERS_2026-09-26_v51.18.json, the identities exact, the roll's age audit reproduces build.json.
-                    Then 9 Inspector patches, each matched once and none in PLAYERS, the literals byte-identical, and
-                    the two node gates. --reapply reproduces calc/, build.json and the report byte for byte.
-    inspector_equiv_v51_20.js   packaged v51.19 vs the candidate, alone and on the full page stack: values identical,
-                    and panels identical except the floor chains and residual relabels (a change of any other
-                    kind FAILS): 394 = 38 + 356, other 0, in all four states.
-    inspector_check_v51_20.js   both views: render errors 0, undefined/NaN 0, no list chain 0, chains not
-                    reconciling list 33 -> 0 and tree 33 -> 0.
-  verify_calc.py    FAIL 0, WARN 2 (the 23 designation-vs-module lags and the 9 T3s on a veteran basis, both
-                    standing). New in v51.20:
-                    - the r identity is exact in both modes (the tolerance of 1 is gone);
-                    - THE INSPECTOR GATE: inspector_check_v51_20.js on calc/gn-app.js. Every Pure chain must
-                      reconcile in both views, every panel must have a list chain, with no render error or
-                      undefined/NaN. Under --roll no chain may carry a residual row. The v51.19 page FAILS it (33 + 33).
-                    - the pace-gate exemptions are season-scoped, as the roll and the page read them;
-                    - a PV block missing a field is named (a FAIL), not a traceback;
-                    - --roll: section 3's D1, D2 and D4, and every eng.roll row and printed figure re-derived.
-  package.py        GordoNation_Calculator_v51.20/ and its zip equal calc/'s 21 deploy files byte for byte (CRC OK,
-                    stamps v51.20 / 2026-09-13 / 537.96 read back from the archive); the build zip (518 entries) passes
-                    the same checks, and carries 22 raw Savant CSVs under statcast/data/, as v51.19's did (not the
-                    deploy; whether the reproduction archive keeps them is the commissioner's call).
-  (no workbook re-sync: every input resync_ceiling_workbook_v51.18.py reads a value from is byte-identical to v51.19
-  -- the PLAYERS, GNDAILY, OPTIONS_DATA and RULE5 literals, RAW_PER_DOLLAR, the data, rosters and injury-opening
-  dates, and the build.json keys it reads (data window, pull, injury module, gnfv, attrition, time discount,
-  statcast); only the identity moved (build, built, GN_BUILD). All 1,412 rows of 1_Player_Inputs match the v51.20
-  board on Risk-Adj and $Value, and 2_Org_Rankings stands: River Cats 54,334, KC Gray Hotdogs 50,802, Kansas Sunflower
-  Seeds 48,073. The workbook still reads "calculator v51.18" and Methodology v18; its next re-sync runs v51.18 -> that
-  build.)
+  The 406 rostered players together: headline $709.25 -> $800.26 (+$91.01, +12.8%); 5-year $2,934.00 -> $3,052.18
+  (+$118.18); 10-year $4,334.49 -> $4,210.85 (-$123.65). Their average headline RA goes from 891.42 to 732.63.
 
-================================================================================
-7. STILL OPEN
+  CLUBS (RA and headline $, v52.0 -> v53.0; ordered by v53.0 RA):
+    River Cats              54,604 -> 45,410   $107.01 -> $122.17
+    KC Gray Hotdogs         49,548 -> 43,020    $97.10 -> $115.74
+    Kansas Sunflower Seeds  46,239 -> 38,834    $90.61 -> $104.48
+    Dirty Spikes            43,569 -> 37,088    $85.38 ->  $99.78
+    MidwestBears            42,236 -> 34,841    $82.77 ->  $93.74
+    High Cheddar            43,234 -> 34,524    $84.73 ->  $92.88
+    C-Town Liquors          42,223 -> 32,852    $82.74 ->  $88.39
+    Balking Dead            40,263 -> 30,880    $78.90 ->  $83.08
+  (High Cheddar and MidwestBears swap 5th and 6th; every other club keeps its rank.)
 
-  FOR THE COMMISSIONER (each moves a price; the roll lists each and applies none):
-  * D7 -- four veterans whose Pure still carries a June recency-floor lift that the roll's step multiplies into 2027,
-    against the 23 Sep ruling (a floor recomputed once at the roll, none afterwards). RA before -> as rolled -> if
-    recomputed as a floor (a scratch what-if of the ruled recompute: the lower-case floor read as a floor, and Wacha's
-    anchor on his peak-derived Pure):
-      Ketel Marte     Pure 1,331 = 1.321 x the peak-derived 1,007.9; carry      RA 1,227 -> 1,022 -> 954
-      Jose Ramirez    Pure 1,235 = 1.216 x 1,015.3;                   carry      RA 1,085 ->   921 -> 790
-      Michael Wacha   Pure 1,960.5 = 1.631 x 1,202.0; in-season anchor (3c multiplied the lift into his new peak)
-                                                                                 RA 1,725 -> 1,583 -> 971
-      Matt Chapman    Pure 973 = 1.440 x 675.9;       age step (IL finisher)     RA   842 ->   758 -> 527
-    Net RA -1,042 if all four were recomputed (RAW' 502.93 -> 502.18). Gray, Springer and Machado carry the same kind
-    of lift but roll through the floor route, and do not move in the what-if.
-  * F2 -- the ruled floor is never tested for a T1 / T2 who finished on an IL designation. Four would rise: Rafael
-    Devers Pure' 1,081.6 vs floor 1,217.2, Dansby Swanson 831.8 vs 893.4, Kirby Yates 175.2 vs 311.1, Taylor Walls
-    463.9 vs 543.1.
-  * CAP -- when the ratchet fires but the carry wins, the carry is capped at the career peak from before the ratchet,
-    beside the new peak the same roll records (the Inspector then prints 'capped at the raw career peak 769' beside
-    'peak 808 FP (2026)'): Jose Soriano capped at 1,090 vs new peak 1,119 (uncapped 1,151.9), Trevor Megill 769 vs 808
-    (813.7), Jake Mangum 595 vs 623 (624.5). Predates v51.20.
-  * The §13.1 carry ignores §13's Pure < 300 short-circuit (18 records), and its cap compares a Pure that includes
-    scarcity with a raw peak (13 C / 2B / 3B veterans; v51.11's verbatim rule).
-  GATE LIMITS, not fixed here:
-  * On the live board the Inspector gate cannot catch a chain that stops reconciling outside the 38 floors: the page
-    adds a residual row that absorbs the gap. Grant Taylor's eng.pk x1.2 (Pure untouched) passes FAIL 0 and adds one
-    unattributed residual (list 101 -> 102). A baseline of the live residual rows in build.json, with a WARN or FAIL on
-    a new one, would close it, but every weekly refresh would then need a re-baselining step. On a rolled board no
-    residual row is allowed at all.
-  * A rolled record's chain lasts while its Pure is eng.roll.pc1. Once a 2027 refresh moves a Pure (a 3c re-anchor or
-    ratchet), the basis chain returns and cannot explain the carry or anchor folded into Pure: with the roll chain
-    switched off, the rehearsed board shows 440 list and 890 tree residual rows, 396 of them 'Unattributed residual'.
-    The fix would append the refresh's factor to eng.roll (update_calc_weekly.py and gnRollChain). It only matters if
-    the redesign is not installed before the first 2027 refresh.
-  BEFORE THE REAL ROLL:
-  * The final weekly refresh and the injury module's post-season feed (steps 1-2), the real regular_season_end, and
-    the statsapi re-pull of step 3: no script in this folder writes backtest/gn_backtest_seasons_2023-2026.json (it
-    was pulled on 15 Sep from statsapi /api/v1/stats?stats=season with /api/v1/sports/1/players; see its 'source').
-  * Before the first 2027 weekly refresh: move GNDAILY_START to the 2027 opening day. The weekly script refuses until
-    then.
-  Carried from v51.19 (notes/README_v51.19.txt), unchanged unless said:
-  * Ruling D-b: nine T1s below peak age by birth date, held T1.
-  * The §4 resolver's sole-MLB-line extension (Carlos Rodriguez).
-  * The injury re-run after the age fix: Suarez 624 -> 589, Steele 807 -> 851, at the pre-roll re-run (step 6).
-  * Duplicate MLBAM ids: 687209 (the Maxwells). The roll now refuses to price a T5 graduate on it (latent until
-    2028).
-  * McKenzie / Garrett, REPACE v20 in four Pures, the 9 T3s on a veteran basis (4 graduate at the roll).
-  * The scoring map: the pending IP1 / SV12 / HR6 / no-fielding map is the league's decision.
-  * The roll's tier re-read cannot move a tool T3 with neither eng.aod nor eng.bd (Harris, Thornton).
-  * 45 records have no birth date from any source.
-  * MLB's terms of use §1(xi) (now also the statsapi re-pull); real iPhone / Android tests; the live GoatCounter count;
-    the 2025-line fetch; the first-use cost of a prospect; Savant data outside the deploy; Compare's checks outside
-    this folder.
-  Closed by v51.20: the Inspector at the roll; the 33 floor chains; verify's r identity; the adversarial review of
-  season_roll.py; graduation maturation (D8, ruled: a market incentive, the eight left as built); 'how pace
-  multipliers reopen in 2027' as far as the locks go.
-  README_v51.19.txt was moved to notes/ with a plain mv: git shows a delete and an untracked file, so stage both.
+  THE CEILING WORKBOOK: resync_ceiling_workbook_v53_0.py (pure stdlib) re-writes 1_Player_Inputs on the rate basis
+  (column 9 is the priced Hit%, U at k* moves to a new column, pm is 1.00 everywhere, A_rec is 0) and rebuilds the
+  prospect sheets 7 and 12. The file name is kept (D-5).
+  2_Org_Rankings recomputed (River Cats 45,410 still first, KC Gray Hotdogs 43,020 second).
 
-RUN ORDER TO REPRODUCE
-  mv README_v51.19.txt notes/
-  python3 build_v51_20.py --apply            # calc/ (backups *.pre-v51_20), build.json, report; copies this README
-                                             # to calc/README.txt (--reapply: back to v51.19 from the backups, then apply)
-  (no workbook re-sync: nothing it reads moved -- section 6)
-  python3 ../../../Reference/patch_methodology_v20.py --apply     # Methodology v20 (no PDF)
-  python3 verify_calc.py
-  python3 package.py --apply
+3. THE LARGEST MOVERS (headline $, v52.0 -> v53.0)
+  Up:   Shohei Ohtani $3.45 -> $5.60; Corbin Carroll $2.42 -> $3.90; Jose Ramirez $1.55 -> $2.99; Bobby Witt Jr.
+        $2.61 -> $4.01; Ketel Marte $1.86 -> $3.26; Rafael Devers $2.01 -> $3.27; William Contreras $2.28 -> $3.53;
+        Max Meyer $1.52 -> $2.74; Jazz Chisholm Jr. $1.67 -> $2.88; Yoshinobu Yamamoto $2.96 -> $4.15.
+  Down: Mike Clevinger $1.63 -> $0.02; Cristian Javier $2.14 -> $0.69; Alexis Diaz $1.47 -> $0.06; Triston McKenzie
+        $1.61 -> $0.21; Dylan Carlson $1.64 -> $0.25; Jack Suwinski $1.46 -> $0.10; Tim Anderson $1.29 -> $0.02;
+        German Marquez $1.58 -> $0.33; Jackson Jobe $2.49 -> $1.28; Trey Yesavage $2.60 -> $1.40.
+  The big drops are players whose v52.0 price came from a past peak that their recent MLB rates and playing time do
+  not support; the big rises are everyday regulars whose expected season is worth more than v52.0's ceiling read.
 
-PRE-ROLL RUN ORDER (build.json pre_roll.order; v51.18's order plus v51.20's statsapi re-pull in step 3. season_roll.py
-refuses a real roll that skips the switch, a regular_season_end outside the season, or an injury feed or MLB season
-file older than it)
-   1. The final weekly refresh (update_calc_weekly.py and its run order), on the final 2026 data.
-   2. The injury module's post-season feed (injury_v2_data_<date>.json, named in build.json), then
-        python3 apply_injury_v2.py --apply
-   3. build.json regular_season_end, from the final 2026 schedule. Then re-pull the statsapi MLB season file after
-      that day: backtest/gn_backtest_seasons_2023-2026.json (its 'built' must follow regular_season_end) and
-      backtest/gn_backtest_fielding.json, which a T5 graduate's career best and Hit% reliability read; record the
-      sha256 (PLAN phase 0, step 3).
-   4. python3 pre_roll_basis_switch.py . --out DIR --report DIR/switch_report.json     (DIR outside this folder)
-   5. Promote:  cp DIR/gn-app.js calc/gn-app.js
-   6. python3 apply_injury_v2.py --apply     (the switched records lose the tool carve-out; RAW moves)
-   7. Restamp the README card: its RAW_PER_DOLLAR line must end at build.json raw_per_dollar
-      (e.g. '538.06 -> 537.96 -> 539.43.'); then cp README_<build>.txt calc/README.txt
-   8. python3 verify_calc.py                 (FAIL 0)
-   9. python3 season_roll.py . --out ROLLDIR, then with --apply --confirm-season-complete   (ROLLDIR outside)
-  10. python3 verify_calc.py --roll ROLLDIR  (FAIL 0)
-  11. The commissioner's OK, with rulings on D7, F2 and CAP (section 7) or an explicit 'as rolled'.
-  12. Promote ROLLDIR to calc/ and package v52.0.
+4. THE HANDOVER AND THE PROSPECTS
+  - The handover switch fired. SPEC 10 declared in advance: if the median value jump of the 18 players switched at
+    the v52.0 pre-roll step lies outside +/-10%, the gradual handover (S2-lite) replaces the one-day switch (S1).
+    Under H3 the median jump is +40.8%; 13 of the 18 jump by more than 30%: A.J. Ewing +72.1%, Henry Bolte +204.3%,
+    Carter Jensen +67.4%, Carson Benge +30.6%, Logan Henderson +38.3%, Travis Bazzana +50.4%, Jacob Gonzalez +218.9%,
+    Hao-Yu Lee +131.0%, Kumar Rocker +43.3%, Spencer Miles +200.0%, Jake Bennett +30.9%, Cole Carrigg +115.7%,
+    Didier Fuentes -38.1%. (Measured on the pinned shadow board, sha256 57a225b2..., which this build reproduces.)
+  - So the 216 prospects with MLB time (198 + 18) are priced on MLB rates starting from their prospect value.
+  - The 675 others keep the v52.0 prospect chain x kappa_P (P-hold). The branch's share of the board's cumulative RA
+    is 10.4% at 1 year, 12.2% at 5 years and 14.9% at 10 years (verify G11).
+  - The 8 relievers who graduated at v52.0 (Cole Winn, Will Klein, Sam Bachman, Seth Halvorsen, David Morgan, Carlos
+    Vargas, Roansy Contreras, Mason Englert) are T1 rate records now, priced from their rates with no x0.80.
+  - The D8 maturation x0.80 stays as a named Inspector line on the 8 production T3s that carry it (Kristian
+    Campbell, Jack Kochanowicz, Hurston Waldrep, Chase Silseth, Robert Hassell III, Luis Matos, Logan Evans, Jonathan
+    Cannon). The 3 switched Book records (Jacob Gonzalez, Jake Bennett, Ryan Johnson) are S2-lite at 1.0 (RD 6).
+
+5. RECORDS THAT NEED ATTENTION (plan 2.11; each is named in the build report, build_report_v53_0.json)
+  - Pricing age differs from board age, 10: the history age prices (the board ages were "fixed first" at v51.17 and
+    are not changed here). Hayden Birdsong (board 29, a0 24, k* 2), Porter Hodge (29, 25, k* 1), Reese Olson (28,
+    26), David Festa (29, 26), Gunnar Hoglund (29, 26), Mike Vasil (28, 26), Hector Neris (37, 37), Chad Green (35,
+    35), Andrew Saalfrank (28, 28), Bowden Francis (30, 30). The Inspector prints a0 and its source.
+  - No 2026 row, 92 player-kinds (86 newest 2025, 6 newest 2024), e.g. Justin Steele, Anthony Santander, Spencer
+    Schwellenbach, A.J. Puk, Edwin Uceta, Robert Stephenson, Pablo Lopez, Frankie Montas. Their newest row carries its
+    own lag weight; the "2026 actual" cell reads "2026: no MLB units (0)".
+  - Newly priced free agents, 38 (no injury-module record at v52.0; each gets the minimal injury block). Two of them
+    are on an ESPN list: Jonathan Heasley (IL-60) and Wyatt Mills (OUT).
+  - Bridged to MLB by a unique name, 44; 10 of them are the 10 pricing-age records above (an unaudited board age).
+  - Hit% above 100%, 44 headlines (max 1.1777, Corbin Carroll): an everyday player's expected share can exceed the
+    full-season playing-time unit. The Inspector explains it.
+  - Priced in the other pitcher group, 91 (a one-kind pitcher whose kind differs from the board position): S1 board SP
+    priced RP 34; S1 board RP priced SP 21; S2-lite board SP priced RP 31; S2-lite board RP priced SP 5. The Inspector
+    prints "priced as <group>".
+  - A history row's group differs from the kind's group: 123 rows on 105 records (e.g. Nick Martinez's 2024 RP row).
+    Each row is valued in its own group's league rate.
+  - Held at v52.0, 3: RA unchanged; their dollars re-float against 371.69: Jack Wenninger RA 24, $0.05 -> $0.06; Luis
+    Ortiz RA 70, $0.14 -> $0.19; Jose A. Ferrer RA 150, $0.29 -> $0.40. The panel says "v52.0 scale".
+  - No birth date on file, 40 records (no eng.bd, no eng.aod, and no MLBAM date for eng.mid): deferred to the 2027
+    roll. Rate prices use the history age. (The plan's earlier count was 45; this is the count on this board.)
+  - ESPN designation vs the injury module, 25 rows, all unrostered free agents carried unchanged from v52.0; nothing
+    is repriced for them at v53.0 (verify WARN; listed in V53_REVIEW.md).
+  - Five branch values sit on an exact half (pc x 0.2 = .5): Gabriel Rodriguez, Anthony Millan, Jose Manon, Pedro
+    Blanco, Daury Vasquez. Each prints its stored RA.
+
+6. WHAT IS NOT IN v53.0 (deferred, each by name)
+  - The fielding line: fld = 0 on every record (deferred to phase 12).
+  - The evidence rule (drop the 15 appearances before an IL placement from a pitcher's row): deferred, because no
+    per-appearance source exists. 88 rate pitchers carry the exposure (on an injured list with R or R2 set), 60 of
+    them with 2026 innings. Reported weekly from v53.1 (D-3).
+  - G9, the double-count audit: REPORTED, not blocking (ruled 3 Oct; a property of the model). (a) the scoring rate
+    tracks last season's playing time: hitters +0.156, starters +0.105, against 0.10; (b) the share model's errors
+    track the rate: all -0.052, hitters -0.061, relievers -0.098, against 0.05.
+  - G14 (roll continuity) and G17 (weekly churn): not run at v53.0; they need the in-season engine (v53.1). G14's
+    newcomer-prior reading is open (D-2). No installed record is a newcomer at e = 0.
+  - N-1: no level adjustment for players back from injury now; the returners are checked as a group after the 2027
+    season (ruled 1 Oct).
+  - The MLB terms question is still unruled (D7).
+  - Keeper values move by design (getKval reads tj). The confidence labels are v52.0's.
+  - The Inspector's term-by-term breakdown is at the headline season; the other nine seasons show their values and
+    U / SIGMA / A, not the logit terms.
+  - The weekly refresh is NOT runnable on a rate board until v53.1 (target 5 Feb 2027, hard stop before opening day,
+    25 Mar 2027). The v52 weekly and one-time scripts refuse a rate board (engine_guard.py). In v53.1 the weekly
+    script itself changes (update_calc_weekly.py v53: preflight, the bridge, rosters and designations, the
+    season-to-date rows, then rate_engine.price_board; plan 7.2), followed as now by verify_calc.py, stamp.py and
+    package.py. A roster-only refresh (no repricing) comes first, in v53.1's first round (D-4).
+  - 30 one-time scripts moved to archive/one_time_v51/ fail closed by folder. The two season_roll_lambda records do
+    not, and are documented as such: each takes the board path on argv and still requires --apply
+    --confirm-season-complete.
+
+7. CHECKS RETIRED OR DEFERRED (verify_calc_v53.py prints this table on every run)
+  - tj identity with _hit_at, the asset identity w = tjp x _hit_at, the _hit_clean assembly: REWRITTEN as G3 / G5 /
+    G10 on rate records (Hit% is U per season, not a band shift); kept on branch and held records.
+  - The age-mate curve and _CLOCK_HELD; "tjp peaks at kp"; the pace-gate leak; "WARN T3 on a vet basis": RETIRED
+    (rate lines are closed form; G4 replaces the peak test; pm is 1.00; no vet basis outside the 3 held).
+  - PV blend, injury carve-out vs basis, TIER / BASIS map: REWRITTEN (narrow) for the rate basis.
+  - The --roll checks (REG, cliff, g, clock, carry, ratchet, floor, --rulings-v52): MOVED with the v52 verify to tag
+    v52.0 and the standby; the v53 --roll refuses a rate board.
+  - The KEEP-class roll checks (age / aod / bd +1, il / ir unchanged, inj.f untouched, tier labels, rotation, roster
+    fields): DEFERRED to the rate roll (phase 12).
+  - The Inspector chain check: REWRITTEN as X-RC (render_check_rate1.js). inspector_equiv_v51_19/20.js,
+    inspector_check_v51_18.js and render_check_v51_15.js: RETIRED (kept as records, never run).
+  - NOT RUN at v53.0: G14, G17, G13-live (v53.1).
+
+8. ROLLBACK
+  Until opening day, build_v53_0.py --rollback restores every tracked build-folder file outside redesign/ from tag
+  v52.0 (from git, not from backups) and removes what v53.0 added, except model/, v53_archive/, redesign/ and the v53
+  scripts outside calc/ (provenance; nothing on the v52 path reads them). redesign/ (the decision records and the
+  spec) is exempt: the rollback never restores, removes or rewrites a path under it (R4b-1). The v52 verify then gives
+  FAIL 0 WARN 2, stamp.py finds its v52 phrase, and package.py rebuilds the 21-entry v52.0 zip;
+  GordoNation_Calculator_v52.0.zip is unchanged on disk and is what the commissioner re-uploads. From opening day to
+  the ROLLBACK DEADLINE, SAT 1 MAY 2027, a rollback runs the v52 hot standby (v53.1, S7). After 1 May 2027 the project
+  fixes forward.
+
+9. THE SHADOW ENVIRONMENT (how the prices were produced and can be reproduced)
+  The pinned shadow board (board_shadow_v52.0.json, sha256 57a225b2...) is reproduced byte for byte from
+  git archive of 413917f (tag v53.0-shadow-env) plus two untracked inputs; the commands are in
+  v53_archive/INPUTS_v53.0.json (shadow_env.commands and run_commands) and in v53_archive/RELEASE_v53.0.md.
+    cd redesign/shadow && python3 -B shadow_price.py --model model/gn_rate_model_v1_cur_refit_2000_2026.json --out ...
+    cd redesign/shadow && python3 -B shadow_verify.py --derive --model model/gn_rate_model_v1_cur_refit_2000_2026.json
+    or all of W0 from a clean environment: python3 -B freeze_v53_0.py all; then python3 -B freeze_v53_0.py --check
+
+RUN ORDER TO REPRODUCE THE PROMOTION (branch calculator-v53.0; one step at a time, never in parallel)
+  On the STAGE (A-R4-1: W2, then the spike, then --record, then W3; never W2 into STAGE after --record):
+  python3 -B -I build_v53_0.py --out ../v53_staging/v53.0 --built 2026-10-03 --utc <the run time>   # 4 stages
+    (--utc is the release run's own UTC time, recorded in build.json; the build is dated the promotion date)
+  python3 -B -I check_v53_0.py --stage ../v53_staging/v53.0 --expect-combo 'H3|S2-lite|P-hold|T5a'
+                                                                                   # PASS, 0 disagreements
+  python3 -B -I rate_engine.py --spike ../v53_staging/v53.0                          # 0 mismatches
+  python3 -B -I build_v53_0.py --record ../v53_staging/v53.0
+  python3 -B verify_calc_v53.py --root ../v53_staging/v53.0                          # FAIL 0
+  (then, in parallel: render_check_rate1.js with the probe, values_check_v53.js, checks/compare_check_v53.js,
+   page_v53/patch_values.py --selftest, test_engine_guards_v53.py --require-stage, the offline sweep)
+  Then this README into the STAGE root, and verify_calc_v53.py once more, alone.
+  After the commissioner's OK on ../v53_staging/V53_REVIEW.md:
+  python3 -B build_v53_0.py --promote ../v53_staging/v53.0 --date 2026-10-03 --approved '<the OK>'
+  python3 -B verify_calc.py                                                        # FAIL 0
+  python3 -B stamp.py --apply                                                      # writes the v53.0 as-of clause
+  python3 -B stamp.py --check                                                      # exit 0 = clause once per page
+  python3 -B resync_ceiling_workbook_v53_0.py --apply                              # then again: 0 cells
+  python3 -B workbook_check_v53.py                                                 # every row equals the board
+  python3 ../../../Reference/patch_methodology_v22.py --apply                      # Methodology v22
+  python3 -B package.py --apply                                                    # GordoNation_Calculator_v53.0

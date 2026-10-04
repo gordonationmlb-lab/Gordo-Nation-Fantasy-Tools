@@ -1,13 +1,18 @@
-/* gn-compare.js -- Player Compare (v51.19, 26 Sep 2026).
+/* gn-compare.js -- Player Compare (v53.0, Oct 2026; first shipped v51.19, 26 Sep 2026).
    Up to five players side by side. Every priced figure in the view is the Player Inspector's own printed
-   number: each column is gnInspectorHTML(p) -- the Inspector's panel as a string, split out of
-   renderInspector with no change to its output (proved byte-identical on all 2,118 records under bust risk
-   on/off x list/tree) -- read by section. Nothing here re-derives Pure, pace, Hit%, injury, RA or $.
+   number: each column is gnInspectorHTML(p) -- the Inspector's panel as a string -- read by section (SEC: both
+   Pure titles, both Hit% titles and "Headline value", plan 2.8). Nothing here re-derives Pure, Hit%, injury, RA
+   or $; the headline integers are the stored ones the Inspector prints (A-16).
    The value row is the Trade Desk's own getValue + fmtValue (ROS-wrapped), so it follows the value mode,
-   Career years, year mode, the blend and bust risk exactly as the side lists do.
+   Career years, year mode, the blend and bust risk exactly as the side lists do. The RA / Pure blend applies to
+   the one-season headline view only (gnPureEndActive(); plan 6.3): at Career years 2 and up the value row,
+   the shading and every word here take no blend.
+   v53.0: the rate basis. The pace rows are retired (pm is 1.00 on every record); RA = Pure x Hit% x Injury.
+   Compare waits for the rate-chain detail file (gnRateDetailLoad(), plan 2.9) before its first table, and
+   checks its own build against the page's (GN_COMPARE_BUILD vs GN_BUILD; one reload per session on a mismatch).
 
    Statcast is DISPLAY-ONLY context. Three pre-registered backtests (26 Sep 2026) found it adds nothing to the
-   price; nothing in this file feeds it into r, pc, h, pm, im, tj, tjp, d or RAW_PER_DOLLAR, and the block says so
+   price; nothing in this file feeds it into r, pc, h, im, tj, tjp, d or RAW_PER_DOLLAR, and the block says so
    on screen. Nothing Statcast ships with the site (the commissioner's ruling, 26 Sep, option (b)): each viewer's
    browser fetches Baseball Savant's CSV exports when Compare needs them and builds the display structure in
    memory -- loadStatcast() (also GNCompare.loadStatcast) and the section it heads are the only code that knows
@@ -19,7 +24,35 @@
 (function () {
   'use strict';
   if (window.__gnCompare) return; window.__gnCompare = 1;
-  if (typeof PLAYERS === 'undefined' || typeof gnInspectorHTML !== 'function') return;
+
+  // ------------------------------------------------------------------ the build handshake (plan W6, CR-34; X-HAND)
+  // This file and gn-app.js must be the same build: Compare reads the Inspector's titles and rows, and a stale copy
+  // of either (a cache that kept one file of an upload) would mis-read them. On a mismatch Compare says so, sets a
+  // session flag and reloads the page once; if the mismatch survives that reload it stays paused (no loop).
+  var GN_COMPARE_BUILD = 'v53.0';
+  var HS_FLAG = 'gn-compare-handshake';
+  function handshake() {
+    var page = typeof GN_BUILD === 'undefined' ? '(none)' : String(GN_BUILD);
+    if (page === GN_COMPARE_BUILD) { try { sessionStorage.removeItem(HS_FLAG); } catch (e) {} return true; }
+    var box = document.getElementById('gnCompare'), tried = null;
+    try { tried = sessionStorage.getItem(HS_FLAG); } catch (e) {}
+    var say = function (t) {
+      var e = String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      if (box) box.innerHTML = '<div class="inspector-box gc-box"><h3 class="inspector-title" id="gcTitle">Player Compare</h3><p class="gc-miss" role="status" data-gc-handshake="1">' + e + '</p></div>';
+      if (typeof gnAnnounce === 'function') gnAnnounce(t);
+    };
+    var paused = 'The page is mid-update: Compare (' + GN_COMPARE_BUILD + ') and the page (' + page + ') are different builds. Compare is paused; reload the page in a minute.';
+    if (tried === page + '>' + GN_COMPARE_BUILD) { say(paused); return false; }
+    var flagged = false;
+    try { sessionStorage.setItem(HS_FLAG, page + '>' + GN_COMPARE_BUILD); flagged = sessionStorage.getItem(HS_FLAG) != null; } catch (e) {}
+    // without a session flag a reload could repeat forever: then Compare only pauses
+    if (!flagged) { say(paused); return false; }
+    say('The page is mid-update; reloading.');
+    try { location.reload(); } catch (e) {}
+    return false;
+  }
+  if (!handshake()) return;
+  if (typeof PLAYERS === 'undefined' || typeof gnInspectorHTML !== 'function' || typeof gnPureEndActive !== 'function') return;
 
   var MAX = 5, LS_KEY = 'gn-trade-compare', LS_PREV = 'gn-trade-compare-prev';
   var esc = _iesc;
@@ -107,15 +140,21 @@
     while ((m = re.exec(h))) { if (m[0] === '</div>') { depth--; if (depth === 0) return re.lastIndex; } else depth++; }
     return -1;
   }
-  var SEC = [['cls', 'Classification'], ['pure', 'Pure Ceiling'], ['hit', 'Hit%'], ['inj', 'Injury module'],
-             ['peak', 'Peak Season Value'], ['traj', '10-Year Trajectory'], ['notes', 'Notes']];
+  // The Inspector's section titles, by prefix (plan 2.8: the rate basis and the prospect branch / held panels title
+  // Pure and Hit% differently; both bases share "Headline value"). G12 (verify) checks each prefix is a real h4.
+  var SEC = [['cls', 'Classification'], ['pure', 'Pure: expected healthy full season'], ['pure', 'Pure Ceiling Derivation'],
+             ['hit', 'Hit%: expected share of a full season'], ['hit', 'Hit% Derivation'], ['inj', 'Injury module'],
+             ['peak', 'Headline value'], ['traj', '10-Year Trajectory'], ['notes', 'Notes']];
+  var SEC_IDS = ['cls', 'pure', 'hit', 'inj', 'peak', 'traj', 'notes'];
+  var SEC_WORD = { cls: 'Classification', pure: 'Pure', hit: 'Hit%', inj: 'Injury module', peak: 'Headline value', traj: '10-Year Trajectory', notes: 'Notes' };
   function secId(title) { for (var i = 0; i < SEC.length; i++) if (title.indexOf(SEC[i][1]) === 0) return SEC[i][0]; return null; }
   function sections(h) {
-    var out = {}, lv = h.indexOf('id="inspListView"'); if (lv < 0) return out;
-    var re = /<div class="formula-section"[^>]*>/g, m; re.lastIndex = lv;
+    // the list view when the panel has one (the flow tree carries no sections); else the whole panel
+    var out = {}, lv = h.indexOf('id="inspListView"'); if (lv < 0) lv = 0;
+    var re = /<div class="formula-section(?:\s[^"]*)?"[^>]*>/g, m; re.lastIndex = lv;
     while ((m = re.exec(h))) {
       var end = divEnd(h, m.index); if (end < 0) break;
-      var inner = h.slice(m.index + m[0].length, end - 6), hm = /<h4>([\s\S]*?)<\/h4>/.exec(inner);
+      var inner = h.slice(m.index + m[0].length, end - 6), hm = /<h4\b[^>]*>([\s\S]*?)<\/h4>/.exec(inner);
       var title = hm ? txt(hm[1]) : '', id = secId(title);
       // ids never leave the Inspector: a pasted id would duplicate #inspViewToggle and friends
       if (id && !out[id]) out[id] = { title: title, body: (hm ? inner.slice(hm.index + hm[0].length) : inner).replace(/\sid="[^"]*"/g, '') };
@@ -132,7 +171,6 @@
     return out;
   }
   function find(rows, fn) { for (var i = 0; i < rows.length; i++) if (fn(rows[i])) return rows[i]; return null; }
-  function findLast(rows, fn) { for (var i = rows.length - 1; i >= 0; i--) if (fn(rows[i])) return rows[i]; return null; }
   function spineOf(h) {
     var i = h.indexOf('<div class="gn-spine">'); if (i < 0) return null;
     var e = divEnd(h, i), html = h.slice(i, e);
@@ -141,66 +179,103 @@
     var head = hd ? txt(hd[1]) : '';
     return { html: html, head: head, steps: steps, stale: /would change/.test(head) };
   }
-  function trajCells(body) {
-    var i = (body || '').indexOf('<div class="traj-grid">'); if (i < 0) return [];
-    var e = divEnd(body, i), g = body.slice(i + 23, e - 6), out = [], re = /<div style="text-align: center;/g, m;
-    while ((m = re.exec(g))) {
-      var ce = divEnd(g, m.index); if (ce < 0) break;
-      var t = txt(g.slice(m.index, ce)), mm = /^(Current|Y\d+)\s*(\u2605)?\s+(\d{4})\s+(-?\d+)\s+age\s+(-?[\d.]+)/.exec(t);
-      if (mm) out.push({ lab: mm[1], peak: !!mm[2], y: +mm[3], v: +mm[4], shown: mm[4], age: mm[5] });
-      re.lastIndex = ce;
+  // the element that carries class "traj-grid", as [start, end) of the whole element, or null
+  var GRID_RE = /<div\b[^>]*\bclass="(?:[^"]*\s)?traj-grid(?:\s[^"]*)?"[^>]*>/;
+  function gridSpan(body) {
+    var m = GRID_RE.exec(body || ''); if (!m) return null;
+    var e = divEnd(body, m.index); return e < 0 ? null : [m.index, e, m.index + m[0].length];
+  }
+  // the direct child elements of html between from and to, each as its outer HTML
+  var VOID = /^(br|img|input|hr|meta|wbr|source|col|area|link)$/i;
+  function children(html, from, to) {
+    var out = [], re = /<(\/?)([a-zA-Z][\w-]*)\b[^>]*?(\/?)>/g, depth = 0, start = -1, t; re.lastIndex = from;
+    while ((t = re.exec(html)) && t.index < to) {
+      if (t[3] === '/' || VOID.test(t[2])) continue;
+      if (!t[1]) { if (depth === 0) start = t.index; depth++; }
+      else { if (depth === 0) break; depth--; if (depth === 0) out.push(html.slice(start, re.lastIndex)); }
     }
     return out;
   }
+  // The ten cells of the Inspector's grid: label (Current, Y2 ... Y10), the year, the printed value, the star and the
+  // age when the cell prints one. The leading "2026 actual" cell (class gn-actual, D-1) is outside every sum and is
+  // skipped. The value is the integer printed after the year (the stored tj[k], A-16).
+  function trajCells(body) {
+    var sp = gridSpan(body); if (!sp) return [];
+    var out = [];
+    children(body, sp[2], sp[1] - 6).forEach(function (c) {
+      var open = /^<[^>]*>/.exec(c)[0], cls = (/\bclass="([^"]*)"/.exec(open) || [])[1] || '';
+      if (/(^|\s)gn-actual(\s|$)/.test(cls)) return;
+      var t = txt(c), star = /\u2605/.test(t), s = t.replace(/\u2605/g, ' ').replace(/\s+/g, ' ').trim();
+      var mm = /^(Current|Y\d{1,2})\b\s*(?:\/|\u00b7|-)?\s*(\d{4})\b\s*(?:\/|\u00b7)?\s*(-?\d[\d,]*)/.exec(s);
+      if (!mm) return;
+      var am = /\bage\s+(-?\d+(?:\.\d+)?)/.exec(s.slice(mm[0].length));
+      out.push({ lab: mm[1], peak: star, y: +mm[2], v: +mm[3].replace(/,/g, ''), shown: mm[3], age: am ? am[1] : null });
+    });
+    return out;
+  }
   function num(s) { var m = /-?\d[\d,]*(\.\d+)?/.exec(String(s == null ? '' : s)); return m ? parseFloat(m[0].replace(/,/g, '')) : null; }
+  // the record's pricing basis (plan 2.8: gnBasis, W5); the fallback reads the same stored fields
+  function basisOf(p) {
+    if (typeof gnBasis === 'function') { try { var b = gnBasis(p); if (b) return b; } catch (e) {} }
+    var e = (p && p.eng) || {};
+    return e.held != null ? 'held' : (e.b === 'rate' ? 'rate' : (e.b === 'tool' && e.pc_v52 != null ? 'branch' : 'held'));
+  }
+  // what each column's Pure is (plan W6): the rate basis prices an expectation (S2-lite: with the handover prior),
+  // the prospect branch a scouted ceiling carried at the status-quo level kappa_P; a held record keeps v52.0's chain
+  function pureBasisWords(p) {
+    var b = basisOf(p);
+    if (b === 'rate') return (((p.eng || {}).rt || {}).tag === 'S2-lite') ? 'expectation (prior: ceiling \u00d7 \u03ba_P)' : 'expectation';
+    if (b === 'branch') return 'ceiling \u00d7 \u03ba_P';
+    return 'held at v52.0 (v52 chain)';
+  }
+  var ID_RE = /Identity check: (-?\d[\d,]*(?:\.\d+)?) \u00d7 (-?\d[\d.]*) \u00d7 (-?\d[\d.]*)(?: \u00d7 (-?\d[\d.]*))? = (-?\d[\d,]*) RA/;
+  var HDR_RE = /(-?\d[\d,]*) Headline RA \/ \$(-?\d[\d,]*(?:\.\d+)?)/;
 
-  // One model per (player, bust-risk mode): FADE_MODE is the only setting the Inspector reads for its chain.
+  // One model per (player, bust-risk mode): FADE_MODE is the only setting the Inspector reads for its chain (the
+  // header, the headline rows and the grid of a rate panel do not move with the value mode or the sliders, RC-18).
   var MCACHE = Object.create(null), MCOUNT = 0;
   function model(p) {
     var key = keyOf(p), ck = key + '|' + FADE_MODE, c = MCACHE[ck];
     if (c && c.p === p) return c;
     if (MCOUNT > 60) { MCACHE = Object.create(null); MCOUNT = 0; }
-    var m = { p: p, key: key, fade: FADE_MODE, ok: true, miss: [], err: null };
-    try { m.html = gnInspectorHTML(p); } catch (e) { m.html = ''; m.err = (e && e.message) || 'render failed'; }
+    var m = { p: p, key: key, fade: FADE_MODE, basis: basisOf(p), ok: true, miss: [], err: null };
+    try { m.html = String(gnInspectorHTML(p)); } catch (e) { m.html = ''; m.err = (e && e.message) || 'render failed'; }
     var h = m.html;
     m.sec = sections(h);
-    SEC.forEach(function (s) { if (!m.sec[s[0]]) m.miss.push(s[1]); });
+    SEC_IDS.forEach(function (id) { if (!m.sec[id]) m.miss.push(SEC_WORD[id]); });
     m.spine = spineOf(h);
-    var R = {}; SEC.forEach(function (s) { R[s[0]] = rowsOf((m.sec[s[0]] || {}).body); }); m.rows = R;
-    var idm = /Identity check: (-?\d+) \u00d7 (-?[\d.]+) \u00d7 (-?[\d.]+) \u00d7 (-?[\d.]+) = (-?\d+) RA/.exec(h);
-    var hdr = />(-?\d+) Peak RA \/ \$(-?[\d.]+)</.exec(h);
+    var R = {}; SEC_IDS.forEach(function (id) { R[id] = rowsOf((m.sec[id] || {}).body); }); m.rows = R;
+    // the identity line and the header, read as text (entities decoded)
+    var pkT = m.sec.peak ? txt(m.sec.peak.body) : '';
+    var idm = ID_RE.exec(pkT) || ID_RE.exec(txt(h));
+    var pre = h.search(/<div class="formula-section/), hdr = HDR_RE.exec(txt(pre < 0 ? h : h.slice(0, pre)));
     var pr = {};
-    if (idm) { pr.pc = idm[1]; pr.pm = idm[2]; pr.h = idm[3]; pr.im = idm[4]; pr.idRA = idm[5]; }
+    if (idm) {
+      pr.pc = idm[1]; pr.idRA = idm[5];
+      if (idm[4] != null) { pr.pm = idm[2]; pr.h = idm[3]; pr.im = idm[4]; } else { pr.h = idm[2]; pr.im = idm[3]; }
+      pr.idTxt = idm[0].replace(/^Identity check: /, '');
+    }
     var pk = R.peak;
-    var rAdj = find(pk, function (r) { return r.label === 'Pace-adjusted peak'; });
     var rHealthy = find(pk, function (r) { return r.label.indexOf('= Healthy RA') === 0; });
-    var rRA = find(pk, function (r) { return r.label.indexOf('= Peak RA (ceiling') === 0 && r.label.indexOf('bust-risk-off') < 0; });
-    var rRel = find(pk, function (r) { return r.label.indexOf('= Peak RA (ceiling, bust-risk-off') === 0; });
+    var rRA = find(pk, function (r) { return r.label.indexOf('bust-risk-off') < 0 && (r.label.indexOf('= Headline RA') === 0 || r.label.indexOf('= Peak RA (ceiling') === 0); });
+    var rRel = find(pk, function (r) { return r.label.charAt(0) === '=' && r.label.indexOf('bust-risk-off') >= 0; });
     var rDol = find(pk, function (r) { return r.label.indexOf('$ Value = RA') === 0; });
     var rInjP = find(pk, function (r) { return r.label.indexOf('\u00d7 Injury asset multiplier') === 0; });
-    if (rAdj) pr.adj = rAdj.value;
     if (rHealthy) pr.healthy = rHealthy.value;
     if (rRA) pr.ra = rRA.value;
     if (rRel) pr.rel = rRel.value;
     if (rDol) pr.dol = rDol.value;
-    if (hdr) { pr.hdrRA = hdr[1]; pr.hdrDol = '$' + hdr[2]; }
-    var rStart = R.pure[0] || null;
-    var rPure = find(R.pure, function (r) { return r.label.indexOf('= Pure ceiling') === 0 && r.label.indexOf('(healthy peak') < 0; });
-    var rPace = findLast(R.pure, function (r) { return /Pace multiplier/.test(r.label); });
-    var rHit = find(R.hit, function (r) { return r.label.indexOf('= Hit% (final)') === 0; });
+    if (hdr) { pr.hdrRA = hdr[1].replace(/,/g, ''); pr.hdrDol = '$' + hdr[2]; }
+    var rPure = find(R.pure, function (r) { return (r.label.indexOf('= Pure (') === 0 || r.label.indexOf('= Pure ceiling') === 0) && r.label.indexOf('(healthy peak') < 0; });
+    var rHit = find(R.hit, function (r) { return r.label.indexOf('= Hit% (') === 0; });
     var rInj = find(R.inj, function (r) { return r.label.indexOf('= Injury asset multiplier') === 0; });
     var rStat = find(R.inj, function (r) { return !r.label && /^Status:/.test(r.value); });
-    m.start = rStart; m.pureRow = rPure; m.paceRow = rPace; m.hitRow = rHit; m.injRow = rInj || rInjP; m.injStatus = rStat ? rStat.value.replace(/^Status:\s*/, '') : '';
-    ['adj', 'healthy', 'ra', 'dol'].forEach(function (k) { if (pr[k] == null) m.miss.push(k); });
+    // the first Pure row says where a tool chain starts (branch / held); a rate chain starts at its prior line
+    m.start = m.basis === 'rate' ? null : (R.pure[0] || null);
+    m.pureRow = rPure; m.hitRow = rHit; m.injRow = rInj || rInjP; m.injStatus = rStat ? rStat.value.replace(/^Status:\s*/, '') : '';
+    ['healthy', 'ra', 'dol'].forEach(function (k) { if (pr[k] == null) m.miss.push(k); });
     if (!idm) m.miss.push('identity check');
-    // the known 33-record display defect: the in-season recency-floor rows re-read this week's pace, so their
-    // printed floor can miss the stored Pure. The price uses the stored Pure; say so where the view shows the row.
-    m.floorFlag = null;
-    if (rPure) {
-      var gm = /greater of \(regressed (-?\d+), floor (-?\d+)\)/.exec(rPure.label);
-      if (gm && Math.abs(Math.max(+gm[1], +gm[2]) - num(rPure.value)) > 1)
-        m.floorFlag = 'The Inspector\u2019s floor rows print greater of (' + gm[1] + ', ' + gm[2] + ') = ' + Math.max(+gm[1], +gm[2]) + ' but the stored Pure is ' + rPure.value + ': those rows re-read this week\u2019s pace, while the Pure was floored on the pace in his RECENCY FLOOR note. The price uses the stored Pure. (Known Inspector display issue, 33 records.)';
-    }
+    if (!hdr) m.miss.push('header (N Headline RA / $D)');
     m.cells = trajCells((m.sec.traj || {}).body);
     var cr = function (lab) { var r = find(R.cls, function (x) { return x.label === lab; }); return r ? r.value : ''; };
     m.roster = cr('Fantasy roster'); m.status = cr('ESPN status'); m.conf = cr('Confidence'); m.phase = cr('Phase');
@@ -351,11 +426,16 @@
     if (MODE === 'ros') return 'rest-of-season projection';
     return YEARS === 1 ? '1 year (headline)' : (YEAR_MODE === 'single' ? 'year ' + YEARS + ' only' : YEARS + ' years cumulative');
   }
-  function blendWords() { return BLEND === 0 ? '100% RA' : (BLEND === 100 ? '100% Pure' : (100 - BLEND) + '% RA / ' + BLEND + '% Pure'); }
+  // the RA / Pure blend is the one-season headline view's only (plan 6.3, A-18): at Career years 2 and up no value
+  // path takes it, so the readout says so instead of naming a mix nothing uses
+  function blendWords() {
+    if (!gnPureEndActive()) return 'blend: one-season view only';
+    return BLEND === 0 ? '100% RA' : (BLEND === 100 ? '100% Pure' : (100 - BLEND) + '% RA / ' + BLEND + '% Pure');
+  }
   function settingsWords() {
     if (MODE === 'ros') return 'ROS projected FP';
     return (MODE === 'dollar' ? '$ value' : 'Risk-Adj') + ' \u00b7 ' + yearsWords() + ' \u00b7 ' + blendWords()
-      + (YEARS > 1 ? ' \u00b7 bust risk ' + (FADE_MODE === 'on' ? 'off' : 'on') : '');
+      + (YEARS > 1 ? ' \u00b7 bust risk ' + (FADE_MODE === 'on' ? 'off' : 'on') + ' (prospects only)' : '');
   }
   function usedCells() {           // the trajectory cells the value row adds up, by index
     if (MODE === 'ros' || YEARS === 1) return [];
@@ -398,7 +478,7 @@
   // Responses are kept in this browser's Cache API store ('gn-savant-v1', keyed by URL) for 12 h; a copy up to 7 days
   // old is used, and said to be, only when Savant does not answer. Each request has a timeout and one retry. A
   // section that cannot load says why and keeps the Savant link; nothing else in Compare waits for it. No value
-  // here reaches r, pc, h, pm, im, tj, tjp, d or RAW_PER_DOLLAR.
+  // here reaches r, pc, h, im, tj, tjp, d or RAW_PER_DOLLAR.
   var SAVANT = 'https://baseballsavant.mlb.com';
   var SC_SEASON = (function () { var m = /^(\d{4})-/.exec(typeof GN_DATA_THROUGH === 'string' ? GN_DATA_THROUGH : ''); return m ? +m[1] : 2026; })();
   var SC_CTX = SC_SEASON - 1, SC_CACHE = 'gn-savant-v1', SC_TTL = 12 * 3600e3, SC_STALE = 7 * 24 * 3600e3;
@@ -406,7 +486,7 @@
   var OTHER_ROLE_MIN = 100, MINORS_QUAL = 150, MINORS_MIN = 100;
   var SC_LEVELS = { AAA: 'Triple-A (all 30 parks tracked)', A: 'Single-A Florida State League (Daytona untracked)' };
   var SC_UNTRACKED = ['AA', 'A+', 'Rookie'];
-  var SC_NOTE = 'Display only. Statcast moves no price: r, pc, h, pm, im, tj, d and RAW are computed without it (three pre-registered backtests found it adds nothing the fantasy points and scouting grades do not already hold; v51.18).';
+  var SC_NOTE = 'Display only. Statcast moves no price: r, pc, h, im, tj, tjp, d and RAW are computed without it (three pre-registered backtests found it adds nothing the fantasy points and scouting grades do not already hold; v51.18).';
   var SC_ATTR = 'Data: Baseball Savant / MLB (MLB Advanced Media, L.P.)';
 
   // ---- the Savant URLs (byte for byte the reference builder's)
@@ -1142,7 +1222,7 @@
     var fk = recs.filter(function (r) { return r.state === 'failed'; }).map(function (r) { return r.kind; });
     if (failed) status += FAIL_TXT[fk.indexOf('format') >= 0 ? 'format' : fk.indexOf('net') >= 0 || fk.indexOf('empty') < 0 ? 'net' : 'empty'] + ' Nothing above depends on it. <button type="button" class="gc-link" data-gc-act="scretry">Try again</button> ';
     var fw = fetchedWords(S);
-    var intro = '<tr><td class="gc-scnote" colspan="' + cols + '"><div class="gc-stick" data-gc-scstate="' + (failed ? 'failed' : loading ? 'loading' : 'ready') + '">' + status + '<b>Nothing in this block changes Pure, pace, Hit%, injury, RA, $ or the trajectory above.</b> '
+    var intro = '<tr><td class="gc-scnote" colspan="' + cols + '"><div class="gc-stick" data-gc-scstate="' + (failed ? 'failed' : loading ? 'loading' : 'ready') + '">' + status + '<b>Nothing in this block changes Pure, Hit%, injury, RA, $ or the trajectory above.</b> '
       + esc(SC_NOTE) + ' Shown for your own judgment. '
       + (fw ? esc(fw) + ': Baseball Savant\u2019s ' + S_ + ' season-to-date aggregates, read by your browser straight from Savant (nothing Statcast is stored on this site). ' : 'Read by your browser straight from Baseball Savant when you compare (nothing Statcast is stored on this site). ')
       + 'Prices through ' + esc(GN_DATA_THROUGH) + ' (' + esc(GN_BUILD) + '). '
@@ -1196,23 +1276,13 @@
   }
 
   // ------------------------------------------------------------------ the table
+  // the column head's basis word: the rate basis with its prior tag, the prospect branch, or held at v52.0
   function basisWord(p) {
-    var b = (p.eng || {}).b;
-    return b === 'vet' ? 'vet' : b === 'prod' ? 'production' : b === 'tool' ? 'tool' : b === 'depth' ? 'depth' : (b || '');
+    var b = basisOf(p), e = p.eng || {};
+    if (b === 'rate') return 'rate \u00b7 ' + ((e.rt || {}).tag || 'S1');
+    if (b === 'branch') return 'prospect branch';
+    return 'held at v52.0' + (e.held === 'held_T5b' ? ' (T5b)' : '');
   }
-  var PACE_TAGS = [[/evidence rule/, 'held \u00b7 on the IL'], [/§19\.3 basis switch/, 'retired \u00b7 §19.3 switch'], [/retired \u2014 banked/, 'retired \u00b7 ratchet'],
-    [/recency floor already banks/, 'retired \u00b7 floor'], [/^depth tier/, 'closed \u00b7 depth'], [/tool-grade ceiling is a projection/, 'closed \u00b7 projection'],
-    [/phase \u2014 held at 1\.00/, 'closed \u00b7 phase'], [/pace on file/, 'no pace on file'], [/insufficient sample/, 'closed \u00b7 small sample'],
-    [/low-ceiling/, 'closed \u00b7 low ceiling'], [/^held/, 'held'], [/^on the IL/, 'on the IL'], [/parked at 1\.00/, 'parked \u00b7 mid-season']];
-  function paceTag(m) {
-    var r = m.paceRow; if (!r) return '';
-    var lm = /\((.*?(hot|cold).*?)\)/.exec(r.label); if (lm) return lm[2];
-    var vm = /^\u00d7[\d.]+ \((.*)\)$/.exec(r.value);
-    if (vm) { for (var i = 0; i < PACE_TAGS.length; i++) if (PACE_TAGS[i][0].test(vm[1])) return PACE_TAGS[i][1]; return 'x1.00'; }
-    if (/2 \u2212 1\/F/.test(r.label)) return 'import ramp';
-    return '';
-  }
-  function paceReason(m) { var r = m.paceRow; if (!r) return ''; var vm = /^\u00d7[\d.]+ \((.*)\)$/.exec(r.value); return vm ? vm[1] : r.label; }
 
   // the per-column controls: five small icon buttons in one row, each named in full with the player. With a fine
   // pointer wider than 640 px they sit in the column head; on a touch screen or a phone the CSS moves them to the
@@ -1265,7 +1335,7 @@
     var btn = open == null ? '' : '<button type="button" class="gc-gx" data-gc-act="open" data-g="' + id + '" aria-expanded="' + !!open + '"><span aria-hidden="true">' + (open ? '\u2212' : '+') + '</span><span class="sr-only">' + (open ? 'collapse' : 'expand') + ' ' + esc(title) + '</span></button>';
     return '<tr class="gc-g"><th scope="rowgroup" colspan="' + cols + '"><span class="gc-gt">' + btn + esc(title) + (sub ? ' <i>' + sub + '</i>' : '') + '</span></th></tr>';
   }
-  var ROWNAME = { pure: 'the Pure ceiling derivation', hit: 'the Hit% derivation', inj: 'the injury module rows', peak: 'the peak season value rows', traj: 'the ten year-by-year trajectory rows' };
+  var ROWNAME = { pure: 'the Pure derivation', hit: 'the Hit% derivation', inj: 'the injury module rows', peak: 'the headline value rows', traj: 'the ten year-by-year trajectory rows' };
   function rowHead(label, g, sub) {
     var o = g != null ? ST.open[g] : null;
     var b = g != null ? '<button type="button" class="gc-x" data-gc-act="open" data-g="' + g + '" aria-expanded="' + !!o + '" title="' + (o ? 'Hide' : 'Show') + ' the Inspector\u2019s rows"><span aria-hidden="true">' + (o ? '\u2212' : '+') + '</span><span class="sr-only">' + (o ? 'hide ' : 'show ') + (ROWNAME[g] || 'the full derivation') + '</span></button>' : '';
@@ -1278,7 +1348,7 @@
     }).join('') + '</tr>';
   }
   function chain(m, id) {
-    var s = m.sec[id]; if (!s) return '<span class="gc-mut">Section not found in the Inspector\u2019s panel.</span>';
+    var s = m.sec[id]; if (!s) return '<span class="gc-mut">' + esc(SEC_WORD[id] || id) + ': Section not found in the Inspector\u2019s panel.</span>';
     return '<div class="formula-section gc-chain" data-gc-sec="' + id + '">' + s.body + '</div>';
   }
   // a priced cell: the Inspector's printed text, verbatim
@@ -1308,7 +1378,7 @@
     var shade = used.filter(function (i) { return i < n; }).map(function (i) { return '<rect x="' + (pad + i * dx - dx / 2).toFixed(1) + '" y="0" width="' + dx.toFixed(1) + '" height="' + H + '" fill="rgba(229,162,39,.22)"/>'; }).join('');
     var pk = -1; cs.forEach(function (c, i) { if (c.peak) pk = i; });
     var star = pk >= 0 ? '<circle cx="' + (pad + pk * dx).toFixed(1) + '" cy="' + y(cs[pk].v) + '" r="3.2" fill="#0B2C5C" stroke="#E5A227" stroke-width="1.2"/>' : '';
-    var desc = cs[0].v + ' in ' + cs[0].y + (pk > 0 ? ', peak ' + cs[pk].v + ' in ' + cs[pk].y : '') + ', ' + cs[n - 1].v + ' in ' + cs[n - 1].y;
+    var desc = cs[0].v + ' in ' + cs[0].y + (pk > 0 ? ', headline season ' + cs[pk].v + ' in ' + cs[pk].y : '') + ', ' + cs[n - 1].v + ' in ' + cs[n - 1].y;
     return '<svg class="gc-spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="' + esc('Trajectory: ' + desc) + '">' + shade
       + '<polyline points="' + pts + '" fill="none" stroke="#C81029" stroke-width="1.6" vector-effect="non-scaling-stroke"/>' + star + '</svg>';
   }
@@ -1316,10 +1386,12 @@
   // fadeAdjustedTj and tjp over the used cells), never priced. 'floored': the cumulative value is held at the
   // headline (it is never below the 1-year value), so it is NOT the sum of the cells; 'other': the value comes
   // from somewhere else (a pre-arrival year, a short trajectory). null: the shading tells the truth.
+  // The blend counts only while the Pure end is active (the one-season view, which uses no cells); fadeAdjustedTj
+  // releases only prospect-branch cells (W5's branch gate), so a rate column's cells are its tj.
   function cellBasis(p) {
     var used = usedCells(); if (!used.length) return null;
     var v = getValue(p); if (v == null || !isFinite(v)) return null;
-    var raw = MODE === 'dollar' ? v * RAW_PER_DOLLAR : v, b = BLEND / 100, tj = p.tj || [], tjp = p.tjp || [], sum = 0;
+    var raw = MODE === 'dollar' ? v * RAW_PER_DOLLAR : v, b = gnPureEndActive() ? BLEND / 100 : 0, tj = p.tj || [], tjp = p.tjp || [], sum = 0;
     for (var i = 0; i < used.length; i++) {
       var j = used[i]; if (tj.length <= j || tjp.length <= j) return 'other';
       sum += (1 - b) * fadeAdjustedTj(p, j) + b * tjp[j];
@@ -1331,13 +1403,28 @@
     floored: 'Value floored at the headline: a cumulative value is never below the 1-year value, so it is not the sum of these cells (none shaded).',
     other: 'The value row does not read these cells for this player (none shaded).'
   };
+  // the trajectory group's subtitle (A-18: gn-compare.js's trajectory group head). Bust risk moves only the prospect
+  // branch's cells; the blend applies only to the one-season headline view, which reads no cells.
+  function gcTrajSub() {
+    var cells = 'the Inspector\u2019s ten cells (bust risk ' + (FADE_MODE === 'on' ? 'off: prospect-branch cells released; rate-basis cells unchanged' : 'on') + ')';
+    return cells + '; ' + (gnPureEndActive()
+      ? (BLEND > 0 ? 'the 1-year value row reads the headline and applies the blend on top' : 'the 1-year value row reads the headline')
+      : 'the value row adds these cells (blend: one-season view only)');
+  }
+  // R4 (W13-PV-01; PLAN_AMENDMENTS_R4b.md A-R4b-4 item 4): on the prospect branch the headline carries the scalar
+  // kappa_P and each cell its own season's kappa_P[k] (plan 2.3), so the star cell is not the season the headline
+  // prices. Wording only: no figure moves. Rate-basis and held columns keep the v52 parenthesis.
+  // R5 ruling R5-1: the ratio replaces "so the cell reads below the headline", which is false for k* <= 1, where
+  // kappa_P[k] can exceed the scalar kappa_P (R4 closeout_W5.md / closeout_W6.md).
+  var SPARK_PK_NOTE = ' (the season the headline prices)';
+  var SPARK_PK_NOTE_BRANCH = ' (the headline season; on the prospect branch the headline carries \u03ba_P and this cell \u03ba_P[k], so the cell reads about \u03ba_P[k] \u00f7 \u03ba_P of the headline)';
   function sparkRow(ms) {
     var mx = 1; ms.forEach(function (m) { m.cells.forEach(function (c) { if (c.v > mx) mx = c.v; }); });
     var used = usedCells();
     var sub = 'one scale for all columns' + (used.length ? '; shaded = the ' + (used.length === 1 ? 'cell' : used.length + ' cells') + ' the value row uses' : (MODE === 'ros' ? '; ROS uses no cells' : '; 1 year uses the headline'));
     return '<tr data-gc-row="spark">' + rowHead('10 seasons', 'traj', esc(sub)) + ms.map(function (m, i) {
       var pk = null; m.cells.forEach(function (c, j) { if (c.peak) pk = { c: c, j: j }; });
-      var note = pk ? '\u2605 ' + (pk.j === 0 ? 'Current' : 'Y' + (pk.j + 1)) + ' ' + pk.c.y + ', age ' + pk.c.age + ' (the season the headline prices)' : 'peak season beyond the grid';
+      var note = pk ? '\u2605 ' + (pk.j === 0 ? 'Current' : 'Y' + (pk.j + 1)) + ' ' + pk.c.y + (pk.c.age != null ? ', age ' + pk.c.age : '') + (basisOf(m.p) === 'branch' ? SPARK_PK_NOTE_BRANCH : SPARK_PK_NOTE) : 'headline season beyond the grid';
       var cb = cellBasis(m.p);
       return '<td class="gc-c' + (i === 0 ? ' gc-a' : '') + '"' + (cb ? ' data-gc-basis="' + cb + '"' : '') + '>' + spark(m, mx, cb ? [] : used) + '<span class="gc-sub">' + esc(note) + '</span>'
         + (cb ? '<span class="gc-sub gc-floored">' + esc(BASIS_TXT[cb]) + '</span>' : '') + '</td>';
@@ -1345,12 +1432,12 @@
   }
   function yrRow(ms, j, used, cbs) {
     cbs = cbs || ms.map(function (m) { return cellBasis(m.p); });
-    var lab = null; ms.forEach(function (m) { if (!lab && m.cells[j]) lab = (m.cells[j].lab === 'Current' ? 'Current' : m.cells[j].lab) + ' \u00b7 ' + m.cells[j].y; });
+    var lab = null; ms.forEach(function (m) { if (!lab && m.cells[j]) lab = m.cells[j].lab + ' \u00b7 ' + m.cells[j].y; });
     var on = used.indexOf(j) >= 0;
     return '<tr class="gc-det gc-yr' + (on ? ' gc-used' : '') + '" data-gc-row="yr' + j + '"><th scope="row" class="gc-rh gc-rh-d">' + esc(lab || ('Y' + (j + 1))) + '</th>' + ms.map(function (m, i) {
       var c = m.cells[j], cls = 'gc-c' + (i === 0 ? ' gc-a' : '') + (on && cbs[i] ? ' gc-nouse' : '');
       if (!c) return '<td class="' + cls + '"></td>';
-      return '<td class="' + cls + '"><span class="gc-num" data-gc-cell="yr' + j + ':' + esc(m.key) + '">' + esc(c.shown) + '</span>' + (c.peak ? ' <span title="peak season">\u2605</span>' : '') + ' <span class="gc-mut">age ' + esc(c.age) + '</span></td>';
+      return '<td class="' + cls + '"><span class="gc-num" data-gc-cell="yr' + j + ':' + esc(m.key) + '">' + esc(c.shown) + '</span>' + (c.peak ? ' <span title="the headline season">\u2605</span>' : '') + (c.age != null ? ' <span class="gc-mut">age ' + esc(c.age) + '</span>' : '') + '</td>';
     }).join('') + '</tr>';
   }
   function tableHTML(ps, opts) {
@@ -1359,6 +1446,16 @@
     // opts.scAll: true / false for both lists (the checks), or { h, p }
     var saveAll = ST.scAll; if (opts.scAll != null) ST.scAll = typeof opts.scAll === 'object' ? { h: !!opts.scAll.h, p: !!opts.scAll.p } : { h: !!opts.scAll, p: !!opts.scAll };
     try { return tableInner(ps); } finally { ST.open = saveOpen; ST.scAll = saveAll; }
+  }
+  // the identity cell (A-16): the Inspector prints pc x h x im = N with N the STORED r, so N must equal the headline
+  // exactly on rate and branch records; a held record keeps v52.0's chain and its +-1 rounding allowance
+  function identityCell(m) {
+    var id = m.pr.idRA != null ? num(m.pr.idRA) : null, ra = m.pr.ra != null ? num(m.pr.ra) : null;
+    var d = (id != null && ra != null) ? Math.abs(id - ra) : null, held = m.basis === 'held';
+    var ok = d != null && (held ? d <= 1 : (d === 0 && id === m.p.r));
+    var tip = 'The Inspector\u2019s identity check: ' + (m.pr.idTxt || 'n/a');
+    return '<span class="gc-sub" title="' + esc(tip) + '" data-gc-id="' + (ok ? 'ok' : 'off') + '">'
+      + (ok ? '\u2713 identity checks' + (held && d ? ' (\u00b11, rounding: v52.0 chain)' : '') : 'identity: ' + esc(m.pr.idRA == null ? 'n/a' : m.pr.idRA) + ' vs ' + esc(m.pr.ra == null ? 'n/a' : m.pr.ra)) + '</span>';
   }
   function tableInner(ps) {
     var ms = ps.map(model), n = ms.length, cols = n + 1;
@@ -1376,28 +1473,22 @@
     out += '<tbody>' + groupHead('value', 'Value', cols, 'the Trade Desk\u2019s number under the page\u2019s settings') + valueRow(ms);
     var ra = ms.map(function (m) { return num(m.pr.ra); }), dol = ms.map(function (m) { return num(m.pr.dol); });
     var bRA = bestSet(ra, raF);
-    out += '<tr data-gc-row="headline">' + rowHead('Headline RA \u00b7 $', null, 'peak season') + ms.map(function (m, i) {
+    out += '<tr data-gc-row="headline">' + rowHead('Headline RA \u00b7 $', null, 'headline season') + ms.map(function (m, i) {
       var d = deltaHTML(ra[i], ra[0], raF, fmtInt, i === 0);
       return '<td class="gc-c' + (i === 0 ? ' gc-a' : '') + (bRA[i] ? ' gc-best' : '') + '"><span class="gc-num gc-big" data-gc-cell="headline:' + esc(m.key) + '">' + esc(m.pr.ra == null ? 'n/a' : m.pr.ra) + '</span> \u00b7 <span class="gc-num" data-gc-cell="dollar:' + esc(m.key) + '">' + esc(m.pr.dol == null ? 'n/a' : m.pr.dol) + '</span>' + (bRA[i] ? BEST : '') + d + '</td>';
     }).join('') + '</tr></tbody>';
     // --- how the price is built
-    out += '<tbody>' + groupHead('build', 'How the price is built', cols, 'RA = Pure \u00d7 Pace \u00d7 Hit% \u00d7 Injury \u00b7 peak-season basis, not changed by the value mode or the sliders' + (FADE_MODE === 'on' ? ' \u00b7 bust risk off changes only the ceiling-release rows and the trajectory' : ''));
+    out += '<tbody>' + groupHead('build', 'How the price is built', cols, 'RA = Pure \u00d7 Hit% \u00d7 Injury \u00b7 headline-season basis, not changed by the value mode or the sliders' + (FADE_MODE === 'on' ? ' \u00b7 bust risk off changes only the prospect branch\u2019s release rows and cells' : ''));
     var pcs = ms.map(function (m) { return num(m.pr.pc); });
     var bP = bestSet(pcs, raF);
-    out += '<tr data-gc-row="pure">' + rowHead('Pure ceiling', 'pure') + ms.map(function (m, i) {
+    out += '<tr data-gc-row="pure">' + rowHead('Pure', 'pure', 'expected healthy full season (rate) \u00b7 ceiling \u00d7 \u03ba_P (prospect branch)') + ms.map(function (m, i) {
       var st = m.start ? '<span class="gc-sub" title="' + esc(m.start.label + ' ' + m.start.value) + '">from ' + esc(m.start.label.replace(/^[^A-Za-z0-9]+/, '')) + ': ' + esc(m.start.value) + '</span>' : '';
-      var fl = m.floorFlag ? '<span class="gc-flag" title="' + esc(m.floorFlag) + '">floor rows: see note</span>' : '';
-      return pcell('pure', m, i, m.pr.pc, st + '<span class="gc-sub">' + esc(basisWord(m.p)) + ' basis</span>' + fl, bP[i], deltaHTML(pcs[i], pcs[0], raF, fmtInt, i === 0));
+      return pcell('pure', m, i, m.pr.pc, st + '<span class="gc-sub" data-gc-basis-word="1">' + esc(pureBasisWords(m.p)) + '</span>', bP[i], deltaHTML(pcs[i], pcs[0], raF, fmtInt, i === 0));
     }).join('') + '</tr>';
-    out += detailRow('pure', 'Pure ceiling derivation (the Inspector\u2019s rows, with the pace chain)', ms, function (m) { return chain(m, 'pure') + (m.floorFlag ? '<p class="gc-flagnote">' + esc(m.floorFlag) + '</p>' : ''); });
-    out += '<tr data-gc-row="pace">' + rowHead('\u00d7 Pace') + ms.map(function (m, i) {
-      return pcell('pace', m, i, m.pr.pm == null ? null : TIMES + m.pr.pm, '<span class="gc-sub" title="' + esc(paceReason(m)) + '">' + esc(paceTag(m)) + '</span>', false, '');
-    }).join('') + '</tr>';
-    var adj = ms.map(function (m) { return num(m.pr.adj); }), bA = bestSet(adj, raF);
-    out += '<tr data-gc-row="adj" class="gc-sum">' + rowHead('= Pace-adjusted peak') + ms.map(function (m, i) { return pcell('adj', m, i, m.pr.adj, '', bA[i], deltaHTML(adj[i], adj[0], raF, fmtInt, i === 0)); }).join('') + '</tr>';
+    out += detailRow('pure', 'Pure derivation (the Inspector\u2019s rows)', ms, function (m) { return chain(m, 'pure'); });
     var hs = ms.map(function (m) { return num(m.pr.h); }), bH = bestSet(hs, 0.005);
     out += '<tr data-gc-row="hit">' + rowHead('\u00d7 Hit%', 'hit') + ms.map(function (m, i) {
-      var tail = m.hitRow ? m.hitRow.value.replace(/^[\d.]+% \([\d.]+\)\s*\u2014?\s*/, '') : '';
+      var tail = m.hitRow ? m.hitRow.value.replace(/^\u00d7?[\d.]+%?(?: \([\d.]+\))?\s*\u2014?\s*/, '') : '';
       return pcell('hit', m, i, m.pr.h == null ? null : TIMES + m.pr.h, tail ? '<span class="gc-sub">' + esc(tail) + '</span>' : '', bH[i], deltaHTML(hs[i], hs[0], 0.005, fmtMult, i === 0));
     }).join('') + '</tr>';
     out += detailRow('hit', 'Hit% derivation (the Inspector\u2019s rows)', ms, function (m) { return chain(m, 'hit'); });
@@ -1411,28 +1502,29 @@
     }).join('') + '</tr>';
     out += detailRow('inj', 'Injury module (the Inspector\u2019s rows)', ms, function (m) { return chain(m, 'inj'); });
     out += '<tr data-gc-row="ra" class="gc-sum gc-tot">' + rowHead('= Headline RA', 'peak') + ms.map(function (m, i) {
-      // the identity line multiplies the PRINTED factors (3 decimals), so it can land 1 RA off the headline (8 records)
-      var idD = (m.pr.idRA != null && m.pr.ra != null) ? Math.abs(num(m.pr.idRA) - num(m.pr.ra)) : null, okId = idD != null && idD <= 1;
       var rel = m.pr.rel ? '<span class="gc-sub">bust risk off: ' + esc(m.pr.rel) + '</span>' : '';
-      return pcell('ra', m, i, m.pr.ra, '<span class="gc-sub" title="The Inspector\u2019s identity check: ' + esc([m.pr.pc, m.pr.pm, m.pr.h, m.pr.im].join(' \u00d7 ') + ' = ' + m.pr.idRA) + '">' + (okId ? '\u2713 identity checks' + (idD ? ' (\u00b11, rounding)' : '') : 'identity: ' + esc(m.pr.idRA == null ? 'n/a' : m.pr.idRA)) + '</span>' + rel, false, '');
+      return pcell('ra', m, i, m.pr.ra, identityCell(m) + rel, false, '');
     }).join('') + '</tr>';
-    out += detailRow('peak', 'Peak season value (the Inspector\u2019s rows)', ms, function (m) { return chain(m, 'peak'); });
+    out += detailRow('peak', 'Headline value (the Inspector\u2019s rows)', ms, function (m) { return chain(m, 'peak'); });
     out += '</tbody>';
     // --- classification
-    out += '<tbody>' + groupHead('cls', 'Classification', cols, 'the decision sequence, six steps', !!ST.open.cls);
+    out += '<tbody>' + groupHead('cls', 'Classification', cols, 'the decision sequence, five steps', !!ST.open.cls);
     out += '<tr data-gc-row="spine">' + rowHead('Decision sequence') + ms.map(function (m, i) {
-      var s = m.spine; if (!s) return '<td class="gc-c' + (i === 0 ? ' gc-a' : '') + '"><span class="gc-mut">not available</span></td>';
+      var s = m.spine; if (!s || !s.steps.length) return '<td class="gc-c' + (i === 0 ? ' gc-a' : '') + '"><span class="gc-mut">not available</span></td>';
       return '<td class="gc-c' + (i === 0 ? ' gc-a' : '') + '"><span class="gc-steps">' + s.steps.map(function (x) { return '<span title="' + esc(x.name) + '">' + esc(x.out.replace(/\s*stale$/, '')) + '</span>'; }).join(' \u00b7 ') + '</span><span class="gc-sub' + (s.stale ? ' gc-warn' : '') + '">' + esc(s.head.replace(/^Decision sequence\s*/, '')) + '</span></td>';
     }).join('') + '</tr>';
     out += detailRow('cls', 'Decision sequence and inputs (the Inspector\u2019s)', ms, function (m) { return (m.spine ? m.spine.html : '') + chain(m, 'cls'); });
     out += '</tbody>';
     // --- trajectory
-    out += '<tbody>' + groupHead('traj', 'Trajectory', cols, 'the Inspector\u2019s ten cells (bust risk ' + (FADE_MODE === 'on' ? 'off: T3/T4 cells released' : 'on: risk-adjusted') + '); the value row applies the blend on top');
+    out += '<tbody>' + groupHead('traj', 'Trajectory', cols, gcTrajSub());
     out += sparkRow(ms);
     if (ST.open.traj) {
       var used = usedCells(), cbs = ms.map(function (m) { return cellBasis(m.p); }), L = 0; ms.forEach(function (m) { L = Math.max(L, m.cells.length); });
       for (var j = 0; j < L; j++) out += yrRow(ms, j, used, cbs);
-      out += detailRow('traj', 'The Inspector\u2019s trajectory notes', ms, function (m) { return '<div class="formula-section gc-chain gc-only-notes">' + ((m.sec.traj || {}).body || '').replace(/<div class="traj-grid">[\s\S]*$/, function (s) { var e = divEnd(s, 0); return s.slice(e); }) + '</div>'; });
+      out += detailRow('traj', 'The Inspector\u2019s trajectory notes', ms, function (m) {
+        var b = (m.sec.traj || {}).body || '', sp = gridSpan(b);
+        return '<div class="formula-section gc-chain gc-only-notes">' + (sp ? b.slice(0, sp[0]) + b.slice(sp[1]) : b) + '</div>';
+      });
     }
     out += '</tbody>';
     // --- Statcast
@@ -1533,11 +1625,18 @@
       var d = parseInt(b.getAttribute('data-d'), 10);
       b.disabled = ros; b.setAttribute('aria-disabled', !ros && (d < 0 ? YEARS <= yr[0] : YEARS >= yr[1]) ? 'true' : 'false');
     });
-    if (els.gcBlend) { if (document.activeElement !== els.gcBlend) els.gcBlend.value = String(BLEND); els.gcBlend.disabled = ros; els.gcBlend.setAttribute('aria-valuetext', ros ? 'n/a in ROS mode' : blendWords()); }
+    // the blend is inert outside the one-season headline view (plan 6.3), as the Trade Desk's own slider is
+    var pureEnd = gnPureEndActive();
+    if (els.gcBlend) {
+      if (document.activeElement !== els.gcBlend) els.gcBlend.value = String(BLEND);
+      els.gcBlend.disabled = ros || !pureEnd;
+      els.gcBlend.setAttribute('aria-valuetext', ros ? 'n/a in ROS mode' : blendWords());
+      els.gcBlend.title = pureEnd ? '' : 'Pure blend applies to the one-season headline view only';
+    }
     if (els.gcBlendRO) els.gcBlendRO.textContent = ros ? 'n/a' : blendWords();
     if (els.gcFade) els.gcFade.classList.toggle('gc-inert', YEARS === 1 && !ros);
     var ml = document.getElementById('modeLabel');
-    if (els.gcSetLine) els.gcSetLine.textContent = 'Values under: ' + ((ml && ml.textContent) || settingsWords()) + (YEARS === 1 && !ros ? '. Bust risk changes values from Career years 2 up.' : '.') + ' These controls are the Trade Desk\u2019s: a change here changes it there.';
+    if (els.gcSetLine) els.gcSetLine.textContent = 'Values under: ' + ((ml && ml.textContent) || settingsWords()) + (YEARS === 1 && !ros ? '. Bust risk changes prospect-branch values from Career years 2 up; the RA / Pure blend applies at 1 year only.' : '.') + ' These controls are the Trade Desk\u2019s: a change here changes it there.';
     if (els.gcDeltas) els.gcDeltas.checked = ST.deltas;
     if (els.gcNotes) els.gcNotes.checked = ST.notes;
   }
@@ -1558,6 +1657,7 @@
     else if (act === 'expand') { var all = ['pure', 'hit', 'inj', 'peak', 'cls', 'traj'], on = !all.every(function (x) { return ST.open[x]; }); all.forEach(function (x) { ST.open[x] = on; }); render(); b.textContent = on ? 'Collapse all formulas' : 'Expand all formulas'; }
     else if (act === 'scall') { var sk = b.getAttribute('data-kind'); if (sk !== 'h' && sk !== 'p') return; ST.scAll[sk] = !ST.scAll[sk]; render(); refocus('[data-gc-act="scall"][data-kind="' + sk + '"]') || refocus('[data-gc-act="scall"]'); }
     else if (act === 'scretry') { scRetry(); render(); refocus('[data-gc-act="scretry"]') || focusTitle(); }
+    else if (act === 'detretry') { DET.state = 'idle'; render(); focusTitle(); }
     else if (act === 'restore') restorePrev();
     else if (act === 'dismiss') dismissPrev();
     else if (act === 'blk') { ST.scPick[k + '|' + b.getAttribute('data-kind')] = b.getAttribute('data-b'); render(); refocus('[data-gc-act="blk"][data-k="' + cssKey(k) + '"][data-b="' + b.getAttribute('data-b') + '"]'); }
@@ -1745,6 +1845,30 @@
   }
   function pulseTray() { if (!tray || tray.hidden) return; tray.classList.remove('gc-pulse'); void tray.offsetWidth; tray.classList.add('gc-pulse'); }
 
+  // ------------------------------------------------------------------ the rate-chain detail (gn-rate-detail.js)
+  // gnRateDetailLoad() (W5, plan 2.9) inserts the detail script once and resolves on its load. Compare asks for it
+  // before its first table; a failed load (offline before any online visit) still draws the table -- the headline
+  // numbers never depend on the detail -- with a line saying the rate chains are not in yet, and a Try again.
+  var DET = { state: 'idle', why: '' };     // idle | loading | ready | failed
+  function detailSettled() { return DET.state === 'ready' || DET.state === 'failed'; }
+  function ensureDetail() {
+    if (DET.state !== 'idle') return;
+    if (typeof GN_RATE_DETAIL !== 'undefined') { DET.state = 'ready'; MCACHE = Object.create(null); MCOUNT = 0; return; }   // already in (the Inspector asked first)
+    if (typeof gnRateDetailLoad !== 'function') { DET.state = 'failed'; DET.why = 'no detail loader on this page'; return; }
+    DET.state = 'loading';
+    var pr; try { pr = gnRateDetailLoad(); } catch (e) { pr = Promise.reject(e); }
+    // W5's loader never rejects: a failed load resolves false. Either way the detail is in only if GN_RATE_DETAIL is.
+    Promise.resolve(pr).then(function (v) {
+      if (v === false || typeof GN_RATE_DETAIL === 'undefined') { DET.state = 'failed'; DET.why = 'not downloaded'; }
+      else { DET.state = 'ready'; DET.why = ''; }
+    }, function (e) { DET.state = 'failed'; DET.why = (e && e.message) || 'not downloaded'; })
+      .then(function () { MCACHE = Object.create(null); MCOUNT = 0; render(); });
+  }
+  function detailNote() {
+    if (DET.state !== 'failed' || !players().some(function (p) { return basisOf(p) === 'rate'; })) return '';
+    return '<p class="gc-miss" data-gc-wait="failed">The rate-chain detail has not been downloaded yet, so the Pure and Hit% derivation rows of rate-basis players are not shown; it loads the next time you are online. The headline numbers do not depend on it. <button type="button" class="gc-link" data-gc-act="detretry">Try again</button></p>';
+  }
+
   // ------------------------------------------------------------------ render and the refresh hooks
   // Off screen, the table is not rebuilt: a Trade Desk change or a slider tick while the section is out of view
   // only marks it stale (the header counts, the tray and the page's own buttons still update), and the section
@@ -1785,10 +1909,16 @@
     syncTray();
     if (!near) { stale = true; return; }
     stale = false;
-    ensureStatcast();          // Savant is asked when the section is on or near the screen (a no-op once it has the lines)
     syncProxies();
+    // the first table waits for the rate-chain detail (plan 2.9): the Inspector's Pure and Hit% rows of a rate
+    // column are drawn from it. Asked only once there are players to show and the section is near the screen.
+    if (ps.length && !detailSettled()) {
+      ensureDetail();
+      if (!detailSettled()) { if (els.gcTable) els.gcTable.innerHTML = '<p class="gc-mut" data-gc-wait="detail" role="status">Loading the rate chain\u2026</p>'; return; }
+    }
+    ensureStatcast();          // Savant is asked when the section is on or near the screen (a no-op once it has the lines)
     var sx = els.gcScroll ? els.gcScroll.scrollLeft : 0, sy = els.gcScroll ? els.gcScroll.scrollTop : 0;
-    if (els.gcTable) els.gcTable.innerHTML = tableHTML(ps);
+    if (els.gcTable) els.gcTable.innerHTML = detailNote() + tableHTML(ps);
     fitColumns();
     if (els.gcScroll) { els.gcScroll.scrollLeft = sx; els.gcScroll.scrollTop = sy; }
     // a player just added is the last column: when the box scrolls sideways (1023 px and down, every phone), show it
@@ -1830,7 +1960,7 @@
   function renderLight() {
     if (!near) { stale = true; return; }
     syncProxies();
-    if (!root || !els.gcTable || !els.gcTable.querySelector) return;
+    if (!root || !els.gcTable || !els.gcTable.querySelector || !detailSettled()) return;
     var ps = players(); if (!ps.length) return;
     var ms = ps.map(model), used = usedCells(), cbs = ms.map(function (m) { return cellBasis(m.p); });
     [['value', valueRow], ['spark', sparkRow]].forEach(function (x) {
@@ -1870,7 +2000,10 @@
     statcastNeeds: function (p) { var b = p && board().get(+((p.eng || {}).mid)); return b ? needsOf(SCX.raw, b) : null; },
     statcastReset: function () { SCX.raw = {}; SCX.bad = {}; SCX.busy = {}; SCX.want = new Map(); SCX.data = null; SCX.waiters = []; scQueued = false; },
     restore: restorePrev, dismiss: dismissPrev, clear: clearAll, state: function () { return { keys: ST.keys.slice(), linked: ST.linked, prev: ST.prev ? ST.prev.slice() : null, missing: ST.missing.slice() }; },
-    keys: function () { return ST.keys.slice(); }, add: function (p) { return add(p, true); }, remove: removeKey, render: render, sections: sections, rows: rowsOf };
+    keys: function () { return ST.keys.slice(); }, add: function (p) { return add(p, true); }, remove: removeKey, render: render, sections: sections, rows: rowsOf,
+    // v53.0: the build, the cells and words the checks read (compare_check_v53.js)
+    build: GN_COMPARE_BUILD, trajCells: trajCells, blendWords: blendWords, trajSub: gcTrajSub, basisOf: basisOf, pureBasisWords: pureBasisWords,
+    detailState: function () { return DET.state; }, loadDetail: function () { ensureDetail(); return DET.state; } };
 
   loadInitial();
   if (build()) {

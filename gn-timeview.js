@@ -14,10 +14,11 @@
  // v51.17: the season this view shows is GNDAILY's own (GN_DAILY_Y). Once the season roll has moved Current on,
  // GNDAILY is the closed season's frozen archive (e.g. '2026 season (final)'): the same pace path, day by day,
  // drawn on each record's final RA of that season and that season's RAW where the roll archived them
- // (gnDailyAnchor), else on today's headline RA -- and labelled as the archive it is.
+ // (gnDailyAnchor), else on today's headline RA -- and labelled as the archive it is. v53.0: a season up to 2026 was
+ // priced on the v51/v52 engine and says so (plan 6.4); the first rate-engine season's GNDAILY drops the label.
  function dailyTitle(){
    return GN_DAILY_FINAL
-     ? 'The '+gnDailyName()+': his '+GN_DAILY_Y+' pace path day by day, drawn on '
+     ? 'The '+gnDailyName()+(GN_DAILY_Y <= 2026 ? ', priced on the v51/v52 engine' : '')+': his '+GN_DAILY_Y+' pace path day by day, drawn on '
        + (GN_DAILY_R_ARCHIVED ? 'his final '+GN_DAILY_Y+' RA ($ at the '+GN_DAILY_Y+' RAW '+GN_DAILY_RAW.toFixed(2)+')' : 'today\u2019s headline RA')
        + ' \u2014 the Career view plots the season-by-season trajectory from Current ('+GN_NOW_Y+')'
      : 'The headline RA day by day through the '+GN_DAILY_Y+' season \u2014 the Career view plots the season-by-season trajectory';

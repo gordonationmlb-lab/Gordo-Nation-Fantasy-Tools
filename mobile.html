@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><title>Gordo Nation Trade Calculator</title>
-<script src="gn-boot.js"></script>
+<html lang="en"><head><meta charset="UTF-8"><meta name="gn-build" content="v53.0"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><title>Gordo Nation Trade Calculator</title>
+<script src="gn-boot.js?b=v53.0"></script>
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://gc.zgo.at; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://gordonation.goatcounter.com; connect-src 'self' https://baseballsavant.mlb.com https://gordonation.goatcounter.com; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0B2C5C">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -124,7 +124,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;op
 #inspTreeView{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;}
 #inspTreeView>svg{min-width:880px;}
 </style>
-</head><body><div class="gn-header"><div class="gn-masthead"><div class="gn-crest" role="img" aria-label="Gordo Nation league crest"></div><div class="gn-mast-c"><div class="kicker">Gordo Nation Dynasty &bull; Official Trade Desk</div><h1>The Trade Calculator</h1><p>16-team dynasty framework — ceiling values, refreshed weekly</p><div class="gn-build-stamp" id="gnBuildStamp" style="margin:4px 0 0;font-family:'Lato',Arial,sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;opacity:.72;">&nbsp;</div></div><div class="gn-crest" role="img" aria-label="Gordo Nation league crest"></div></div></div>
+</head><body><div class="gn-header"><div class="gn-masthead"><div class="gn-crest" role="img" aria-label="Gordo Nation league crest"></div><div class="gn-mast-c"><div class="kicker">Gordo Nation Dynasty &bull; Official Trade Desk</div><h1>The Trade Calculator</h1><p>16-team dynasty framework — expected values, refreshed weekly</p><div class="gn-build-stamp" id="gnBuildStamp" style="margin:4px 0 0;font-family:'Lato',Arial,sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;opacity:.72;">&nbsp;</div></div><div class="gn-crest" role="img" aria-label="Gordo Nation league crest"></div></div></div>
 
 <div id="gnDeadlineBar" style="max-width:1400px;margin:10px auto 0;padding:0 8px;">
  <style>
@@ -144,11 +144,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;op
   <div class="gn-dl-body" id="gnDlBody"><b>League rule:</b> every 2026 trade must be <b>COMPLETED &amp; PROCESSED</b> by ESPN&rsquo;s league deadline, <b>Monday, Aug 24 @ 12:00 PM (noon)</b>. ESPN&rsquo;s review/processing window means an accepted deal needs the full weekend to clear &mdash; so <b>any offer not ACCEPTED by noon Saturday, Aug 22 is DEAD</b>. Get your offers in NOW; don&rsquo;t leave one sitting in an inbox over the weekend.</div>
  </div>
 </div>
-<script src="gn-install-tip.js"></script>
+<script src="gn-install-tip.js?b=v53.0"></script>
 
 <div id="installTip" class="gn-install-tip"><button class="close-btn">×</button><strong>📱 Install as an app:</strong> <span id="installInstructions">Tap your browser's Share button, then "Add to Home Screen" — opens fullscreen and works offline.</span></div>
 <div id="gnViewSwitch" style="max-width:1400px;margin:.35rem auto 0;padding:0 .75rem;font-family:'Lato',Arial,sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;text-align:right;opacity:.7;"></div>
-<script src="gn-buildlink.js"></script>
+<script src="gn-buildlink.js?b=v53.0"></script>
 <div class="gn-container">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <style>
@@ -362,7 +362,7 @@ body, html { background: transparent; }
   <div class="tc-header">
     <div>
       <p class="tc-title">Gordo Nation Dynasty Trade Calculator</p>
-      <p class="tc-sub"><span id="playerCount">2,118</span> players. Mode: <span id="modeLabel">Risk-Adj</span>. v51.20 &middot; data through Sep 13, 2026 &middot; rosters through Sep 22, 2026.</p>
+      <p class="tc-sub"><span id="playerCount">2,118</span> players. Mode: <span id="modeLabel">Risk-Adj</span>. v53.0 &middot; data through Sep 27, 2026 &middot; rosters through Sep 27, 2026.</p>
     </div>
     <div class="controls">
       <button class="btn" id="clearAll">Clear</button>
@@ -391,7 +391,7 @@ body, html { background: transparent; }
         <span class="ctrl-label">Prospect projection</span>
         <div class="toggle" id="fadeModeToggle">
           <button data-mode="off" class="active">Bust risk ON (risk-adjusted)</button>
-          <button data-mode="on">Bust risk OFF (ceiling + maturation)</button>
+          <button data-mode="on">Bust risk OFF (prospects only: ceiling × κ_P + maturation)</button>
         </div>
         <span class="ctrl-readout" id="fadeModeReadout">Risk-adj</span>
       </div>
@@ -405,8 +405,8 @@ body, html { background: transparent; }
       </div>
       <div class="ctrl-row">
         <label class="ctrl-label" for="yearsSlider">Career years</label>
-        <input type="range" class="slider-input" id="yearsSlider" min="1" max="10" step="1" value="1" aria-valuetext="1 year (single peak season)">
-        <span class="ctrl-readout" id="yearsReadout">1 year (single peak season)</span>
+        <input type="range" class="slider-input" id="yearsSlider" min="1" max="10" step="1" value="1" aria-valuetext="1 year (headline season)">
+        <span class="ctrl-readout" id="yearsReadout">1 year (headline season)</span>
       </div>
     </div>
   </div>
@@ -473,7 +473,7 @@ body, html { background: transparent; }
   </div>
 
   <div class="legend">
-    Top slider: RA-to-Pure blend (0% = single-year Risk-Adj, 100% = single-year Pure Ceiling on the same pace basis the Pure trajectory uses). Bottom slider: Career years (1-10). At 1, it shows the headline RA — the asset value, which for a player below his peak age is his peak-season value (the Inspector marks that season ★). At 10, it shows expected RA summed across his ten trajectory seasons, Current (<span data-gn-y="0">2026</span>) through <span data-gn-y="9">2035</span> (career value); in Single season mode it shows the engine's own year-10 trajectory, with no floor under a year a player has aged out of. Combine the two for "5-year career value at 30% Pure blend" etc. Verdict: the percentage is of the LARGER side — under 5% reads as fair, 5 to 15% a slight edge, above 15% a clear win. A gap worth less than five cents of value is called even rather than graded.
+    Top slider: RA-to-Pure blend, for the one-season headline view only (0% = the headline RA; 100% = Pure, his expected healthy full season at the headline season). At Career years 2 and up the blend does not apply and the slider is inert. Bottom slider: Career years (1-10). At 1, it shows the headline RA — the asset value priced at his headline season, which for a player below his peak age is his peak-age season (the Inspector marks that season ★). For a prospect on the branch, the headline carries the level carry κ_P and each Inspector cell its own season's κ_P[k], so the ★ cell reads about κ_P[k*] ÷ κ_P of the headline (below it for most prospects). At 10, it shows expected RA summed across his ten trajectory seasons, Current (<span data-gn-y="0">2026</span>) through <span data-gn-y="9">2035</span> (career value); in Single season mode it shows the engine's own year-10 trajectory, with no floor under a year a player has aged out of. The blend combines with the one-season view only ("1-year value at 30% Pure blend"). Verdict: the percentage is of the LARGER side — under 5% reads as fair, 5 to 15% a slight edge, above 15% a clear win. A gap worth less than five cents of value is called even rather than graded.
   </div>
 
   <div class="charts-section">
@@ -500,7 +500,7 @@ body, html { background: transparent; }
         <div class="chart-box-title">Injury discount — RA removed, stacked by player</div>
         <div class="chart-canvas-wrap"><canvas id="injuryRiskChart" role="img" aria-label="Injury discount, stacked by player. Pick players to see the breakdown.">Injury discount, stacked by player. Pick players to see the breakdown.</canvas></div>
         <div class="no-data-msg" id="injuryRiskEmpty">Pick players to see the injury discount breakdown</div>
-        <div class="history-note">Each colored segment is one player's injury discount on his asset value: his healthy RA (Pure × Pace × Hit%) minus his risk-adjusted RA — what the Durability v2.2 module takes off (rate after a return, the UCL workload factor, survival and recurrence load, with each season's line weighted by what he produces that season, so a season lost to injury counts zero at its share of the ten; no time discount). Each player keeps his color from the value chart; the legend gives his band — low under 5%, moderate 5–15%, high 15–35%, extreme 35%+ — and the share removed. Players the module leaves untouched (×1.00) are left off. Bar height = total RA a side is giving up to injury.</div>
+        <div class="history-note">Each colored segment is one player's injury discount on his asset value: his healthy RA (Pure × Hit%) minus his risk-adjusted RA — what the Durability v2.2 module takes off (rate after a return, the UCL workload factor, and S′, the never-return risk in excess of the baseline survival Hit% already carries; the recurrence load is retired on the rate basis, tool-basis prospects take neither it nor the rate term, and the held records keep their v52.0 terms; each season's line is weighted by what he produces that season, so a season lost to injury counts zero at its share of the ten; no time discount). Each player keeps his color from the value chart; the legend gives his band — low under 5%, moderate 5–15%, high 15–35%, extreme 35%+ — and the share removed. Players the module leaves untouched (×1.00) are left off. Bar height = total RA a side is giving up to injury.</div>
       </div>
       <div class="chart-box full">
         <div class="chart-box-title-row">
@@ -642,7 +642,7 @@ body, html { background: transparent; }
           <button type="button" class="opt-filter-btn opt-fb-r5" id="optFiltR5" aria-pressed="false" aria-expanded="false" aria-controls="optFilterList">RULE 5 DRAFT <span class="cnt" id="optCntR5">&ndash;</span></button>
         </div>
         <div id="optFilterList"></div>
-        <div class="opt-filter-note">Ledger rebuilt from the full ESPN transaction log through the Aug 24 deadline processing, extended from the league activity feed through Sep 13 &middot; parse verified against the whole-season feed, 1,102 of 1,102 stored events reproduced &middot; tap a button to list players, tap a player to open their record.</div>
+        <div class="opt-filter-note">Ledger rebuilt from the full ESPN transaction log through the Aug 24 deadline processing, extended from the league activity feed through Sep 27 &middot; parse verified against the whole-season feed, 1,151 of 1,151 stored events reproduced &middot; tap a button to list players, tap a player to open their record.</div>
       </div>
       <div id="optionsBody">
         <div class="inspector-empty">Search for any player to see their <span data-gn-daily-y>2026</span> AAA option status and transaction history. Moves that burn an option are shown in red.</div>
@@ -652,10 +652,10 @@ body, html { background: transparent; }
   </div>
 </div>
 
-<script src="gn-app.js"></script>
+<script src="gn-app.js?b=v53.0"></script>
 </div>
-<div class="gn-footer"><b>Gordo Nation Weekly</b> &bull; Trade Desk &mdash; dynasty ceiling values as of September 13, 2026 (Week 22 data; championship round in progress, SP167&ndash;173 complete; prospect GNFV, tool grades and level proximity re-read from FanGraphs, MLB Pipeline, Just Baseball, Prospects Live and TJStats on Sep 17; Durability v2.2 injury module)</div>
-<script src="gn-sw-register.js"></script>
+<div class="gn-footer"><b>Gordo Nation Weekly</b> &bull; Trade Desk &mdash; dynasty values as of September 27, 2026 (Week 22 data; the 2026 regular season complete (SP187) and the championship round, SP167&ndash;180, final; rolled to the 2027 season (v52.0, 28 Sep); re-priced on the rate-based engine (v53.0: expected seasons from MLB rates, playing time and survival, model fitted on 2000&ndash;2026), same data window; prospect GNFV, tool grades and level proximity re-read from FanGraphs, MLB Pipeline, Just Baseball, Prospects Live and TJStats on Sep 17; Durability v2.2 injury module)</div>
+<script src="gn-sw-register.js?b=v53.0"></script>
 
 <style id="gn-detail-v45">
 /* ---- Gordo Nation detail-art layer (v45): plate frames, stitching, medallion, org identity ---- */
@@ -719,7 +719,7 @@ input[type=range],.slider-input{accent-color:#C9A227;}
 /* DO-3: the two sliders and the Year-mode / Prospect toggles are disabled while ROS is the value
    mode (see the ros-v46 block). DO-4: the bust-risk toggle is dimmed, not disabled, at Career
    years 1, where it changes no value. */
-.toggle button:disabled,.slider-input:disabled{opacity:.45;cursor:not-allowed;}
+.toggle button:disabled,.slider-input:disabled,.slider-input.gn-inert{opacity:.45;cursor:not-allowed;}
 /* editorial titles: eyebrow caps + gold underline w/ red diamond */
 .charts-title,.inspector-title,.chart-box-title{font-family:var(--font-display)!important;
  text-transform:uppercase;letter-spacing:.1em;font-weight:900;color:var(--nl-navy,#0B2C5C);}
@@ -728,7 +728,7 @@ input[type=range],.slider-input{accent-color:#C9A227;}
 @media(max-width:520px){.verdict-tag::before,.verdict-tag::after{content:"";}}
 </style>
 
-<script id="gn-detail-v45-js" src="gn-detail-v45.js"></script>
+<script id="gn-detail-v45-js" src="gn-detail-v45.js?b=v53.0"></script>
 
 <style id="gn-timeview-css">
 .gn-tv{float:right;display:inline-flex;gap:0;border:1px solid #9C7C1B;border-radius:999px;overflow:hidden;
@@ -738,11 +738,11 @@ input[type=range],.slider-input{accent-color:#C9A227;}
 .gn-tv button.on{background:linear-gradient(180deg,#F2D77E,#C9A227);color:#0B2C5C;
  box-shadow:inset 0 0 0 1.2px rgba(255,255,255,.55);}
 </style>
-<script id="gn-timeview-js" src="gn-timeview.js"></script>
+<script id="gn-timeview-js" src="gn-timeview.js?b=v53.0"></script>
 
-<script id="gn-ros-v46" src="gn-ros-v46.js"></script>
+<script id="gn-ros-v46" src="gn-ros-v46.js?b=v53.0"></script>
 
-<script id="gn-a11y-keys" src="gn-a11y-keys.js"></script>
+<script id="gn-a11y-keys" src="gn-a11y-keys.js?b=v53.0"></script>
 
 <style id="gn-compare-css">
 /* Player Compare (gn-compare.js). Light only, like the rest of the page (:root{color-scheme:light}).
@@ -954,8 +954,8 @@ body.gc-tray-on{padding-bottom:64px}
 <!-- Anonymous page and feature counts (GoatCounter; no cookies, the address after # is never sent, nothing from
      localhost). count.v5.js is pinned by its SRI hash; the events are gn-track.js. -->
 <script async src="https://gc.zgo.at/count.v5.js" integrity="sha384-atnOLvQb9t+jTSipvd75X2yginT4PjVbqDdlJAmxMm+wYElFmeR6EmLP5bYeoRVQ" crossorigin="anonymous" data-goatcounter="https://gordonation.goatcounter.com/count"></script>
-<script id="gn-track-js" src="gn-track.js"></script>
-<script id="gn-compare-js" src="gn-compare.js"></script>
+<script id="gn-track-js" src="gn-track.js?b=v53.0"></script>
+<script id="gn-compare-js" src="gn-compare.js?b=v53.0"></script>
 
-<script src="gn-build-stamp.js"></script>
+<script src="gn-build-stamp.js?b=v53.0"></script>
 </body></html>

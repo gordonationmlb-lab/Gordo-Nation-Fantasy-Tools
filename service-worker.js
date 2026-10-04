@@ -1,18 +1,21 @@
-const CACHE = 'gordo-calc-v93-2026-09-13-v51.20';
+const CACHE = 'gordo-calc-v96-2026-09-27-v53.0';
 const SHELL = [
-  './', 'index.html', 'mobile.html', 'manifest.json',
+  // v53.0: every script entry carries ?b=v53.0, the URL both pages load (X-HAND), and the model-tables page
+  // is precached; gn-rate-detail.js is not (it loads on demand, plan 2.9; the network-first branch below
+  // keeps a copy once it has loaded).
+  './', 'index.html', 'mobile.html', 'gn-model-tables.html', 'manifest.json',
   'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'apple-touch-icon.png',
   // v50.22 moved every inline <script> out of the two pages so the CSP could drop
   // 'unsafe-inline'. The pages went from 6.4 MB each to ~114 KB and these carry the
   // difference, so the offline shell is incomplete without them. gn-app.js is the
   // 6.2 MB one: it holds PLAYERS/GNDAILY/GNROS/HISTORY/OPTIONS_DATA and all the logic,
   // and it is now shared by both pages instead of duplicated into each.
-  'gn-boot.js', 'gn-install-tip.js', 'gn-buildlink.js', 'gn-app.js', 'gn-sw-register.js',
-  'gn-detail-v45.js', 'gn-timeview.js', 'gn-ros-v46.js', 'gn-a11y-keys.js', 'gn-build-stamp.js',
+  'gn-boot.js?b=v53.0', 'gn-install-tip.js?b=v53.0', 'gn-buildlink.js?b=v53.0', 'gn-app.js?b=v53.0', 'gn-sw-register.js?b=v53.0',
+  'gn-detail-v45.js?b=v53.0', 'gn-timeview.js?b=v53.0', 'gn-ros-v46.js?b=v53.0', 'gn-a11y-keys.js?b=v53.0', 'gn-build-stamp.js?b=v53.0',
   // v51.19: Player Compare, and the anonymous feature counts. Compare's Statcast context is not a file here at
   // all: each browser fetches it from Baseball Savant when Compare needs it, and GoatCounter's count.js comes
   // from gc.zgo.at -- both cross-origin, which the fetch handler below never intercepts, caches or precaches.
-  'gn-track.js', 'gn-compare.js'
+  'gn-track.js?b=v53.0', 'gn-compare.js?b=v53.0'
 ];
 
 self.addEventListener('install', (e) => {
@@ -92,9 +95,11 @@ self.addEventListener('fetch', (e) => {
   // against the HTTP cache, so an unchanged gn-app.js answers 304 with no body.
   const isCode = url.pathname.endsWith('.js');
   if (isPage || isCode) {
-    // network-first so a new build always wins; fall back to cache offline
+    // network-first so a new build always wins; fall back to cache offline. v53.0 (CR-34): cache 'no-cache'
+    // revalidates even a copy the HTTP cache still holds as fresh (GitHub Pages serves max-age=600), so a
+    // new build is never hidden behind the browser cache
     e.respondWith(
-      fetch(req).then(keep).catch(() => caches.match(req).then(
+      fetch(req, { cache: 'no-cache' }).then(keep).catch(() => caches.match(req).then(
         (r) => r || (isPage ? caches.match('index.html') : Response.error())))
     );
   } else {
