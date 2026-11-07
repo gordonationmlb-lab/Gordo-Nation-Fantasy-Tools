@@ -1,213 +1,351 @@
-GORDO NATION TRADE CALCULATOR — v53.0  THE RATE-BASED ENGINE INSTALLED (2026-10-03)
-  Built on v52.0 by build_v53_0.py: every price is rebuilt on the rate-based engine, exactly the verified shadow
-  default H3|S2-lite|P-hold|T5a (the commissioner's "install now" of 3 Oct 2026; the Sitting B defaults stand, D-5).
-  Same data window: data through 2026-09-27 (scoringPeriod 187); TEAM_GAMES 162, F = 162/162 = 1.0000 (as v52.0).
-  Current stays the 2027 season (GN_NOW_Y 2027). 2026 is the newest history season of every price, shown as a greyed
-  "2026 actual" cell before 2027 (D-1). The 2026 season view stays the frozen v52 archive.
-  Service worker: gordo-calc-v96-2026-09-27-v53.0.  GN_BUILD v53.0, GN_DATA_THROUGH 2026-09-27,
-  GN_ROSTERS_THROUGH 2026-09-27. Injury line opens 2027-03-25 (the injury module is not re-run).
-  Model: model/gn_rate_model_v1_cur_refit_2000_2026.json (sha256 c7829868...), fitted on 2000-2026, 2020 excluded.
-  Acceptance on the staged folder ../v53_staging/v53.0: check_v53_0.py PASS, 0 disagreements; the e = 0 spike
-  (rate_engine.py) 0 mismatches; verify_calc_v53.py FAIL 0; render, values and compare checks pass.
-  RAW_PER_DOLLAR 510.28 -> 371.69.
+GORDO NATION TRADE CALCULATOR — v53.1  THE IN-SEASON MACHINERY INSTALLED 2026-10-31; PRICES AS BUILT (2026-10-03)
+  Installed on v53.0 on 2026-10-31 by the reviewed install tool (the commissioner's "start R9" of 31 Oct 2026, the GO
+  for the v53.1 release). No price moves at the install: at e = 0 the v53.1 board is G13-live byte-identical to
+  v53.0's, so every price, every dollar and RAW are v53.0's, and the date above stays v53.0's build date.
+  What v53.1 adds: the weekly in-season repricing, the offseason roster-only refresh, the deploy label, the guards that
+  hold the first 2027 weekly until its preconditions are met, and the rollback tool for this install.
+  Same data window: data through 2026-09-27 (scoringPeriod 187); TEAM_GAMES 162, F = 162/162 = 1.0000 (as v53.0).
+  Current is the 2027 season (GN_NOW_Y 2027); opening day is Thu 25 Mar 2027.
+  Service worker: gordo-calc-v97-2026-09-27-v53.1.  GN_BUILD v53.1, GN_DATA_THROUGH 2026-09-27,
+  GN_ROSTERS_THROUGH 2026-09-27. Injury line opens 2027-03-25 (the injury module is not re-run at the install).
+  Model: model/gn_rate_model_v1_cur_refit_2000_2026.json, unchanged (the v53.0 model; combo H3|S2-lite|P-hold|T5a).
+  Run with these scripts, each week in season (section 2 has the full order, W0 to W8): update_calc_weekly.py,
+  news_facts.py, apply_injury_v2.py, update_calc_weekly.py --after-injury, update_options.py, stamp.py,
+  resync_ceiling_workbook_v53_0.py --weekly (on a copy until R9c), verify_calc.py, package.py; and off season
+  (section 4): update_calc_weekly.py --rosters-only, update_options.py, update_calc_weekly.py --deploy-label,
+  stamp.py, verify_calc.py, package.py, manifest_check_v53.py.
+  RAW_PER_DOLLAR unchanged at the install: 371.69.
 ================================================================================
-1. WHAT v53.0 IS, IN PLAIN WORDS
+1. WHAT v53.1 IS, IN PLAIN WORDS
 
-  v52.0 priced a player from his best season: a "Pure ceiling" (his peak production), then cut it by a Hit% (the
-  chance he gets there) and an injury multiplier. v53.0 prices what a season is expected to be worth:
+  v53.0 (3 Oct 2026) put the rate-based engine live: a price is the expected value of a season, from a player's MLB
+  scoring rate, his playing time and his chance of staying in MLB. v53.1 is the same engine with the machinery to run
+  the 2027 season on it. Nothing is re-priced at the install: the board, the prices, RAW 371.69 and the CEILING
+  workbook stay exactly as v53.0 left them. Methodology v23 (Reference/Trade_Calculator_Methodology_v23.docx) describes
+  v53.1; it replaces v22.
 
-    Pure  = the expected healthy full season: his MLB scoring rate (FP per PA or per IP, blended over his last three
-            seasons and pulled toward the league by how much evidence there is) x a full season's playing time for
-            his role (a hitter's 153 games, a catcher's about 135, a starter's 32.5 starts, a reliever's 70 games),
-            x 1.15 at C, 2B and 3B (scarcity).
-    Hit%  = the share of that full season he is expected to play, including the chance he has left MLB (availability
-            x survival, from a model fitted on every MLB season 2000-2026). It can exceed 100% for an everyday
-            player (44 headlines do, Corbin Carroll highest at 117.77%).
-    RA    = Pure x Hit% x the injury multiplier, the same three-part identity as before.
+  What changes when the season starts (after the season-start step, section 5):
+    - each weekly refresh reprices the board on the season so far: e, the share of the 2027 season played, is read
+      from the pinned 2027 schedule (v53_archive/inputs/hs_schedule_2027_R_f86a8c3e3e7f.json); the current season's
+      cell becomes "to date + expected remainder"; the to-date row joins each player's rate evidence;
+    - a hitter's playing-time class blends the two windows by e (C-R6-9), so it moves smoothly through the season;
+    - a newcomer (a player-kind with no completed MLB season as of 2026) starts from the newcomer prior, whose weight
+      falls by (1 - e) through the season (D-2 (b)); a new player with no MLB rows is a newcomer for 2027 (C-R8-2 (b));
+    - the 216 S2-lite records keep their ceiling-based start (κ_P × tc) through 2027 and past the roll (D-6 (b));
+    - injuries are priced by the frozen injury rules (C-R6-8); a suspension with games left at season's end counts
+      against the next season (C-R8-1); a returning veteran keeps the frozen rule (C-R7-2);
+    - each week verify measures the week's churn against the acknowledged G17 thresholds (a median move of 4%, a
+      large-move mark of 87%, 0 star moves; g17_thresholds_2027.json). Over the median or the large-move mark is a
+      WARN that means "look at this week's movers before publishing"; it never fails a build or changes a price. A star
+      move is different: a record's ★ (its headline season k*) moving from install is over G17's star-move threshold
+      and also FAILs verify's G4 (the star never moves in season), so that week stops at W7 (section 2);
+    - the Player Inspector shows the in-season lines (this season's cell, the to-date line; display only, C-R7-1).
 
-  The headline (the one-number value) prices his peak-age season, counting the chance he has left MLB by then (H3):
-  the season k* = min(9, max(0, peak - a0 - 1)), peak 26 for hitters and 27 for pitchers. The ten-year line is the
-  same calculation season by season. pm (the pace multiplier) is 1.00 on every record.
+  Records added in season (plan 7.10 as ruled): a player with a completed MLB season in 2024-2026 is priced on MLB
+  rates from scratch (row 1); a player with no completed MLB season is priced on rates as a newcomer (row 2; C-R8-2 (b)
+  makes this the rule for 2027, whatever his prospect status); the frozen prospect branch (row 3) covers only the 675
+  branch records already on the board. Off season the roster-only refresh adds no record: new players wait in pending_new.
 
-  Who is priced how (2,118 records):
-    1,224  on MLB rates from scratch (S1)
-      216  prospects with MLB time, priced on MLB rates starting from their prospect value (S2-lite; the 198 tool T3s
-           with MLB time plus the 18 switched at the v52.0 pre-roll step)
-      675  prospects without MLB time: the v52.0 prospect price x kappa_P (P-hold, kappa_P 0.7284; it holds the
-           prospects' headline dollars where v52.0 had them)
-        3  held at their v52.0 values (no MLB id match: Jack Wenninger, Luis Ortiz, Jose A. Ferrer)
+================================================================================
+2. THE WEEKLY RUN ORDER (in season; binding: PLAN_AMENDMENTS_R8 A-R8-3 item 2)
 
-  What a manager sees: the Player Inspector shows the new chain (rate, playing time, Hit% = availability x survival,
-  injury), a greyed "2026 actual" cell before the ten seasons, and a link to the model-tables page
-  (gn-model-tables.html). The term-by-term detail loads on demand from gn-rate-detail.js. The Trade Desk, the
-  slider and Compare read the same numbers. The slider's Pure end applies to the one-season view only.
+  Run from the build folder, one step at a time, never in parallel. P is the week's pull, <D> its data date.
 
-2. THE BOARD IMPACT (measured on the staged board against v52.0; $ = value / RAW)
-  Dollars as the page defaults compute them: headline $ = r / RAW; 5-year $ = max(sum tj[0..4], r) / RAW;
-  10-year $ = max(sum tj, r) / RAW. "Moved" = by five cents or more.
+W0  (operator) the ESPN pull into wk<yyyy>_<NN>/gordo_espn_pull_<date>.json, with gordo_espn_news_il_<date>.json beside it;
+    and, when the week has them, the operator's declared facts in weekly_reports/declared_<D>.json (a ban's games and
+    first missed date, a PR-C label: R-7)
+W1  python3 -B update_calc_weekly.py <BUILD> --pull P --apply       also writes units_to_placement into declared_<D>.json
+W2  python3 -B news_facts.py --apply
+W3  python3 -B apply_injury_v2.py --apply --todate weekly_reports/todate_<D>.json --pull P
+          --report weekly_reports/injury_<D>.json [--declared weekly_reports/declared_<D>.json]    (--declared whenever it exists)
+W3b python3 -B update_calc_weekly.py --after-injury --apply
+W4  python3 -B update_options.py --pull P --apply
+W5  python3 -B stamp.py --apply ; python3 -B stamp.py --check          (S2c: the in-season path)
+W6  python3 -B resync_ceiling_workbook_v53_0.py --weekly --root . --workbook <copy> --apply       copies only until R9c
+W7  python3 -B verify_calc.py
+W8  python3 -B package.py --apply                                   the four-copy rule holds after W8 (copy 3 is W8's output)
 
-    all 2,118     v52.0 (510.28)   v53.0 (371.69)     change     RAW held at 510.28     players moved
-    headline         $1,574.47        $1,615.30    +$40.82 (+2.6%)    $1,176.59 (-25.3%)    1,312 (731 up, 581 down)
-    5-year           $6,503.69        $6,216.76   -$286.93 (-4.4%)    $4,528.32 (-30.4%)    1,748 (626 up, 1,122 down)
-    10-year          $9,785.55        $8,696.19 -$1,089.35 (-11.1%)   $6,334.34 (-35.3%)    2,089 (521 up, 1,568 down)
+  Notes (each binding):
+  - Each step first runs without --apply where it has a dry run, and the report is read before --apply. W2's dry run
+    (news_facts.py without --apply) still writes its dated report, news_facts_report_<data_through>.json, and nothing
+    else; its --apply refusal writes nothing at all.
+  - The order: W2 before W3; W3 only after W1 has written the 2027 data_through; W3b after W3 and before W4; W6 after
+    W3b. W1 writes the placement units into declared_<D>.json itself (W1b is gone); W3 passes --declared whenever that
+    file exists, and always passes --report (it keeps C-R6-8's two counts).
+  - No --standin-pre, ever: it is refused with --apply, and every W3 must exit 0 on its first run.
+  - W5's EDITORIAL strings (stamp.py's header) are the operator's weekly judgement; in season stamp.py puts a
+    generated in-season identity card on top of this file and leaves the install card below it as the record.
+  - W6 runs on a COPY of the CEILING workbook until R9c (section 6): --weekly --apply refuses the real workbook (exit 2,
+    nothing written).
+  - The four README copies (this file, calc/README.txt, GordoNation_Calculator_<BUILD>/README.txt and the " 2" copy)
+    are equal after W8. At W5 only the first two exist: copy 3 is W8's output, keyed by the week's new BUILD, and
+    stamp.py names copies 3 and 4 as expected absent. Check copy 3 against this file after W8 --apply.
+  - Exit codes of the logged writers (W1, W2, W3, W3b, W4, W6, the deploy label and update_options.py --rule5): 0 done;
+    2 refused, nothing written; 3 board state unknown (a write failed and so did its restore). On 3, stop: nothing
+    else runs until the pending log is resolved.
+  - Exit codes of W5, W7 and W8 differ (none of them means an unknown board state):
+    W5  stamp.py --apply: 0 written; 1 refused (nothing written, the reason named) or its read-back check failed.
+        stamp.py --check: 0 every stamp current; 3 a stamp is not current (run stamp.py --apply again, then --check);
+        1 refused.
+    W7  verify_calc.py must report FAIL 0. WARN lines are allowed (G17's WARN, KEEP INJURY MODULE, the RULE5 line);
+        read each one. Exit 1 means at least one FAIL (a star move is one: G4): stop there, no W8 and no upload; keep
+        the output and ask the orchestrator. Exit 2 means the run itself was refused (nothing checked).
+    W8  package.py: 0 done; 1 refused (it names why; there is nothing to upload).
+    The upload follows only a W7 with FAIL 0 and a W8 --apply with exit 0.
+  - The pending-log rule: every writer logs first (<log>.json.pending), then writes, then renames the log. A
+    *.json.pending left in rosters_only_runs/, weekly_runs/, options_runs/, page_runs/, weekly_reports/ or injury_runs/
+    is exit 3's state: every writer refuses while it exists and verify FAILs G13. Stop and ask the orchestrator.
+  - Verify in BF: run it plain (python3 -B verify_calc.py). A --report path must be outside BF when the root is BF
+    (verify refuses a report inside it). The same holds for every other --report of a check run on BF.
 
-  On the displayed (rounded) d, 1,325 players move by five cents or more on the headline.
+================================================================================
+3. BUILD LABELS
 
-  RAW falls from 510.28 to 371.69. The new engine prices an expected season, not a best season, so raw points fall.
-  RAW is the mean RA over the records with an ESPN id and RA > 0: 1,402 such records at v52.0, 1,445 now. Over the
-  same 1,402 the v53.0 mean would be 380.39; the rest of the fall comes from the 43 records that now price above zero
-  and join the pool (none leaves it).
+  - In season: one new label per W1, v53.1-w<NN>, NN the 2027 refresh number from 01 (v53.1-w01, v53.1-w02, ...). A
+    re-run of a week adds a letter (v53.1-w03b). W1 refuses a label the page already carries ("pick the next one").
+  - Off season: v53.1.<n> (v53.1.1, v53.1.2, ...), written by the deploy label, never by hand:
+        python3 -B update_calc_weekly.py --deploy-label v53.1.<n> --utc <YYYY-MM-DDTHH:MM:SSZ> --apply
+    It writes the GN_BUILD literal, the .tc-sub build token and rosters date and the gn-build handshake of both pages,
+    the service worker's cache name (the next number: v98, v99, ...) and SHELL, the GN_COMPARE_BUILD literal of
+    calc/gn-compare.js, and build.json build, build_prev, sw_cache, sw_cache_prev; and a link log
+    page_runs/PAGE_PATCH_<n>.json. No price moves. It refuses (exit 2, nothing written) a hyphenated label, a label
+    already used, a weekly_runs/ log (in season each W1 labels its own build), a pending log, and --apply without
+    --utc. The install itself labelled v53.1 this way.
 
-  After the re-float the headline total barely moves, but the 5-year and 10-year totals fall: the engine expects
-  fewer future seasons from the players on the board, mostly the older ones.
+================================================================================
+4. OFF SEASON: THE ROSTER-ONLY REFRESH (D-4; usable in BF from v53.1 on, without --add-new)
 
-  The 406 rostered players together: headline $709.25 -> $800.26 (+$91.01, +12.8%); 5-year $2,934.00 -> $3,052.18
-  (+$118.18); 10-year $4,334.49 -> $4,210.85 (-$123.65). Their average headline RA goes from 891.42 to 732.63.
+  Precondition, once, before the first production roster-only --apply in BF: the orchestrator's v52-standby commit of
+  S7b's R9 files (A-R9-14 item 3; the tid fix of S7b-R8c-F1) is done, and the standby's self-test (runbook S2) ends
+  RESULT PASS with 90 check lines. Until both hold, no roster-only run is applied in BF.
+  For a pull P placed as the operator places it (wk2026_off<NN>_<label>/gordo_espn_pull_<date>.json):
+    python3 -B update_calc_weekly.py --rosters-only --pull P                         dry run: read the report
+    python3 -B update_calc_weekly.py --rosters-only --pull P --apply                 rosters and designations; no price
+    python3 -B update_options.py --pull P --apply                                    the options ledger (W4)
+    python3 -B update_calc_weekly.py --deploy-label v53.1.<n> --utc <UTC> --apply   the new label (section 3)
+    python3 -B stamp.py --apply ; python3 -B stamp.py --check                        exit 0
+    python3 -B verify_calc.py                                                        FAIL 0
+    python3 -B package.py ; python3 -B package.py --apply                            GordoNation_Calculator_v53.1.<n>
+    python3 -B manifest_check_v53.py --dir ../GordoNation_Calculator_v53.1.<n> --manifest ../deploy_manifest_v53.1.<n>.json
+  Then the commissioner uploads the 23 files as one commit (section 13), and the orchestrator runs the live check on his
+  word. Then the standby replay of the new rosters_only_runs/ log (runbook S3, $BF/S7/ROLLBACK_RUNBOOK_v53.md),
+  before the next roster-only run.
+  - --add-new stays off in BF until R9c: --rosters-only --add-new --apply is refused (exit 2) in the live build folder.
+    New players wait in pending_new and are priced by the first 2027 weekly.
+  - Each step refuses while a pending log exists (section 2). Exit codes as in section 2: no package and no upload
+    unless verify reports FAIL 0.
 
-  CLUBS (RA and headline $, v52.0 -> v53.0; ordered by v53.0 RA):
-    River Cats              54,604 -> 45,410   $107.01 -> $122.17
-    KC Gray Hotdogs         49,548 -> 43,020    $97.10 -> $115.74
-    Kansas Sunflower Seeds  46,239 -> 38,834    $90.61 -> $104.48
-    Dirty Spikes            43,569 -> 37,088    $85.38 ->  $99.78
-    MidwestBears            42,236 -> 34,841    $82.77 ->  $93.74
-    High Cheddar            43,234 -> 34,524    $84.73 ->  $92.88
-    C-Town Liquors          42,223 -> 32,852    $82.74 ->  $88.39
-    Balking Dead            40,263 -> 30,880    $78.90 ->  $83.08
-  (High Cheddar and MidwestBears swap 5th and 6th; every other club keeps its rank.)
+================================================================================
+5. BEFORE THE FIRST 2027 WEEKLY: THE PRECONDITIONS
 
-  THE CEILING WORKBOOK: resync_ceiling_workbook_v53_0.py (pure stdlib) re-writes 1_Player_Inputs on the rate basis
-  (column 9 is the priced Hit%, U at k* moves to a new column, pm is 1.00 everywhere, A_rec is 0) and rebuilds the
-  prospect sheets 7 and 12. The file name is kept (D-5).
-  2_Org_Rankings recomputed (River Cats 45,410 still first, KC Gray Hotdogs 43,020 second).
+  No 2027 weekly runs in BF until all three are done. R9b comes before the season start, R9c by its deadline, and the
+  season start last, before the first refresh:
+  1. R9b, the 2027 Rule 5 list (C-R6-7 (d)): after the December 2026 draft, at the latest Mon 22 Mar 2027. The
+     commissioner gives each pick (player, drafting club, original club) and the draft date (or says no draft was
+     held); the operator writes v53_archive/inputs/rule5_list_2027.json and runs, first on a clone named like BF, then
+     in BF (A-R9-4 R9b steps 3 and 4). The clone sits in a scratch parent, with BF's parent outputs cloned beside it
+     (the manifest check and package.py read ../):
+        BFN=GN_v51.9_wk22_2026-09-20; ST="$BF/../v53_staging/v53.1"; C="$ST/r9b.reh/$BFN"; mkdir "$ST/r9b.reh"
+        cp -c -pR "$BF" "$C"
+        cp -c -pR "$BF"/../GordoNation_Calculator_v53.1* "$BF"/../deploy_manifest_v53.1*.json "$ST/r9b.reh/"
+        cp -c -p "$BF/../$BFN.zip" "$BF/../$BFN.zip.pre-v53_1" "$ST/r9b.reh/"
+     Then, from "$C" (and afterwards from BF, the same commands and arguments):
+        python3 -B update_options.py --rule5 v53_archive/inputs/rule5_list_2027.json --utc <UTC>           dry run
+        python3 -B update_options.py --rule5 v53_archive/inputs/rule5_list_2027.json --utc <UTC> --apply
+     with <UTC> = <the run's date>T12:00:00Z; then the deploy label (v53.1.<n>), stamp --apply and --check (exit 0),
+     verify (on the clone: verify_calc.py --root "$C" --report <outside BF and the clone>; FAIL 0, no RULE5 WARN),
+     price_identity_v53.py --digest "$C" (the install digest, unchanged), page_v53/patch_new_v53_1.py --check
+     "$C/calc/gn-app.js" (patched), package.py dry then --apply, and the manifest check (23 of 23; copy 3 equal), as in
+     section 4. In BF, the changed files must equal the clone's byte for byte. Remove "$ST/r9b.reh" once its logs are
+     kept.
+  2. R9c, a reviewed pre-opening-day round (hard deadline Fri 5 Mar 2027): GN_DATA_WEEK, verify's G6 and
+     pre_installed audits, the season-c fallback texts and the S < 1 ban's input in the engine, W6 on the real
+     workbook, and the page items needed before --add-new. Its install writes the build.json key r9c.
+  3. The season start, once, before the first refresh (it re-prices nothing):
+        python3 -B season_start_v53.py --root . --schedule v53_archive/inputs/hs_schedule_2027_R_f86a8c3e3e7f.json
+                --gndaily-start 2027-03-25 --report <outside BF>                                         dry run
+        (the same with --apply)
+     It archives the 2026 daily feed and options ledger in calc/gn-history.js, starts the 2027 feed and moves
+     build.json gndaily_start to 2027-03-25. The first W4 after it rolls the options ledger over to 2027.
+  On the opening-day pull (e = 0) W1 refuses; update_calc_weekly.py --g13-live --pull P --report <outside BF> and
+  verify_calc.py --opening-day P --report <outside BF> confirm the board still equals v53.0's prices.
 
-3. THE LARGEST MOVERS (headline $, v52.0 -> v53.0)
-  Up:   Shohei Ohtani $3.45 -> $5.60; Corbin Carroll $2.42 -> $3.90; Jose Ramirez $1.55 -> $2.99; Bobby Witt Jr.
-        $2.61 -> $4.01; Ketel Marte $1.86 -> $3.26; Rafael Devers $2.01 -> $3.27; William Contreras $2.28 -> $3.53;
-        Max Meyer $1.52 -> $2.74; Jazz Chisholm Jr. $1.67 -> $2.88; Yoshinobu Yamamoto $2.96 -> $4.15.
-  Down: Mike Clevinger $1.63 -> $0.02; Cristian Javier $2.14 -> $0.69; Alexis Diaz $1.47 -> $0.06; Triston McKenzie
-        $1.61 -> $0.21; Dylan Carlson $1.64 -> $0.25; Jack Suwinski $1.46 -> $0.10; Tim Anderson $1.29 -> $0.02;
-        German Marquez $1.58 -> $0.33; Jackson Jobe $2.49 -> $1.28; Trey Yesavage $2.60 -> $1.40.
-  The big drops are players whose v52.0 price came from a past peak that their recent MLB rates and playing time do
-  not support; the big rises are everyday regulars whose expected season is worth more than v52.0's ceiling read.
+  The guards (in code; no price is involved, they only stop a run):
+  - THE R9c GUARD (F9). W1 --apply in BF refuses, before any write, until build.json carries r9c:
+      REFUSED (exit 2) -- nothing written: this is the live build folder and build.json carries no r9c: no 2027 weekly
+      runs in BF until R9c is installed (...)
+    Its dry run prints the same text as one WARNING line. Only R9c's reviewed install writes r9c; never add it by hand.
+  - THE RULE 5 GUARD (F19). The install carries the 2026 list and names it 2026 (build.json rule5, season 2026). From
+    the season start on (options season 2027), update_options.py --apply refuses, so W4 and the rollover stop:
+      REFUSED (exit 2) -- nothing written: the Rule 5 list in calc/gn-app.js is 2026's (build.json rule5) and the
+      options season is 2027: enter the 2027 list first (C-R6-7 (d); R9b: update_options.py --rule5 ...)
+    Its dry run prints it as one WARNING and exits 0. A hand edit of the RULE5 literal or of build.json rule5 refuses
+    the same way. Verify then prints one WARN line, "RULE5: the Rule 5 list in calc/gn-app.js is 2026's (build.json
+    rule5) and the options season is 2027: enter the 2027 list (R9b; C-R6-7 (d))". What to do: run R9b (step 1). The
+    line never appears off season.
+  - W1 also refuses before the opener and without a season start; W3 refuses a season-c placement whose texts R9c has
+    not written yet (exit 2, a named message) and a declared S < 1 ban; W6 refuses the real workbook.
 
-4. THE HANDOVER AND THE PROSPECTS
-  - The handover switch fired. SPEC 10 declared in advance: if the median value jump of the 18 players switched at
-    the v52.0 pre-roll step lies outside +/-10%, the gradual handover (S2-lite) replaces the one-day switch (S1).
-    Under H3 the median jump is +40.8%; 13 of the 18 jump by more than 30%: A.J. Ewing +72.1%, Henry Bolte +204.3%,
-    Carter Jensen +67.4%, Carson Benge +30.6%, Logan Henderson +38.3%, Travis Bazzana +50.4%, Jacob Gonzalez +218.9%,
-    Hao-Yu Lee +131.0%, Kumar Rocker +43.3%, Spencer Miles +200.0%, Jake Bennett +30.9%, Cole Carrigg +115.7%,
-    Didier Fuentes -38.1%. (Measured on the pinned shadow board, sha256 57a225b2..., which this build reproduces.)
-  - So the 216 prospects with MLB time (198 + 18) are priced on MLB rates starting from their prospect value.
-  - The 675 others keep the v52.0 prospect chain x kappa_P (P-hold). The branch's share of the board's cumulative RA
-    is 10.4% at 1 year, 12.2% at 5 years and 14.9% at 10 years (verify G11).
-  - The 8 relievers who graduated at v52.0 (Cole Winn, Will Klein, Sam Bachman, Seth Halvorsen, David Morgan, Carlos
-    Vargas, Roansy Contreras, Mason Englert) are T1 rate records now, priced from their rates with no x0.80.
-  - The D8 maturation x0.80 stays as a named Inspector line on the 8 production T3s that carry it (Kristian
-    Campbell, Jack Kochanowicz, Hurston Waldrep, Chase Silseth, Robert Hassell III, Luis Matos, Logan Evans, Jonathan
-    Cannon). The 3 switched Book records (Jacob Gonzalez, Jake Bennett, Ryan Johnson) are S2-lite at 1.0 (RD 6).
+================================================================================
+6. THE CEILING WORKBOOK (unchanged until R9c)
 
-5. RECORDS THAT NEED ATTENTION (plan 2.11; each is named in the build report, build_report_v53_0.json)
-  - Pricing age differs from board age, 10: the history age prices (the board ages were "fixed first" at v51.17 and
-    are not changed here). Hayden Birdsong (board 29, a0 24, k* 2), Porter Hodge (29, 25, k* 1), Reese Olson (28,
-    26), David Festa (29, 26), Gunnar Hoglund (29, 26), Mike Vasil (28, 26), Hector Neris (37, 37), Chad Green (35,
-    35), Andrew Saalfrank (28, 28), Bowden Francis (30, 30). The Inspector prints a0 and its source.
-  - No 2026 row, 92 player-kinds (86 newest 2025, 6 newest 2024), e.g. Justin Steele, Anthony Santander, Spencer
-    Schwellenbach, A.J. Puk, Edwin Uceta, Robert Stephenson, Pablo Lopez, Frankie Montas. Their newest row carries its
-    own lag weight; the "2026 actual" cell reads "2026: no MLB units (0)".
-  - Newly priced free agents, 38 (no injury-module record at v52.0; each gets the minimal injury block). Two of them
-    are on an ESPN list: Jonathan Heasley (IL-60) and Wyatt Mills (OUT).
-  - Bridged to MLB by a unique name, 44; 10 of them are the 10 pricing-age records above (an unaudited board age).
-  - Hit% above 100%, 44 headlines (max 1.1777, Corbin Carroll): an everyday player's expected share can exceed the
-    full-season playing-time unit. The Inspector explains it.
-  - Priced in the other pitcher group, 91 (a one-kind pitcher whose kind differs from the board position): S1 board SP
-    priced RP 34; S1 board RP priced SP 21; S2-lite board SP priced RP 31; S2-lite board RP priced SP 5. The Inspector
-    prints "priced as <group>".
-  - A history row's group differs from the kind's group: 123 rows on 105 records (e.g. Nick Martinez's 2024 RP row).
-    Each row is valued in its own group's league rate.
-  - Held at v52.0, 3: RA unchanged; their dollars re-float against 371.69: Jack Wenninger RA 24, $0.05 -> $0.06; Luis
-    Ortiz RA 70, $0.14 -> $0.19; Jose A. Ferrer RA 150, $0.29 -> $0.40. The panel says "v52.0 scale".
-  - No birth date on file, 40 records (no eng.bd, no eng.aod, and no MLBAM date for eng.mid): deferred to the 2027
-    roll. Rate prices use the history age. (The plan's earlier count was 45; this is the count on this board.)
-  - ESPN designation vs the injury module, 25 rows, all unrostered free agents carried unchanged from v52.0; nothing
-    is repriced for them at v53.0 (verify WARN; listed in V53_REVIEW.md).
-  - Five branch values sit on an exact half (pc x 0.2 = .5): Gabriel Rodriguez, Anthony Millan, Jose Manon, Pedro
-    Blanco, Daury Vasquez. Each prints its stored RA.
+  Gordo_Nation_Dynasty_CEILING_Workbook_UNIFIED.xlsx is not written by the install. It keeps v53.0's install state
+  (12497fd2...): its prices equal v53.1's at e = 0, and its banners still say v53.0 and name Methodology v22 until
+  R9c. At v53.0's install, 2_Org_Rankings recomputed (River Cats 45,410 still first, KC Gray Hotdogs 43,020 second).
+  Until R9c, do not run on BF:
+  - resync_ceiling_workbook_v53_0.py without --weekly: the install-layout resync accepts only build v53.0 from v52.0
+    and refuses build v53.1;
+  - workbook_check_v53.py without arguments: it looks for PLAYERS_2026-10-03_v53.1.json, which does not exist.
+  W6 (--weekly) runs on a copy, with --root . --workbook <copy> (section 2).
 
-6. WHAT IS NOT IN v53.0 (deferred, each by name)
-  - The fielding line: fld = 0 on every record (deferred to phase 12).
-  - The evidence rule (drop the 15 appearances before an IL placement from a pitcher's row): deferred, because no
-    per-appearance source exists. 88 rate pitchers carry the exposure (on an injured list with R or R2 set), 60 of
-    them with 2026 innings. Reported weekly from v53.1 (D-3).
-  - G9, the double-count audit: REPORTED, not blocking (ruled 3 Oct; a property of the model). (a) the scoring rate
-    tracks last season's playing time: hitters +0.156, starters +0.105, against 0.10; (b) the share model's errors
-    track the rate: all -0.052, hitters -0.061, relievers -0.098, against 0.05.
-  - G14 (roll continuity) and G17 (weekly churn): not run at v53.0; they need the in-season engine (v53.1). G14's
-    newcomer-prior reading is open (D-2). No installed record is a newcomer at e = 0.
-  - N-1: no level adjustment for players back from injury now; the returners are checked as a group after the 2027
-    season (ruled 1 Oct).
-  - The MLB terms question is still unruled (D7).
-  - Keeper values move by design (getKval reads tj). The confidence labels are v52.0's.
-  - The Inspector's term-by-term breakdown is at the headline season; the other nine seasons show their values and
-    U / SIGMA / A, not the logit terms.
-  - The weekly refresh is NOT runnable on a rate board until v53.1 (target 5 Feb 2027, hard stop before opening day,
-    25 Mar 2027). The v52 weekly and one-time scripts refuse a rate board (engine_guard.py). In v53.1 the weekly
-    script itself changes (update_calc_weekly.py v53: preflight, the bridge, rosters and designations, the
-    season-to-date rows, then rate_engine.price_board; plan 7.2), followed as now by verify_calc.py, stamp.py and
-    package.py. A roster-only refresh (no repricing) comes first, in v53.1's first round (D-4).
-  - 30 one-time scripts moved to archive/one_time_v51/ fail closed by folder. The two season_roll_lambda records do
-    not, and are documented as such: each takes the board path on argv and still requires --apply
-    --confirm-season-complete.
+================================================================================
+7. CHECKS AND TESTS: WHERE AND HOW EACH RUNS
 
-7. CHECKS RETIRED OR DEFERRED (verify_calc_v53.py prints this table on every run)
-  - tj identity with _hit_at, the asset identity w = tjp x _hit_at, the _hit_clean assembly: REWRITTEN as G3 / G5 /
-    G10 on rate records (Hit% is U per season, not a band shift); kept on branch and held records.
-  - The age-mate curve and _CLOCK_HELD; "tjp peaks at kp"; the pace-gate leak; "WARN T3 on a vet basis": RETIRED
-    (rate lines are closed form; G4 replaces the peak test; pm is 1.00; no vet basis outside the 3 held).
-  - PV blend, injury carve-out vs basis, TIER / BASIS map: REWRITTEN (narrow) for the rate basis.
-  - The --roll checks (REG, cliff, g, clock, carry, ratchet, floor, --rulings-v52): MOVED with the v52 verify to tag
-    v52.0 and the standby; the v53 --roll refuses a rate board.
-  - The KEEP-class roll checks (age / aod / bd +1, il / ir unchanged, inj.f untouched, tier labels, rotation, roster
-    fields): DEFERRED to the rate roll (phase 12).
-  - The Inspector chain check: REWRITTEN as X-RC (render_check_rate1.js). inspector_equiv_v51_19/20.js,
-    inspector_check_v51_18.js and render_check_v51_15.js: RETIRED (kept as records, never run).
-  - NOT RUN at v53.0: G14, G17, G13-live (v53.1).
+  On BF (each alone; reports outside BF):
+    python3 -B verify_calc.py                                          FAIL 0 (at the install, WARN only the
+                                                                       KEEP INJURY MODULE line)
+    python3 -B stamp.py --check                                        exit 0
+    python3 -B price_identity_v53.py --digest .                        the install digest, unchanged
+    python3 -B test_engine_guards_v53_1.py --root . --stage ../v53_staging/v53.1     alone; 22 PASS, 0 FAIL
+    python3 -B rate_engine.py --selftest --root .                      162 passed, 0 failed (reads ../v53_staging/v53.1
+                                                                       r8base and gate7b.sc_wk, kept read-only to R9c)
+    python3 -B verify_calc.py --selftest ; python3 -B manifest_check_v53.py --selftest
+    python3 -B page_v53/patch_new_v53_1.py --check calc/gn-app.js       patched
+  Every manifest check passes --manifest ../deploy_manifest_<build>.json explicitly (F3), for a deploy folder:
+    python3 -B manifest_check_v53.py --dir ../GordoNation_Calculator_<build> --manifest ../deploy_manifest_<build>.json
+  and, after an upload, on the commissioner's network word only:
+    python3 -B manifest_check_v53.py --site <the site URL> --network --manifest ../deploy_manifest_<build>.json
+  STAGE-only (F17): test_weekly_v53.py, test_rosters_only_v53.py, test_deploy_label_v53_1.py and test_rule5_v53_1.py
+  are not installed, because their fixtures are not (a synthetic 2027 pull in BF would be read as the newest pull).
+  Each runs only from its tracked deliver copy, on a STAGE tree built from ../v53_staging/v53.1/r9base and the R9
+  finals:
+    redesign/v53/rounds/R8/deliver_R8c/S2c/test_weekly_v53.py
+    redesign/v53/rounds/R8/deliver/S2c/test_rosters_only_v53.py
+    redesign/v53/rounds/R9/deliver/S2d/test_deploy_label_v53_1.py
+    redesign/v53/rounds/R9/deliver/S4d/test_rule5_v53_1.py
+    python3 -B <deliver copy> --root <the STAGE tree> --stage ../v53_staging/v53.1
+  test_weekly_v53.py and test_rosters_only_v53.py each run alone (test_rosters_only_v53.py with --workers 3).
+  The STAGE tree, built from BF with ST="$BF/../v53_staging/v53.1" and D9="$BF/redesign/v53/rounds/R9/deliver" (a new
+  name each time; remove the tree once its logs are kept):
+        T="$ST/stest_<YYYY-MM-DD>"; cp -c -pR "$ST/r9base" "$T" && chmod -R u+w "$T"
+        for p in S2d S4d S5d S6d S10d S12; do
+          (cd "$D9/$p" && shasum -a 256 -c R9_FINAL.sha256 >/dev/null && sed 's/^[0-9a-f]*  //' R9_FINAL.sha256 |
+           while IFS= read -r f; do mkdir -p "$T/${f%/*}"; cp -p "$f" "$T/$f"; done) || echo "STOP: $p"
+        done
+  These six finals lists name tree paths. The other R9 finals are not copied: S7b's belong under S7/, S9's README
+  would make a second README in the tree, and M23's script belongs in Reference/. $ST/r9base is kept only until R9
+  ends (A-R9-8). After that, start from the R8 gate's tree, which holds the same 454 files plus r8_reports/:
+        cp -c -pR "$ST/gate8" "$T" && chmod -R u+w "$T" && rm -rf "$T/r8_reports"
+        (cd "$T" && shasum -a 256 -c "$BF/redesign/v53/rounds/R8/runlogs/GATE_R8c/gate8_after_GR8-0.sha256" | grep -v ': OK$')
+  The last line prints nothing when the tree is right; then run the loop above. If neither $ST/r9base nor $ST/gate8
+  is on disk, ask the orchestrator before running these four tests.
 
-8. ROLLBACK
-  Until opening day, build_v53_0.py --rollback restores every tracked build-folder file outside redesign/ from tag
-  v52.0 (from git, not from backups) and removes what v53.0 added, except model/, v53_archive/, redesign/ and the v53
-  scripts outside calc/ (provenance; nothing on the v52 path reads them). redesign/ (the decision records and the
-  spec) is exempt: the rollback never restores, removes or rewrites a path under it (R4b-1). The v52 verify then gives
-  FAIL 0 WARN 2, stamp.py finds its v52 phrase, and package.py rebuilds the 21-entry v52.0 zip;
-  GordoNation_Calculator_v52.0.zip is unchanged on disk and is what the commissioner re-uploads. From opening day to
-  the ROLLBACK DEADLINE, SAT 1 MAY 2027, a rollback runs the v52 hot standby (v53.1, S7). After 1 May 2027 the project
-  fixes forward.
+================================================================================
+8. RETIRED
 
-9. THE SHADOW ENVIRONMENT (how the prices were produced and can be reproduced)
-  The pinned shadow board (board_shadow_v52.0.json, sha256 57a225b2...) is reproduced byte for byte from
-  git archive of 413917f (tag v53.0-shadow-env) plus two untracked inputs; the commands are in
-  v53_archive/INPUTS_v53.0.json (shadow_env.commands and run_commands) and in v53_archive/RELEASE_v53.0.md.
-    cd redesign/shadow && python3 -B shadow_price.py --model model/gn_rate_model_v1_cur_refit_2000_2026.json --out ...
-    cd redesign/shadow && python3 -B shadow_verify.py --derive --model model/gn_rate_model_v1_cur_refit_2000_2026.json
-    or all of W0 from a clean environment: python3 -B freeze_v53_0.py all; then python3 -B freeze_v53_0.py --check
+  - apply_pace_v51.py, pre_roll_basis_switch.py and resync_ceiling_workbook_v52_0.py: v52 scripts; each refuses a
+    rate board. The pace multiplier is 1.00 on every record.
+  - test_engine_guards_v53.py (v53.0's): superseded by test_engine_guards_v53_1.py.
+  - The R7 stand-ins --standin and --standin-pre: refused with --apply on every schedule.
+  - README_v53.0.txt: moved to notes/README_v53.0.txt at the install (the release notes of v53.0 live there).
 
-RUN ORDER TO REPRODUCE THE PROMOTION (branch calculator-v53.0; one step at a time, never in parallel)
-  On the STAGE (A-R4-1: W2, then the spike, then --record, then W3; never W2 into STAGE after --record):
-  python3 -B -I build_v53_0.py --out ../v53_staging/v53.0 --built 2026-10-03 --utc <the run time>   # 4 stages
-    (--utc is the release run's own UTC time, recorded in build.json; the build is dated the promotion date)
-  python3 -B -I check_v53_0.py --stage ../v53_staging/v53.0 --expect-combo 'H3|S2-lite|P-hold|T5a'
-                                                                                   # PASS, 0 disagreements
-  python3 -B -I rate_engine.py --spike ../v53_staging/v53.0                          # 0 mismatches
-  python3 -B -I build_v53_0.py --record ../v53_staging/v53.0
-  python3 -B verify_calc_v53.py --root ../v53_staging/v53.0                          # FAIL 0
-  (then, in parallel: render_check_rate1.js with the probe, values_check_v53.js, checks/compare_check_v53.js,
-   page_v53/patch_values.py --selftest, test_engine_guards_v53.py --require-stage, the offline sweep)
-  Then this README into the STAGE root, and verify_calc_v53.py once more, alone.
-  After the commissioner's OK on ../v53_staging/V53_REVIEW.md:
-  python3 -B build_v53_0.py --promote ../v53_staging/v53.0 --date 2026-10-03 --approved '<the OK>'
-  python3 -B verify_calc.py                                                        # FAIL 0
-  python3 -B stamp.py --apply                                                      # writes the v53.0 as-of clause
-  python3 -B stamp.py --check                                                      # exit 0 = clause once per page
-  python3 -B resync_ceiling_workbook_v53_0.py --apply                              # then again: 0 cells
-  python3 -B workbook_check_v53.py                                                 # every row equals the board
-  python3 ../../../Reference/patch_methodology_v22.py --apply                      # Methodology v22
-  python3 -B package.py --apply                                                    # GordoNation_Calculator_v53.0
+================================================================================
+9. THE RULINGS IN FORCE (redesign/DECISIONS.md)
+
+  - D-2 (b): the newcomer prior is phased out through the season, its weight x (1 - e).
+  - D-3: e from the pinned 2027 schedule (no weekly statsapi request); the IL placement date is the first refresh
+    that sees the designation, refined by the news date; the evidence rule stays deferred to phase 12, its exposure
+    reported weekly; the LMR_c denominator is the prior season's league totals x e.
+  - D-4: the offseason roster-only refresh; no repricing; new records unpriced until v53.1 prices them in season.
+  - D-6 (b): the 216 S2-lite records keep the ceiling-based start after the 2027 -> 2028 roll.
+  - C-R6-7: the options ledger for 2027: (a) no level carries from 2026; (b) a move after the regular season's end is
+    an offseason move, never a burn; (c) the Palencia recapture exemption covers its 2026 event only, the Halvorsen
+    id alias stays; (d) the 2027 Rule 5 list replaces 2026's after the December 2026 draft (R9b; still open).
+  - C-R6-8: designation-only records stay priced from day 0, and a routine 60-day move with no news timeline stays on
+    the pooled curve; both counts are reported weekly.
+  - C-R6-9: the hitter's playing-time class is the two-window blend by e.
+  - C-R6-10: the G17 thresholds acknowledged as declared (g17_thresholds_2027.json, pinned in build.json g17).
+  - C-R7-1: the in-season Inspector (display only). C-R7-2: no new rule for returning veterans.
+  - C-R8-1: a suspension with games left at season's end counts against the next season.
+  - C-R8-2 (b): a new player with no MLB rows is a newcomer for 2027.
+  - S7b-R1 (b): the runbook's B4 hand check of every name bridge before B5 (section 12). S7b-R8c-F1: the standby
+    replay writes a missing tid on a pickup.
+
+================================================================================
+10. KNOWN ISSUES (disclosed; none moves a price at the install)
+
+  - G9, the double-count audit: reported, not blocking (a property of the model).
+  - N-1: no level adjustment for players back from injury; the returners are checked as a group after the 2027 season.
+  - The expected-share curve: its step and its too-slow fall, the next season of players aged 34 and over projected
+    too low, and the long-range term flat beyond its last lag knot. The fix tested under the pre-registered second look
+    did not pass, so it is not installed, and these defects carry into 2027. Nothing in the price is adjusted for them;
+    a later model change would be tested anew (Methodology v23, 25.10).
+  - The Inspector's "A = U / SIGMA" row can show a quotient one unit off in the fourth decimal at a rounding boundary,
+    as v53.0 does. Display only.
+  - EXP-1 is a synthetic-fixture line of the rehearsal (an options case on a synthetic schedule); it is not expected
+    on a real 2027 board.
+  - The v52 standby's page keeps the 2026 Rule 5 list after R9b (display only).
+  - Declare no S < 1 ban in 2027: no source for its input is ruled, and W3 refuses one until R9c.
+  - Until R9c: GN_DATA_WEEK (the page's week label) still follows the 2026 calendar; --add-new is off in BF; the
+    workbook keeps v53.0's state (section 6).
+
+================================================================================
+11. THE BUILD-TIME RULE (--utc)
+
+  build_v53_0.py accepts only a --utc that starts with --built's date (YYYY-MM-DDTHH:MM:SSZ on the same date); v53.0
+  was built with --built 2026-10-03 --utc 2026-10-03T23:59:59Z. Every v53.1 writer that stamps a time takes it from
+  --utc on its command line, never the wall clock: the install used --date 2026-10-31 --utc 2026-10-31T12:00:00Z, and
+  the deploy label, the page patch and update_options.py --rule5 take --utc the same way.
+
+================================================================================
+12. ROLLBACK
+
+  Names (bash; REPO as in v53_archive/RELEASE_v53.1.md section 3, the repository root):
+        BF="$REPO/2026/Calculator/GN_v51.9_wk22_2026-09-20"
+        TOOL="$BF/redesign/v53/rounds/R9/deliver/S11/install_v53_1.py"
+        J="$BF/redesign/v53/rounds/R9/runlogs/RELEASE/install/rel/journal.json"
+        APPROVED='Commissioner: "start R9", 31 Oct 2026 (the GO for the v53.1 release; orchestrator ruling R9-1)'
+  J is the tracked release journal (it holds no absolute path). APPROVED is the release's approval text exactly, as
+  RELEASE section 3 sets it: the tool refuses a journal from an install made with a different --approved. Every run
+  takes the release's own arguments (--date 2026-10-31 --utc 2026-10-31T12:00:00Z) and a new, empty --log-dir
+  outside BF.
+
+  BEFORE OPENING DAY (window A), in this order (the runbook, $BF/S7/ROLLBACK_RUNBOOK_v53.md, has every command):
+  A0  the commissioner decides; the decision and the date go into redesign/DECISIONS.md;
+  A1  the operator copies first, before anything is removed: the status record; rosters_only_runs/, options_runs/,
+      page_runs/ and the wk*_off* pull folders into ../rollback_ro_<date>/; and $BF/S7 into ../rollback_s7_<date>/
+      (from here on the runbook's S7 is that copy, because the tool removes $BF/S7);
+  then the tool's dry run, then the rollback itself (<date> the day of the run):
+        python3 -B "$TOOL" --rollback --dry-run --journal "$J" --target "$BF" --repo "$REPO" \
+            --reference-dir "$REPO/Reference" --log-dir "$BF/../v53_staging/rollback_ld_<date>_dry" \
+            --date 2026-10-31 --utc 2026-10-31T12:00:00Z --approved "$APPROVED"
+        python3 -B "$TOOL" --rollback [--discard-later-runs] --journal "$J" --target "$BF" --repo "$REPO" \
+            --reference-dir "$REPO/Reference" --log-dir "$BF/../v53_staging/rollback_ld_<date>" \
+            --date 2026-10-31 --utc 2026-10-31T12:00:00Z --approved "$APPROVED"
+       (--discard-later-runs when any later run log exists: A1 has copied them). It returns every install path to
+       tag v53.0's bytes, restores the build zip from its .pre-v53_1 backup and proves it; it leaves, and lists, the
+       later pull folders, R9b's list and the later deploy outputs, and never touches redesign/;
+  then A2-A8 of the runbook (build_v53_0.py --rollback, to v52.0), if the decision is to go back to v52.0.
+  After the season start, run the tool's dry run first; if it refuses, stop and ask the orchestrator.
+
+  v53.1 -> v53.0 ALONE, after the upload (a device test fails, or v53.1 must come down before opening day): the tool's
+  rollback as above, then the commissioner re-uploads the 23 files of GordoNation_Calculator_v53.0.zip as one commit.
+  Stopping at v53.0 is allowed (its prices equal v53.1's at e = 0), but v53.0 cannot run a 2027 weekly: before opening
+  day either a fixed v53.1 is installed or window A goes on to v52.0. v53_archive/RELEASE_v53.1.md has the six steps.
+
+  FROM OPENING DAY TO SAT 1 MAY 2027 (window B): the v52 hot standby, by the runbook at $BF/S7. The B4 hand check of
+  every name bridge before B5 (S7b-R1 (b)) is in the runbook (written by S7b, F15). After 1 May 2027 the project fixes
+  forward.
+
+================================================================================
+13. THE INSTALL AND THE UPLOAD
+
+  The install (2026-10-31): the 12 updated scripts, the new scripts and records, the operator's standby set S7/, the
+  page patch (page_runs/PAGE_PATCH_1.json) and the label (page_runs/PAGE_PATCH_2.json), the spike re-record
+  (v53_archive/spike_report_v53_1.json), build.json's g17, rule5 and v53_1 keys, this README, the stamps, Methodology
+  v23 and the v53.1 package (GordoNation_Calculator_v53.1, 23 files, ../deploy_manifest_v53.1.json). The per-file list
+  with every sha256 is v53_archive/INSTALL_v53.1.json; v53_archive/RELEASE_v53.1.md describes the release, the
+  rollback and the commissioner's upload checklist; v53_archive/device_tests_v53.md is the phone checklist and
+  v53_archive/CHECKPOINT_2027-04-26.md the four-week check.
+  The upload is the commissioner's: the 23 files of GordoNation_Calculator_v53.1.zip to GitHub Pages as one commit
+  (the same 23 names as v53.0; nothing added or removed).

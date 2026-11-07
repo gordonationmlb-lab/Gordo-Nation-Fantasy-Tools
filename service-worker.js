@@ -1,4 +1,4 @@
-const CACHE = 'gordo-calc-v96-2026-09-27-v53.0';
+const CACHE = 'gordo-calc-v97-2026-09-27-v53.1';
 const SHELL = [
   // v53.0: every script entry carries ?b=v53.0, the URL both pages load (X-HAND), and the model-tables page
   // is precached; gn-rate-detail.js is not (it loads on demand, plan 2.9; the network-first branch below
@@ -10,12 +10,12 @@ const SHELL = [
   // difference, so the offline shell is incomplete without them. gn-app.js is the
   // 6.2 MB one: it holds PLAYERS/GNDAILY/GNROS/HISTORY/OPTIONS_DATA and all the logic,
   // and it is now shared by both pages instead of duplicated into each.
-  'gn-boot.js?b=v53.0', 'gn-install-tip.js?b=v53.0', 'gn-buildlink.js?b=v53.0', 'gn-app.js?b=v53.0', 'gn-sw-register.js?b=v53.0',
-  'gn-detail-v45.js?b=v53.0', 'gn-timeview.js?b=v53.0', 'gn-ros-v46.js?b=v53.0', 'gn-a11y-keys.js?b=v53.0', 'gn-build-stamp.js?b=v53.0',
+  'gn-boot.js?b=v53.1', 'gn-install-tip.js?b=v53.1', 'gn-buildlink.js?b=v53.1', 'gn-app.js?b=v53.1', 'gn-sw-register.js?b=v53.1',
+  'gn-detail-v45.js?b=v53.1', 'gn-timeview.js?b=v53.1', 'gn-ros-v46.js?b=v53.1', 'gn-a11y-keys.js?b=v53.1', 'gn-build-stamp.js?b=v53.1',
   // v51.19: Player Compare, and the anonymous feature counts. Compare's Statcast context is not a file here at
   // all: each browser fetches it from Baseball Savant when Compare needs it, and GoatCounter's count.js comes
   // from gc.zgo.at -- both cross-origin, which the fetch handler below never intercepts, caches or precaches.
-  'gn-track.js?b=v53.0', 'gn-compare.js?b=v53.0'
+  'gn-track.js?b=v53.1', 'gn-compare.js?b=v53.1'
 ];
 
 self.addEventListener('install', (e) => {

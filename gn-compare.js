@@ -29,7 +29,7 @@
   // This file and gn-app.js must be the same build: Compare reads the Inspector's titles and rows, and a stale copy
   // of either (a cache that kept one file of an upload) would mis-read them. On a mismatch Compare says so, sets a
   // session flag and reloads the page once; if the mismatch survives that reload it stays paused (no loop).
-  var GN_COMPARE_BUILD = 'v53.0';
+  var GN_COMPARE_BUILD = 'v53.1';
   var HS_FLAG = 'gn-compare-handshake';
   function handshake() {
     var page = typeof GN_BUILD === 'undefined' ? '(none)' : String(GN_BUILD);

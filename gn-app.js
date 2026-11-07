@@ -12,7 +12,7 @@ const GN_HISTORY_DATES = ["2026-06-12", "2026-06-15", "2026-06-17", "2026-06-20"
 const RAW_PER_DOLLAR = 371.69;
 // v50.20: build constants the weekly script updates alongside RAW_PER_DOLLAR. Absorption is read from
 // the methodology 13 month table on the data-through date, never hand-typed into the display code.
-const GN_BUILD = 'v53.0';
+const GN_BUILD = 'v53.1';
 const GN_ENGINE = 'rate1';
 const GN_RATE_MODEL = {"sha12":"c7829868bca7","combo":"H3|S2-lite|P-hold|T5a","settings":{"pure_end":"one-season"},"window":[2000,2026],"kappa_P":0.7283854126930237,"kappa_P_k":[0.8006535649299622,0.7397476077079774,0.6915493130683898,0.6455108046531676,0.5574712634086609,0.5535372853279112,0.52903813123703,0.5404762148857116,0.5632911562919616,0.5830945849418641],"w":{"H":[1.0,0.6,0.4],"SP":[1.0,0.4,0.1],"RP":[1.0,0.5,0.3]},"LMR":{"H":{"2024":1.472964751407258,"2025":1.502976727403933,"2026":1.5040631833164715},"SP":{"2024":6.420240276929346,"2025":6.362904528566047,"2026":6.354214577853671},"RP":{"2024":6.860878510070016,"2025":6.597688709529484,"2026":6.474409168564916}},"Gfull":{"H":153.0,"C":135.21637426900585,"SP":32.5,"RP":70.0},"peak":{"hitter":26,"pitcher":27},"Ug":{"H":["b0","age","age_h21","age_h24","age_h27","age_h30","age_h33","age_h36","age_h39","lag_r1","lag_r2","lag_r3","lag_r4","q","s","s2","shist","nohist","qxs","Lxs","Lxq","ysd01","ysd01xL","absent","agexq"],"SP":["b0","age","age_h24","age_h27","age_h30","age_h33","age_h36","lag_r1","lag_r2","lag_r3","lag_r4","q","s","s2","shist","nohist","qxs","Lxs","Lxq","ysd01","ysd01xL","absent"],"RP":["b0","age","age_h24","age_h27","age_h30","age_h33","age_h36","lag_r1","lag_r2","lag_r3","lag_r4","lag_r5","lag_r6","q","s","s2","shist","nohist","qxs","Lxs","Lxq","ysd01","ysd01xL","absent","CL","SU","CLxL"]},"Sg":{"H":["b0","age","age_h21","age_h24","age_h27","age_h30","age_h33","age_h36","age_h39","lag_r1","lag_r2","lag_r3","lag_r4","lag_r5","lag_r6","lag_r7","q","s","s2","shist","nohist","qxs","Lxs","Lxq","ysd01","ysd01xL","absent","agexq"],"SP":["b0","age","age_h24","age_h27","age_h30","age_h33","age_h36","lag_r1","lag_r2","lag_r3","lag_r4","lag_r5","lag_r6","lag_r7","q","s","s2","shist","nohist","qxs","Lxs","Lxq","ysd01","ysd01xL","absent"],"RP":["b0","age","age_h24","age_h27","age_h30","age_h33","age_h36","lag_r1","lag_r2","lag_r3","lag_r4","lag_r5","lag_r6","lag_r7","q","s","s2","shist","nohist","qxs","Lxs","Lxq","ysd01","ysd01xL","absent","CL","SU","CLxL"]},"h3rule":"min(9, max(0, peak - a0 - 1))"};
 // ==================== v53.0 (package W5): the rate-basis helpers, the detail loader, the build handshake ====================
@@ -22,6 +22,7 @@ const GN_RATE_MODEL = {"sha12":"c7829868bca7","combo":"H3|S2-lite|P-hold|T5a","s
 //   held    held at v52.0 (eng.held set: the three held records, and 'held_T5b' under a T5b combination, A-6)
 function gnBasis(p) {
   const e = (p && p.eng) || {};
+  if (e.new) return 'new';                        // v53.1 (S10, A-R7-4): added after v53.0 by --rosters-only --add-new; not priced yet
   if (e.held != null) return 'held';
   if (e.b === 'rate') return 'rate';
   if (e.b === 'tool' && e.pc_v52 != null) return 'branch';
@@ -268,7 +269,12 @@ const PLAYERS_BY_ORG = (() => {
   for (const p of PLAYERS) { const k = p.o || ''; let a = m.get(k); if (!a) { a = []; m.set(k, a); } a.push(p); }
   return m;
 })();
-function playersOf(org) { return PLAYERS_BY_ORG.get(org) || []; }
+function playersOf(org) {
+  // v53.1 (S10): a record added after v53.0 (eng.new) is not priced yet, so no team total, depth chart or roster set
+  // counts it. An org without one gets its shared array, as before.
+  const a = PLAYERS_BY_ORG.get(org) || [];
+  return a.some(p => p.eng && p.eng.new) ? a.filter(p => !(p.eng && p.eng.new)) : a;
+}
 // Decorate-sort-undecorate, descending. The comparator form called the value function twice
 // per comparison: 466 getKval calls to rank one 52-man roster, 3,554 across the eight orgs one
 // manager render builds. renderResults already did this (CORE-4); ten sort sites were missed.
@@ -473,6 +479,9 @@ function fadeAdjustedTj(player, yearIdx) {
 }
 
 function getValue(p) {
+  // v53.1 (S10, A-R7-4 (c)): a record added after v53.0 (eng.new) is not priced yet. It has no value in any mode, as an
+  // unprojected ROS record has none (CORE-2): no total, sort or chart line counts it as a 0.
+  if (p && p.eng && p.eng.new) return null;
   let raw;
   // v53.0 (plan 2.8, A-18): the Pure end is a one-season setting. At YEARS > 1 b is 0 on every path below: the
   // single-season cell, the pre-arrival branch, the cumulative sum and its floor, and blendedRaw's fallback.
@@ -527,6 +536,7 @@ function getValue(p) {
 }
 
 function fmtValue(v) {
+  if (v == null) return 'not priced yet';   // v53.1 (S10): outside ROS mode getValue is null only on an eng.new record
   if (MODE === 'dollar') return '$' + v.toFixed(2);
   // SA-8: the side totals printed 17110 beside a manager panel printing 17,110
   return Math.round(v).toLocaleString();
@@ -673,8 +683,8 @@ function renderResults(side) {
     rows = list.slice(0, CAP).map(p => ({ p: p, v: getValue(p) }));
   }
   box.innerHTML = rows.map(r =>
-    '<div class="result-item" data-n="' + _iesc(r.p.n) + '" data-o="' + _iesc(r.p.o) + '">' +
-      '<div><div>' + _iesc(r.p.n) + '</div><div class="meta">' + _iesc(r.p.p) + ' | age ' + (r.p.a||'-') + ' | ' + _iesc(rosterBadge(r.p)) + ' | ' + _iesc(r.p.t) + (r.p.ph ? ' ' + _iesc(r.p.ph) : '') + '</div></div>' +
+    '<div class="result-item" data-n="' + _iesc(r.p.n) + '" data-o="' + _iesc(r.p.o) + '"' + (r.p.eid != null ? ' data-eid="' + _iesc(r.p.eid) + '"' : '') + '>' +
+      '<div><div>' + _iesc(r.p.n) + '</div><div class="meta">' + _iesc(r.p.p) + ' | age ' + (r.p.a||'-') + ' | ' + _iesc(rosterBadge(r.p)) + ' | ' + _iesc(r.p.t || '-') + (r.p.ph ? ' ' + _iesc(r.p.ph) : '') + '</div></div>' +
       '<div class="ra">' + fmtValue(r.v) + '</div>' +
     '</div>'
   ).join('') || (held.length
@@ -699,7 +709,12 @@ function renderResults(side) {
   box.classList.add('open');
   [...box.querySelectorAll('.result-item[data-n]')].forEach(el => {
     el.addEventListener('click', () => {
-      const player = PLAYERS.find(p => p.n === el.dataset.n && p.o === el.dataset.o);
+      // v53.1 (S10, A-R7-4 (e)): select by the ESPN id when the row carries one; (n, o) only for a keyless record, so a
+      // record added after v53.0 that shares a priced record's name and org selects itself
+      const eid = el.dataset.eid;
+      const player = (eid != null && eid !== '')
+        ? PLAYERS.find(p => p.eid != null && String(p.eid) === eid)
+        : (PLAYERS.find(p => p.eid == null && p.n === el.dataset.n && p.o === el.dataset.o) || PLAYERS.find(p => p.n === el.dataset.n && p.o === el.dataset.o));
       if (player) addPlayer(side, player);
     });
   });
@@ -755,6 +770,7 @@ function removePlayer(side, idx, viaKeyboard) {
 // share of it (it can pass 100%). Branch: Pure is the tool ceiling carried by kappa_P. Held: still the v52.0 numbers.
 function gnPickedFactors(p) {
   const b = gnBasis(p), hit = (p.h ? (p.h * 100).toFixed(0) + '%' : '-');
+  if (b === 'new') return ' | not priced yet: new to the board (priced from v53.1)';   // v53.1 (S10)
   if (b === 'rate') return ' | Pure ' + Math.round(p.pc) + ' exp. | Hit% ' + hit + ' exp. share';
   if (b === 'branch') return ' | Pure ' + Math.round(p.pc) + ' (\u00d7\u03ba_P) | Hit% ' + hit;
   return ' | Pure ' + Math.round(p.pc) + ' | Hit% ' + hit + ' (v52.0)';
@@ -765,7 +781,7 @@ function renderPicked(side) {
   box.innerHTML = state[side].map((p, i) =>
     '<div class="player-row" data-o="' + _iesc((p.o||'')+'') + '">' +
       '<div><div class="name">' + _iesc(p.n) + '</div>' +
-        '<div class="meta">' + _iesc(p.p) + ' | age ' + (p.a||'-') + ' | ' + _iesc(p.t) + (p.ph ? ' ' + _iesc(p.ph) : '') + gnPickedFactors(p) + (gnInjCost(p) > 0 ? ' | Inj \u00d7' + (p.im).toFixed(2) : '') + '</div>' +
+        '<div class="meta">' + _iesc(p.p) + ' | age ' + (p.a||'-') + ' | ' + _iesc(p.t || '-') + (p.ph ? ' ' + _iesc(p.ph) : '') + gnPickedFactors(p) + (gnInjCost(p) > 0 ? ' | Inj \u00d7' + (p.im).toFixed(2) : '') + '</div>' +
       '</div>' +
       '<div class="meta roster" title="' + _iesc(rosterBadge(p)) + '">' + _iesc(rosterBadge(p)) + '</div>' +
       '<div class="ra">' + fmtValue(getValue(p)) + '</div>' +
@@ -808,6 +824,10 @@ function renderVerdict() {
   const unA = vA.filter(v => v === null).length;
   const unB = vB.filter(v => v === null).length;
   const un = unA + unB;
+  // v53.1 (S10): an eng.new record has no value yet (getValue null in every mode): it is counted with the unprojected,
+  // so its side shows a floor, and the words say "not priced yet"
+  const nw = state.A.filter((p, i) => vA[i] === null && p && p.eng && p.eng.new).length
+    + state.B.filter((p, i) => vB[i] === null && p && p.eng && p.eng.new).length;
   const sumA = gnDisplayRound(vA.reduce((s,v) => s + (v || 0), 0));
   const sumB = gnDisplayRound(vB.reduce((s,v) => s + (v || 0), 0));
   const floorA = unA ? '≥ ' : '', floorB = unB ? '≥ ' : '';
@@ -850,8 +870,9 @@ function renderVerdict() {
     $('vTag').textContent = ahead ? (ahead + ' ahead, at least') : 'No verdict';
     $('vTag').className = 'verdict-tag ' + (ahead ? 'tag-slight' : 'tag-empty');
     $('vDelta').textContent = ahead
-      ? (ahead + ' +' + fmtValue(absDiff) + ' or more (' + un + ' unprojected)')
-      : (un + (un === 1 ? ' player has' : ' players have') + ' no ROS projection');
+      ? (ahead + ' +' + fmtValue(absDiff) + ' or more (' + (nw ? (un > nw ? (un - nw) + ' unprojected, ' : '') + nw + ' not priced yet' : un + ' unprojected') + ')')
+      : (nw ? (un > nw ? (un - nw) + (un - nw === 1 ? ' player has' : ' players have') + ' no ROS projection; ' : '') + nw + (nw === 1 ? ' player is' : ' players are') + ' not priced yet'
+            : un + (un === 1 ? ' player has' : ' players have') + ' no ROS projection');
     return;
   }
   if (bigger === 0) {
@@ -1241,6 +1262,7 @@ function gnLockOn(p, key, rx){
   document.querySelectorAll('[data-gn-daily-y]').forEach(function(el){ el.textContent = String(GN_DAILY_Y); });
 })();
 function gnCareerArc(p){
+  if (p && p.eng && p.eng.new) return GN_ARC_YEARS.map(() => null);   // v53.1 (S10): not priced yet, so no value line
   const pit  = !!(p.p) && p.p.indexOf('P')>=0;
   const peak = pit?27:26;
   const dec  = (p.t==='T1'||p.t==='T2')?GN_VET_DEC:GN_T3_DEC;
@@ -1330,7 +1352,9 @@ function gnChartNum(unit, v){
 // archived season line (eng.s<year>, written by the season roll) once that season is a closed archive.
 function gnDailyStats(p){ const s = GN_DAILY_FINAL ? (p.eng || {})['s' + GN_DAILY_Y] : null; return s || p; }
 function gnPlayedInSeason(p){ const s = gnDailyStats(p); return (s.gp||0) > 0 || (s.ab||0) > 0 || (s.ip||0) > 0 || (s.fp25||0) > 0; }
-function gnFlatNote(p){ return gnPlayedInSeason(p) ? ' \u2014 flat: no daily history on file' : ' \u2014 flat: no ' + GN_DAILY_Y + ' games'; }
+function gnFlatNote(p){
+  if (p && p.eng && p.eng.new) return ' \u2014 not priced yet (flat at 0 until v53.1 prices him)';   // v53.1 (S10)
+  return gnPlayedInSeason(p) ? ' \u2014 flat: no daily history on file' : ' \u2014 flat: no ' + GN_DAILY_Y + ' games'; }
 // PV-5: the wrap is a fixed 220px and Chart.js draws the legend inside it, so twelve picks left a
 // 116px plot and twenty-four left 76px. Give the box room per legend row instead, up to a cap.
 function gnFitChartWrap(canvasId, n){
@@ -1389,8 +1413,8 @@ function gnRenderArcPlayer(){
   const unit = (MODE==='dollar')?'$':'';
   gnFitChartWrap('playerChart', allPlayers.length);
   const datasets = allPlayers.map((p,i)=>{
-    const isA = state.A.some(x=>x.n===p.n && x.o===p.o);
-    const ds = gnArcDataset(p.n+' ('+(isA?'A':'B')+')', gnCareerArc(p), gnSeriesColor(i));
+    const isA = state.A.some(x=>gnPKey(x)===gnPKey(p));   // v53.1 (S10): the side by identity (eid), not (n, o)
+    const ds = gnArcDataset(p.n+' ('+(isA?'A':'B')+')'+((p.eng&&p.eng.new)?' \u2014 not priced yet':''), gnCareerArc(p), gnSeriesColor(i));
     // v53.0: the points before Current are actual GN FP (rate basis, marked) or the illustrative ramp
     ds.gnPast = gnBasis(p) === 'rate' ? 'actual' : 'illustrative';
     if (ds.gnPast === 'actual') ds.pointRadius = c => ((c.dataIndex < GN_NOW_IDX && c.raw != null) ? 3 : 0);
@@ -1406,7 +1430,7 @@ function gnRenderArcPlayer(){
     const hi = GN_NOW_IDX + k;
     const data = new Array(GN_ARC_YEARS.length).fill(null);
     data[hi] = (MODE==='dollar') ? (p.d||0) : (p.r||0);
-    const isA = state.A.some(x=>x.n===p.n && x.o===p.o);
+    const isA = state.A.some(x=>gnPKey(x)===gnPKey(p));
     datasets.push({ label: p.n + ' (' + (isA?'A':'B') + ') headline', data, gnHeadline: true, showLine: false,
       borderColor: gnSeriesColor(i), backgroundColor: gnSeriesColor(i), pointStyle: 'rectRot', pointRadius: 5, pointHoverRadius: 7 });
   });
@@ -1455,11 +1479,12 @@ function gnRenderArcTeam(){
     if(!list.length) return;
     const s = teamSeries(list);
     const d = gnArcDataset('Side ' + side + ' receives (' + list.length + ')', s.sums, color, 3);
-    d.gnCounts = s.counts; d.gnTotal = list.length;
+    const _lv = list.filter(p => !(p.eng && p.eng.new)).length;   // v53.1 (S10): the priced picks (an eng.new arc is null)
+    d.gnCounts = s.counts; d.gnTotal = _lv;
     const _nr = list.filter(p => gnBasis(p) === 'rate').length;   // v53.0: what the summed past is
-    d.gnPast = _nr === list.length ? 'actual' : (_nr ? 'actual + illustrative' : 'illustrative');
+    d.gnPast = _nr === _lv ? 'actual' : (_nr ? 'actual + illustrative' : 'illustrative');
     const entered = s.counts.filter(c=>c>0);
-    if(entered.length && Math.min.apply(null, entered) < list.length) stepped = true;
+    if(entered.length && Math.min.apply(null, entered) < _lv) stepped = true;
     datasets.push(d);
   });
   const options = gnArcOptions(unit,11);
@@ -1469,10 +1494,12 @@ function gnRenderArcTeam(){
   // below peak age, the injury multiplier spread over ten seasons -- so wherever a picked player's
   // Current cell is not his headline, say why the two differ rather than let it read as a gap.
   const _sub = [];
-  if (YEARS === 1 && allPicked0.some(p => gnKstar(p) !== 0
-        || Math.abs(((p.tj || [])[0] || 0) - (p.r || 0)) > Math.max(5, 0.05 * (p.r || 0))))
+  if (YEARS === 1 && allPicked0.some(p => !(p.eng && p.eng.new) && (gnKstar(p) !== 0
+        || Math.abs(((p.tj || [])[0] || 0) - (p.r || 0)) > Math.max(5, 0.05 * (p.r || 0)))))
     _sub.push(GN_NOW_Y + ' adds each player\u2019s Current season; the side card adds headlines (each player\u2019s headline-season value, injury spread over ten seasons)');
   if(stepped) _sub.push('Earlier years count only the players who had started by then, so the line steps up as they enter');
+  const _nwN = allPicked0.filter(p => p.eng && p.eng.new).length;   // v53.1 (S10)
+  if (_nwN) _sub.push(_nwN + (_nwN === 1 ? ' picked player is' : ' picked players are') + ' not priced yet (new to the board) and not in the lines');
   if(_sub.length){
     options.plugins.subtitle = { display:true, color:'#6e6d68', font:{size:10,style:'italic'}, padding:{bottom:4},
       text: _sub.length === 1 ? _sub[0] : _sub };
@@ -1506,16 +1533,17 @@ function renderStackedBarChart() {
   const allPlayers = [];
   state.A.forEach(p => allPlayers.push({ p, side: 'A' }));
   state.B.forEach(p => allPlayers.push({ p, side: 'B' }));
-  let unprojected = 0, sumA = 0, sumB = 0;
+  let unprojected = 0, unpriced = 0, sumA = 0, sumB = 0;   // v53.1 (S10): unpriced = eng.new records (no value yet)
   allPlayers.forEach((item, i) => {
     const val = getValue(item.p);
     // SB-1: in ROS mode getValue is null for 42% of the board. Such a player drew no segment but
     // kept his legend swatch, so the card showed three players and two bars with nothing saying
     // why. Name it on his own legend entry, the way the value cards label a gap.
-    if (val == null) unprojected++;
+    const _nw = val == null && !!(item.p.eng && item.p.eng.new);
+    if (_nw) unpriced++; else if (val == null) unprojected++;
     else if (item.side === 'A') sumA += val; else sumB += val;
     // SB-7: bare names on the one card whose whole job is comparing two sides
-    const label = item.p.n + ' (' + item.side + ')' + (val == null ? ' \u2014 no ROS projection' : '');
+    const label = item.p.n + ' (' + item.side + ')' + (val == null ? (_nw ? ' \u2014 not priced yet' : ' \u2014 no ROS projection') : '');
     const data = item.side === 'A' ? [val, 0] : [0, val];
     datasets.push({
       label: label,
@@ -1530,7 +1558,7 @@ function renderStackedBarChart() {
   gnFitChartWrap('stackedBarChart', allPlayers.length);
   gnDescribeChart('stackedBarChart', 'Trade comparison, stacked by player. '
     + labels[0] + ' totalling ' + gnChartNum(unit, sumA) + ', ' + labels[1] + ' totalling '
-    + gnChartNum(unit, sumB) + '.' + (unprojected ? ' ' + unprojected + ' with no ROS projection.' : ''));
+    + gnChartNum(unit, sumB) + '.' + (unprojected ? ' ' + unprojected + ' with no ROS projection.' : '') + (unpriced ? ' ' + unpriced + ' not priced yet.' : ''));
 
   const config = {
     type: 'bar',
@@ -1542,10 +1570,11 @@ function renderStackedBarChart() {
         legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } },
         // SB-1: the side cards mark an unprojected total with a floor sign; these bars are the same
         // floor and said nothing. They agree numerically, so this is what was missing, not the math.
-        subtitle: unprojected
+        subtitle: (unprojected || unpriced)
           ? { display: true, color: '#6e6d68', font: { size: 10, style: 'italic' }, padding: { bottom: 4 },
-              text: unprojected + (unprojected === 1 ? ' picked player has' : ' picked players have')
-                + ' no ROS projection, so the bars show a floor' }
+              text: [unprojected ? unprojected + (unprojected === 1 ? ' picked player has' : ' picked players have')
+                + ' no ROS projection, so the bars show a floor' : '', unpriced ? unpriced + (unpriced === 1 ? ' picked player is' : ' picked players are')
+                + ' not priced yet (new to the board), so the bars show a floor' : ''].filter(Boolean).join('; ') }
           : { display: false },
         tooltip: {
           callbacks: {
@@ -1821,7 +1850,7 @@ function gnEkgDayRoster(orgName, day){
   const o = GNDAILY.orgs[orgName]; if(!o) return [];
   const ids = {}; ids[String(o.mlb)] = 1; ids[String(o.aaa)] = 1;
   const out = [];
-  for(const p of PLAYERS){ if(p.eid == null || !GNDAILY.member[String(p.eid)]) continue;
+  for(const p of PLAYERS){ if(p.eid == null || (p.eng && p.eng.new) || !GNDAILY.member[String(p.eid)]) continue;   // v53.1 (S10): not eng.new
     const tid = gnTeamOnDay(p.eid, day); if(tid && ids[tid]) out.push(p); }
   return out;
 }
@@ -1909,7 +1938,7 @@ function renderMgrEkg(){
   } else {
     // org / mlb / aaa: sum every rostered player on the relevant squad(s) that day.
     for(const p of PLAYERS){
-      if(p.eid == null) continue;
+      if(p.eid == null || (p.eng && p.eng.new)) continue;   // v53.1 (S10): an eng.new record is not priced yet
       if(!GNDAILY.member[String(p.eid)]) continue;
       if(MGR_POS && !gnEkgPassesPos(p)) continue;
       for(let i=0;i<D;i++){
@@ -1939,7 +1968,7 @@ function renderMgrEkg(){
       }
     } else {
       for (const p of PLAYERS) {
-        if (p.eid == null || !GNDAILY.member[String(p.eid)]) continue;
+        if (p.eid == null || (p.eng && p.eng.new) || !GNDAILY.member[String(p.eid)]) continue;
         if (MGR_POS && !gnEkgPassesPos(p)) continue;
         const tid = gnTeamOnDay(p.eid, D);
         if (tid && teamSet[tid] && p.o !== MGR_EKG_ORG) out.push(p);
@@ -2389,6 +2418,11 @@ function buildDecisionSpine(p,ctx){
   // weight", row 5 (pace) is retired and row 6 adds S'. Held and branch records keep the v52 rows below.
   if (gnBasis(p) === 'rate') {
     var e = p.eng || {}, rt = e.rt || {}, D = gnRateDetail(p), GM = GN_RATE_MODEL, Y0 = GN_NOW_Y, t0 = GN_NOW_Y - 1;
+    // v53.1 (S10c; PLAN_AMENDMENTS_R8 A-R8-7): in season (e > 0) row 4 is the row to date at w0(e) and the newest history
+    // row at its weight at e; b as in gnInspectorHTML (the model's F10_w0, model c7829868bca7 only)
+    var eS = (typeof rt.e === 'number' && rt.e > 0) ? rt.e : 0;
+    var B10 = GM.sha12 === 'c7829868bca7' ? { H: 0.6688057244510216, SP: 0.9951775216206298, RP: 1.8586232729440646 } : null;
+    var anyTd = eS > 0 && !!(D && D.kinds && D.kinds.some(function (kd) { return Array.isArray(kd.td) && kd.td[1] > 0; }));
     var q = function (v) { return (v == null) ? '&mdash;' : _iesc(v); };
     var rows = '', warns = 0, diff = (p.a != null && rt.a0 != null && p.a - 1 !== rt.a0);
     var acts = (rt.act || []).map(function (a) { return a[0]; });
@@ -2399,11 +2433,30 @@ function buildDecisionSpine(p,ctx){
     // R4 (W13-PV-12): one season of history prints as that season, not 'YYYY-YY'
     var span2 = !acts.length ? '2024-26' : (acts[acts.length - 1] === acts[0] ? String(acts[0]) : acts[acts.length - 1] + '-' + String(acts[0]).slice(2));
     rows += gnSpineRow(2, 'Basis', 'SPEC 1', 'rate basis: the lag-weighted posterior of his ' + span2
-      + ' MLB rows at e = ' + q(rt.e || 0) + ', model ' + q(rt.model || GM.sha12) + (rt.hist === 'namecand' ? ' &middot; history matched by a unique name (hist:namecand)' : '')
+      + ' MLB rows' + (anyTd ? ' and his ' + Y0 + ' row to date' : '') + ' at e = ' + q(rt.e || 0) + ', model ' + q(rt.model || GM.sha12) + (rt.hist === 'namecand' ? ' &middot; history matched by a unique name (hist:namecand)' : '')
       + (s2 ? ' &middot; handover test: a tool T3 with MLB units, prior &mu;0 from &kappa;_P &times; tc' + (k2 ? ' (' + (k2.s2.src === 'switched' ? 'switched' : 'tool') + ')' : '') : ''),
       s2 ? 'RATE (S2-lite: handover test)' : 'RATE (S1)', '', false);
     rows += gnSpineRow(3, 'Phase', '§12A', 'not used on the rate basis: the phase is a label only', ' &mdash; ', '', true);
     var t4 = 'no ' + Y0 + ' games yet';
+    if (eS > 0) {
+      t4 = '';
+      if (D && D.kinds && D.kinds.length) {
+        D.kinds.forEach(function (kd, i) {
+          var w = (GM.w || {})[kd.grp] || [], b = B10 ? B10[kd.grp] : null, w0 = (b == null || w[0] == null) ? null : w[0] * (1.0 + b * (1.0 - eS));
+          var den = (kd.x || {}).den, td = (Array.isArray(kd.td) && kd.td[1] > 0) ? kd.td : null;
+          t4 += i ? '; ' + (kd.grp === 'H' ? 'batting' : 'pitching') + ': ' : '';
+          if (td) {
+            var sh = (den > 0 && w0 != null) ? 100 * w0 * td[1] / den : 0;
+            t4 += Y0 + ' to date: ' + (Number.isInteger(td[1]) ? String(td[1]) : td[1].toFixed(1)) + ' ' + (kd.grp === 'H' ? 'PA' : 'IP') + ' at w0(e) = ' + (w0 != null ? w0.toFixed(4) : '&mdash;') + ' (' + sh.toFixed(1) + '% of the posterior)';
+          } else t4 += 'no ' + Y0 + ' units yet' + (w0 != null ? ' (w0(e) = ' + w0.toFixed(4) + ')' : '');
+          var r0 = kd.rows && kd.rows[0]; if (!r0) return;
+          var s0 = r0[0], li = Y0 - s0, wv = li === 1 ? (1 - eS) * w[0] + eS * w[1] : (li === 2 ? (1 - eS) * w[1] + eS * w[2] : (li === 3 ? (1 - eS) * w[2] : null));
+          var share = (den > 0 && r0[1] > 0 && wv != null) ? 100 * wv * r0[1] / den : 0;
+          t4 += '; the newest history row is ' + s0 + ' at lag weight ' + (li < 3 ? '(1 &minus; e) w' + li + ' + e w' + (li + 1) : '(1 &minus; e) w' + li)
+            + ' = ' + (wv != null ? wv.toFixed(4) : '&mdash;') + ' (' + share.toFixed(1) + '% of the posterior)';
+        });
+      } else t4 = Y0 + ' to date: the rows load with the rate chain';
+    } else {
     if (D && D.kinds && D.kinds.length) {
       D.kinds.forEach(function (kd, i) {
         var r0 = kd.rows && kd.rows[0]; if (!r0) return;
@@ -2413,6 +2466,7 @@ function buildDecisionSpine(p,ctx){
           + ' = ' + (wv != null ? wv.toFixed(2) : '&mdash;') + ' (' + share.toFixed(1) + '% of the posterior)';
       });
     } else t4 += '; the history rows load with the rate chain';
+    }
     rows += gnSpineRow(4, "This season's weight", 'SPEC 3.3', t4, 'e = ' + q(rt.e || 0), '', false);
     rows += gnSpineRow(5, 'Pace', '§13', 'retired on the rate basis: the multiplier is fixed at 1.00 (SPEC 8.3)', 'retired', '', true);
     var j = p.inj || null, im = (p.im != null ? p.im : 1), t6, w6 = '', onEspn = /^(IL-|OUT)/.test(String(p.il || ''));
@@ -2680,13 +2734,14 @@ function buildInspectorTree(p,ctx){
   // retires) and the result is RA = Pure x Hit% x Injury; held and branch records keep the v52 tree below.
   if (gnBasis(p) === 'rate') {
     var re = p.eng || {}, rt = re.rt || {}, D = gnRateDetail(p), rk = rt.kstar, rj = p.inj || null, rim = (p.im != null ? p.im : 1);
+    var rtE = (typeof rt.e === 'number' && rt.e > 0) ? rt.e : 0;          // v53.1 (S10c): in season
     var rsc = (p.p === 'C' || p.p === '2B' || p.p === '3B') ? 1.15 : 1.00, rmt = (re.matur != null && re.matur < 1) ? re.matur : 1;
     var tf = function (v, d) { return (v == null || !isFinite(v)) ? '-' : Number(v).toFixed(d); };
     var rpure = [], rhit = [], rinj = [];
     if (D && D.kinds) {
       D.kinds.forEach(function (kd) {
         var px = D.kinds.length > 1 ? kd.grp + ': ' : '';
-        rpure.push([px + (kd.prior === 's2lite' ? 'S2-lite prior' : 'league-mean prior') + ', K ' + tf(kd.K, 1), '\u03bc0 ' + tf(kd.mu0, 4)]);
+        rpure.push([px + (kd.prior === 's2lite' ? 'S2-lite prior' : (kd.prior === 'newcomer' ? 'newcomer prior' : 'league-mean prior')) + ', K ' + tf(kd.K, 1), '\u03bc0 ' + tf(kd.mu0, 4)]);
         rpure.push([px + 'posterior from the rows (league-relative)', (kd.post >= 0 ? '+' : '') + tf(kd.post, 4)]);
         rpure.push([px + '+ LM ' + kd.grp + ' = rate at the anchor', tf(kd.post + kd.LM, 3)]);
         rpure.push([px + '\u03b2, \u03b3, C' + (kd.grp !== 'H' ? ', \u03b4' : '') + ' to k* = rate_E', tf(kd.rE[rk], 3)]);
@@ -2703,12 +2758,12 @@ function buildInspectorTree(p,ctx){
     // number as Hit% and stays the last step
     var kY = (rk > 0) ? ' at k* (' + (GN_NOW_Y + rk) + ')' : '';
     if (D && D.uk) {
-      rhit.push(['U' + kY + ' = 1.5 x logistic(terms)', tf(D.uk[rk], 4)]);
+      rhit.push([(rtE > 0 && !(rk > 0)) ? 'U this season (k = 0, in progress)' : 'U' + kY + ' = 1.5 x logistic(terms)', tf(D.uk[rk], 4)]);
       rhit.push(['SIGMA' + kY + ': still in MLB', tf(D.sk[rk], 4)]);
       rhit.push(['A = U / SIGMA', tf(D.ak[rk], 4)]);
       if (D.ugk && D.ugk[rk] != null) rhit.push(['UG' + kY + ' (appearances)', tf(D.ugk[rk], 4)]);
     } else rhit.push(['rate chain', 'loading']);
-    if (!(rk > 0)) rhit.push(['a_real 0 + a_rem (this season)', tf(p.arem, 4)]);
+    if (!(rk > 0)) rhit.push([rtE > 0 ? 'a_real ' + tf(p.areal, 4) + ' + a_rem (this season)' : 'a_real 0 + a_rem (this season)', tf(p.arem, 4)]);
     rhit.push(['= HIT %' + (rk > 0 ? ' (share at k* ' + (GN_NOW_Y + rk) + ')' : ''), tf(p.h, 4)]);
     if (!rj || rj.present === false) { rinj.push(['no injury-module record', 'f\u2032 = 1']); rinj.push(['A_rec: retired (rate basis)', '0']); }
     else {
@@ -2751,7 +2806,7 @@ function buildInspectorTree(p,ctx){
     var RH = rdY + 56;
     if (rk > 0) {          // R4 (W13-PV-05): this season's share, off the chain
       rparts.push('<text x="' + (RW / 2) + '" y="' + (rdY + 60) + '" font-size="9.5" font-style="italic" text-anchor="middle" fill="#6e6d68">'
-        + _iesc('Not a step to Hit%: this season (' + GN_NOW_Y + ', k = 0) a_real 0 + a_rem = ' + tf(p.arem, 4) + ', his expected share now; Hit% is the share at k* (' + (GN_NOW_Y + rk) + ').') + '</text>');
+        + _iesc('Not a step to Hit%: this season (' + GN_NOW_Y + ', k = 0) ' + (rtE > 0 ? 'a_real ' + tf(p.areal, 4) + ' + a_rem ' + tf(p.arem, 4) + ' = ' + tf((p.hk || [])[0], 4) : 'a_real 0 + a_rem = ' + tf(p.arem, 4)) + ', his expected share now; Hit% is the share at k* (' + (GN_NOW_Y + rk) + ').') + '</text>');
       RH += 16;
     }
     return '<svg viewBox="0 0 ' + RW + ' ' + RH + '" style="width:100%;height:auto;font-family:Lato,Arial,sans-serif" role="img" aria-label="Value flow tree for ' + _iesc(p.n) + '"><rect x="0" y="0" width="' + RW + '" height="' + RH + '" fill="#FBF8EF"/>' + redges.join('') + rparts.join('') + '</svg>';
@@ -2860,6 +2915,42 @@ function gnV50RetiredRow(p, sub2) {
 }
 // Compare view: the panel as a string, no DOM and no INSP_CURRENT -- renderInspector below is the only writer.
 function gnInspectorHTML(p) {
+  /* v53.1 S10 patch_new_v53_1 */
+  // v53.1 (S10; PLAN_AMENDMENTS_R6b A-R6b-4, R7 A-R7-4 (b)): a record added after v53.0 by --rosters-only --add-new carries
+  // eng.new (the rosters-through date) and no price: r 0, d 0, no rate block, no detail entry, and none of a, t, ph, h, pc,
+  // pm, im, tj or inj. Its panel is built here, before any of those is read; it prints no Pure, Hit%, Injury, headline
+  // or trajectory chain, and its value reads "not priced yet". Plan 7.10's line, with eng.new escaped.
+  if (p && p.eng && p.eng.new) {
+    const _o = (p.o || '') + '', _fa = _o.indexOf('FA') === 0;
+    const _team = _fa ? ('Free agent' + (_o.length > 2 ? ' ' + _o.slice(2).trim() : '')) : (p.rn ? (p.rn + (p.l ? ' (' + p.l + ')' : '')) : (_o || '\u2014'));
+    const _il = p.il || (p.eid != null ? 'ACTIVE' : '\u2014'), _pos = p.p || '\u2014';
+    const _row = (l, v) => `<div class="formula-row"><span class="label">${_iesc(l)}</span><span class="value">${_iesc(v)}</span></div>`;
+    const _line = 'New to the board: added after v53.0; priced from v53.1 (rosters through ' + String(p.eng.new) + ').';
+    return `
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div style="font-size: 16px; font-weight: 500;">${_iesc(p.n)}</div>
+        <div style="font-size: 12px; color: var(--color-text-secondary, #6e6d68);">${_iesc(_pos)} | ${_iesc(_team)} | ${_iesc(_il)}</div>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-size: 20px; font-weight: 500;">not priced yet</div>
+        <div style="font-size: 11px; font-style: italic; color: var(--color-text-tertiary, #9c9b96);">new to the board &mdash; priced from v53.1</div>
+      </div>
+    </div>
+
+    <div class="player-card" id="inspListView">
+      <div class="formula-section" style="grid-column: 1 / -1;">
+        <h4>New to the board</h4>
+        <div class="formula-row note"><span class="value">${_iesc(_line)}</span></div>
+        ${_row('Name', p.n)}
+        ${_row('Position', _pos)}
+        ${_row('Fantasy roster', _team)}
+        ${_row('ESPN status', _il)}
+        ${_row('Value', 'not priced yet')}
+      </div>
+    </div>
+  `;
+  }
   // v53.0 (W4; plan 6.1, SPEC 13.4): a rate-basis record has its own panel. Every number on it is a stored field --
   // PLAYERS (column A), the detail entry through gnRateDetail(p) (column D, gn-rate-detail.js), GN_RATE_MODEL -- so
   // the page prints the build's numbers and re-derives none of the stored integers (A-16). Held and prospect-branch
@@ -2873,6 +2964,32 @@ function gnInspectorHTML(p) {
     const D = gnRateDetail(p);                 // null until gn-rate-detail.js has loaded (plan 2.9)
     const e = p.eng || {}, rt = e.rt || {}, j = p.inj || {}, GM = GN_RATE_MODEL, Y0 = GN_NOW_Y, t0 = GN_NOW_Y - 1;
     const k = rt.kstar, jS = k + 1, isPitcher = p.p === 'SP' || p.p === 'RP';
+    // v53.1 (S10c; PLAN_AMENDMENTS_R8 A-R8-7, C-R7-1): the in-season Inspector, display only. eS is the season share e the
+    // record is priced at (eng.rt.e). At e = 0 no line below changes, so every panel is v53.0's byte for byte (A-R7-4
+    // (d)). The anchor's weights at e (SPEC 3.3 with F10) are [w0(e), (1 - e) w1 + e w2, (1 - e) w2 + e w3, (1 - e) w3]
+    // on [the season-c row to date (td), c - 1, c - 2, c - 3], with w0(e) = w1 (1 + b (1 - e)). b is the model's
+    // F10_w0.groups[g].b: GN_RATE_MODEL carries no b (A-8), so it is written here for the pinned model (sha12
+    // c7829868bca7) only, and the render check holds every printed w0 against the model JSON. The row to date's league
+    // mean (LMR_c, the weekly's) is not shipped either: it is read back from the stored posterior, post x (den + K) =
+    // num + K mu0, and the render check holds it against the weekly log's LMR_c.
+    const eS = (typeof rt.e === 'number' && rt.e > 0) ? rt.e : 0;
+    const B10 = GM.sha12 === 'c7829868bca7' ? { H: 0.6688057244510216, SP: 0.9951775216206298, RP: 1.8586232729440646 } : null;
+    const wAt = (kd, s) => {         // the anchor's weight at e on a history row of season s (lag c - s = 1, 2, 3)
+      const w = (GM.w || {})[kd.grp] || [], i = Y0 - s;
+      return i === 1 ? (1 - eS) * w[0] + eS * w[1] : (i === 2 ? (1 - eS) * w[1] + eS * w[2] : (i === 3 ? (1 - eS) * w[2] : null));
+    };
+    const w0At = kd => { const w = (GM.w || {})[kd.grp] || [], b = B10 ? B10[kd.grp] : null; return (b == null || w[0] == null) ? null : w[0] * (1.0 + b * (1.0 - eS)); };
+    const tdOf = kd => ((eS > 0 && Array.isArray(kd.td) && kd.td[1] > 0) ? kd.td : null);
+    const lmTd = kd => {             // LMR_c of the kind's row to date, read back from the stored posterior (null if it cannot be)
+      const td = tdOf(kd), w0 = w0At(kd);
+      if (!td || w0 == null || !(w0 > 0)) return null;
+      let num = 0, den = 0;
+      kd.rows.forEach(r => { const n = r[1], wv = wAt(kd, r[0]); if (n && wv) { const lm = ((GM.LMR || {})[r[5]] || {})[String(r[0])]; num += wv * n * (r[2] / n - lm); den += wv * n; } });
+      const xt = (kd.post * (den + w0 * td[1] + kd.K) - num - kd.K * kd.mu0) / (w0 * td[1]);
+      return isFinite(xt) ? td[2] / td[1] - xt : null;
+    };
+    const uOf = kd => (kd.grp === 'H' ? 'PA' : 'IP');
+    const unitsT = n => ((n == null || !isFinite(n)) ? '\u2014' : (Number.isInteger(n) ? String(n) : Number(n).toFixed(1)));
     const role = p.p === 'SP' ? 'SP' : (p.p === 'RP' ? 'RP' : 'Hitter');
     const r3 = String(GM.combo || '').split('|')[0];
     const sc = (p.p === 'C' || p.p === '2B' || p.p === '3B') ? 1.15 : 1.00;     // X-SC (R7)
@@ -2925,10 +3042,36 @@ function gnInspectorHTML(p) {
         if (kd.prior === 's2lite' && kd.s2) {
           x += row(`Prior: S2-lite (handover test), \u03ba_P \u00d7 tc = ${fx(kd.s2.kappa, 4)} \u00d7 ${ns(kd.s2.tc)} = ${fx(kd.s2.kappa * kd.s2.tc, 1)} FP \u2192 \u03bc0 = ${g6(kd.mu0)} FP/${u}`, `K = ${fx(kd.K, 1)}`);
           x += note(`\u03bc0 = (\u03ba_P \u00d7 tc \u2212 role points ${fx(kd.s2.role1, 2)}) \u00f7 the full season ${fx(kd.s2.PTf, 1)} ${u} \u2212 LM ${fx(kd.s2.LM, 4)}: his tool grade at the install level, as a prior rate, in place of the league mean (${kd.s2.src === 'switched' ? 'switched to the rate basis' : 'a tool T3 with 2024-26 MLB units'}).`);
+        } else if (kd.prior === 'newcomer') {
+          // v53.1 (S10c): plan 7.10 row 2 / D-2 (b), a player-kind with no MLB row of the kind before season c (none at v53.0)
+          x += row(`Prior: ${kd.grp} newcomer prior (no ${kd.grp} row before ${Y0}), \u03bc0(e) = (1 \u2212 e) \u00d7 the age band's mean = ${g6(kd.mu0)} FP/${u}`, `K = ${fx(kd.K, 1)}`);
         } else {
           x += row(`Prior: ${kd.grp} league mean, \u03bc0 = 0`, `K = ${fx(kd.K, 1)}`);
         }
         // Pure 2: the history rows, newest first, each with its own group's league mean and the kind's lag weight
+        if (eS > 0) {
+          // v53.1 (S10c): in season the row to date comes first, at w0(e), then the history rows at the anchor's weights at
+          // e; x.num / x.den are the posterior's numerator and denominator at those weights (P-R6-1)
+          const td = tdOf(kd), w0 = w0At(kd), b0 = B10 ? B10[kd.grp] : null;
+          const w0T = w0 == null ? 'w0(e) = w1 \u00d7 (1 + b \u00d7 (1 \u2212 e)) (F10)' : `w0(e) = w1 \u00d7 (1 + b \u00d7 (1 \u2212 e)) = ${fx(w[0], 2)} \u00d7 (1 + ${fx(b0, 4)} \u00d7 (1 \u2212 ${ns(eS)})) = ${fx(w0, 4)}`;
+          if (td) {
+            const n = td[1], sk = td[2], rp = td[3], g = td[5], lm = lmTd(kd);
+            x += row(`${Y0} to date (${g}): ${unitsT(n)} ${u}, ${ns(sk)} skill FP \u2192 ${fx(sk / n, 4)}/${u}`
+              + (lm != null ? `; vs LM ${sg(sk / n - lm, 4)} (LM ${g} ${Y0} to date), LM ${fx(lm, 4)}` : `; vs the league mean to date (LM ${g} ${Y0} to date)`)
+              + `; weight ${w0T}` + (rp ? `; role points ${ns(rp)} (priced on the role line)` : ''), '');
+          } else x += row(`${Y0} to date: no units yet (weight ${w0T}, contributes 0)`, '');
+          if (!kd.rows.some(r => r[0] === t0)) x += row(`${t0}: no MLB units (lag weight (1 \u2212 e) w1 + e w2 = ${fx(wAt(kd, t0), 4)}, contributes 0)`, '');
+          kd.rows.forEach(r => {
+            const s = r[0], n = r[1], sk = r[2], rp = r[3], g = r[5], wv = wAt(kd, s), i = Y0 - s;
+            const lm = ((GM.LMR || {})[g] || {})[String(s)];
+            const nT = Number.isInteger(n) ? String(n) : fx(n, 1);
+            const tail = `; lag weight ${i < 3 ? `(1 \u2212 e) w${i} + e w${i + 1}` : `(1 \u2212 e) w${i}`} = ${fx(wv, 4)}` + (rp ? `; role points ${ns(rp)} (priced on the role line)` : '');
+            if (!(n > 0)) x += row(`${s} (${g}): ${nT} ${u}, ${ns(sk)} skill FP; no rate (0 units): no weight in the posterior, contributes 0 (LM ${g} ${s})${tail}`, '');
+            else x += row(`${s} (${g}): ${nT} ${u}, ${ns(sk)} skill FP \u2192 ${fx(sk / n, 4)}/${u}; vs LM ${sg(sk / n - lm, 4)} (LM ${g} ${s}), LM ${fx(lm, 4)}${tail}`, '');
+          });
+          x += row(`posterior numerator \u03a3w\u00b7n\u00b7x + K\u00b7\u03bc0 (the weights at e = ${ns(eS)}; the ${Y0} row to date at w0(e))`, '= ' + g6(xx.num), 'sub');
+          x += row('denominator \u03a3w\u00b7n + K', '= ' + g6(xx.den), 'sub');
+        } else {
         if (!kd.rows.some(r => r[0] === t0)) x += row(`${t0}: no MLB units (lag 1, weight w1, contributes 0)`, '');
         kd.rows.forEach(r => {
           const s = r[0], n = r[1], sk = r[2], rp = r[3], g = r[5], wv = w[t0 - s];
@@ -2940,14 +3083,15 @@ function gnInspectorHTML(p) {
         });
         x += row('posterior numerator \u03a3w\u00b7n\u00b7x + K\u00b7\u03bc0', '= ' + g6(xx.num), 'sub');
         x += row('denominator \u03a3w\u00b7n + K', '= ' + g6(xx.den), 'sub');
+        }
         // Pure 3
         x += row('= posterior (league-relative)', `${sg(kd.post, 5)} FP/${u} (numerator \u00f7 denominator); + LM ${fx(kd.LM, 5)} = ${fx(kd.post + kd.LM, 5)} FP/${u} at the anchor`, 'subtotal');
         // Pure 4-5: to the headline season, each term signed and as a percent of the anchor rate
         const anc = kd.post + kd.LM, pct = v => (anc > 0 ? pc_(100 * v / anc) : '');
         const beta = Math.abs(kd.post) > 1e-12 ? xx.bt / kd.post : null;
-        x += row(`\u00d7 horizon slope \u03b2(j*) at j* = ${jS}${beta != null ? ': \u03b2 = ' + fx(beta, 4) : ''}, on the posterior`, `${sg(xx.bt - kd.post, 5)} FP/${u}${pct(xx.bt - kd.post)}`, 'sub');
+        x += row(`\u00d7 horizon slope \u03b2(j*) at j* = ${eS > 0 ? fx(jS - eS, 4) : jS}${beta != null ? ': \u03b2 = ' + fx(beta, 4) : ''}, on the posterior`, `${sg(xx.bt - kd.post, 5)} FP/${u}${pct(xx.bt - kd.post)}`, 'sub');
         x += row(`+ quality drift \u03b3(j*)(q \u2212 0.5), q = ${fx(kd.q, 3)}`, `${sg(xx.gq, 5)} FP/${u}${pct(xx.gq)}`, 'sub');
-        x += row(`+ ageing C(a + j*) \u2212 C(a), a = ${ns(rt.a0)} \u2192 ${rt.a0 != null ? rt.a0 + jS : '\u2014'}`, `${sg(xx.ca, 5)} FP/${u}${pct(xx.ca)}`, 'sub');
+        x += row(`+ ageing C(a + j*) \u2212 C(a), a = ${(eS > 0 && rt.a0 != null) ? fx(rt.a0 + eS, 4) : ns(rt.a0)} \u2192 ${rt.a0 != null ? rt.a0 + jS : '\u2014'}`, `${sg(xx.ca, 5)} FP/${u}${pct(xx.ca)}`, 'sub');
         if (kd.grp !== 'H') x += row('+ role-state rate shift \u03b4_j*', `${sg(xx.dl || 0, 5)} FP/${u}${pct(xx.dl || 0)}`, 'sub');
         x += row(`= rate_E at the headline season (k* = ${k}, ${Y0 + k})`, `${fx(kd.rE[k], 4)} FP/${u}`, 'subtotal');
         // Pure 6: the healthy full season
@@ -2994,22 +3138,32 @@ function gnInspectorHTML(p) {
         let L = 0; uT.forEach(v => { L += v; });
         let LS = 0; sT.forEach(v => { LS += v; });
         if (multi) x += note(kindName(kd) + ':');
-        x += termTable(`Expected-share terms: U's linear predictor at j* = ${jS} (${kd.grp}${kd.pre ? '; the return season reads the pre-episode share' : ''})`, (GM.Ug || {})[kd.grp] || [], uT);
+        x += termTable(`Expected-share terms: U's linear predictor at j* = ${eS > 0 ? fx(jS - eS, 4) : jS} (${kd.grp}${kd.pre ? '; the return season reads the pre-episode share' : ''})`, (GM.Ug || {})[kd.grp] || [], uT);
         x += row('logit = \u03a3 terms', fx(L, 4), 'sub');
-        const U = multi ? 1.5 / (1 + Math.exp(-L)) : D.uk[k];
+        // v53.1 (S10c): c0, this season's cell (k* = 0) in progress (SPEC 5.4): its U is cell 0's uk[0] = a_real + (1 - e)
+        // Arem, not the full-season line the terms give; its SIGMA is the lag-1 survival from tau
+        const c0 = eS > 0 && k === 0;
+        const U = (multi || c0) ? 1.5 / (1 + Math.exp(-L)) : D.uk[k];
         x += row(`U = 1.5 \u00d7 logistic(${fx(L, 4)}) = ${fx(U, 4)}`, '');
-        x += termTable(`Survival terms: SIGMA's linear predictor at j* = ${jS} (${kd.grp})`, (GM.Sg || {})[kd.grp] || [], sT);
-        const sRaw = 1 / (1 + Math.exp(-LS)), Sk = multi ? sRaw : D.sk[k], held = Math.abs(sRaw - Sk) > 2e-4;
-        x += row(`SIGMA = logistic(${fx(LS, 4)}) = ${fx(held ? sRaw : Sk, 4)}` + (held ? `; held to the running minimum over the lags (beyond the last fitted lag, the last one-step survival) = ${fx(Sk, 4)}` : ''), '');
+        if (c0 && !multi) x += note(`This season (${Y0}, k = 0) is in progress: its share is cell 0's, uk[0] = ${fx(D.uk[0], 4)} (his share to date plus (1 \u2212 e) \u00d7 Arem in U, SPEC 5.4), not the full-season line above; ${kd.grp !== 'RP' ? 'the a_real / a_rem row below splits it' : 'the a_real / a_rem row below splits the value-weighted U/UG mix, hk[0]'}.`);
+        x += termTable(`Survival terms: SIGMA's linear predictor at j* = ${c0 ? '1 (the lag-1 survival from \u03c4)' : (eS > 0 ? fx(jS - eS, 4) : jS)} (${kd.grp})`, (GM.Sg || {})[kd.grp] || [], sT);
+        const sRaw = 1 / (1 + Math.exp(-LS)), Sk = multi ? sRaw : D.sk[k], held = !c0 && Math.abs(sRaw - Sk) > 2e-4, s0d = c0 && !multi && fx(sRaw, 4) !== fx(Sk, 4);
+        x += row(`SIGMA = logistic(${fx(LS, 4)}) = ${fx((held || s0d) ? sRaw : Sk, 4)}` + (held ? `; held to the running minimum over the lags (beyond the last fitted lag, the last one-step survival) = ${fx(Sk, 4)}` : '') + (s0d ? `; this season's cell (k = 0) reads the lag-1 survival from \u03c4, ${fx(Sk, 4)}` : ''), '');
         // R4 (W13-PV-09): uk / sk / ak are stored at 4 dp, so where the 4-dp quotient does not reproduce the stored A at
         // 4 dp (a small U, e.g. a retired veteran's 0.0167 / 0.0661), the row prints U and SIGMA from the shipped terms
         // at 6 significant figures (SIGMA as held, where it is held), and the shown quotient reproduces A
         if (!multi) {
           const q4 = (D.sk[k] > 0) ? fx(D.uk[k] / D.sk[k], 4) : null, okA = q4 === fx(D.ak[k], 4);
-          const uA = okA ? fx(D.uk[k], 4) : g6(1.5 / (1 + Math.exp(-L))), sA = okA ? fx(D.sk[k], 4) : (held ? fx(Sk, 4) : g6(sRaw));
+          // v53.1 (S10c): at c0, U is cell 0's (a_real + a_rem, exact on a single non-reliever kind; else uk[0] at 4 dp), and
+          // SIGMA the shipped terms' only where they reproduce the stored lag-1 survival and A; else the stored sk[0] at 4
+          // dp (the terms are a display split and can miss the in-season cell; V09 at e > 0 reads the printed precision)
+          const u0 = (c0 && kd.grp !== 'RP') ? p.areal + p.arem : null;
+          const sTerms = c0 && !s0d && u0 != null && sRaw > 0 && fx(u0 / sRaw, 4) === fx(D.ak[0], 4);
+          const uA = okA ? fx(D.uk[k], 4) : (c0 ? (u0 != null ? g6(u0) : fx(D.uk[0], 4)) : g6(1.5 / (1 + Math.exp(-L))));
+          const sA = okA ? fx(D.sk[k], 4) : (c0 ? (sTerms ? g6(sRaw) : fx(Sk, 4)) : (held ? fx(Sk, 4) : g6(sRaw)));
           x += row(`A = U \u00f7 SIGMA = ${uA} \u00f7 ${sA} = ${fx(D.ak[k], 4)}`, '');
         }
-        kU.push([kd, U]);
+        kU.push([kd, (c0 && !multi) ? D.uk[0] : U]);
       });
       if (multi) {
         x += row(`record at k*: U ${fx(D.uk[k], 4)}, SIGMA ${fx(D.sk[k], 4)}`, '', 'sub');
@@ -3026,11 +3180,22 @@ function gnInspectorHTML(p) {
         });
         // R4 (W13-PV-09): the row's figure is the stored hk[k*] (the mix as the build computed it, from unrounded
         // inputs), so it agrees with the Hit% line below; re-deriving it from the inputs as printed could be 1 off at 4 dp
+        // v53.1 (S10c): a two-way record at k* = 0 in season: Hit% there is cell 0, a_real + a_rem value-weighted over the
+        // chains (the row below), not this mix of the full-season lines (cell 0's per-chain shares are not shipped)
+        if (eS > 0 && k === 0 && multi) x += row('Hit% this season (k = 0, in progress) = a_real + a_rem, value-weighted over the chains (the row below), not the mix of the full-season lines above', fx(p.hk[k], 4), 'sub');
+        else
         x += row(`Hit% = the value-weighted mix ${ug != null ? '(U \u00d7 skill + UG \u00d7 role) \u00f7 (skill + role)' : '\u03a3 U \u00d7 points \u00f7 \u03a3 points over the chains'} = (${parts.join(' + ')}) \u00f7 ${fx(den, 1)} (inputs rounded as shown)`, den > 0 ? fx(p.hk[k], 4) : '\u2014', 'sub');
       }
       // R4 (W13-PV-04): a_rem is the expected share of the current season, hk[0]: U at k = 0, or, for a reliever (UG) or a
       // two-way record, the value-weighted mix at k = 0, the same mix as Hit%
       const ug0 = (D.ugk && D.ugk[0] != null) ? D.ugk[0] : null;
+      if (eS > 0) {
+        // v53.1 (S10c): cell 0 in season (SPEC 5.4): a_real = his units to date over PT_full and a_rem = (1 - e) Arem, each
+        // value-weighted with UG (a reliever) or over the two chains; a_rem is printed as a_rem, never as U (V04)
+        const mix0 = ug0 != null || multi, tdk = D.kinds.filter(kd => tdOf(kd));
+        const realT = !tdk.length ? `no ${Y0} units yet` : (mix0 ? `his ${Y0} units to date, value-weighted` : `${unitsT(tdk[0].td[1])} ${uOf(tdk[0])} to date \u00f7 PT_full ${fx(tdk[0].PTf, 1)}`);
+        x += row(`this season (${Y0} in progress, e = ${ns(eS)}): a_real ${fx(p.areal, 4)} (${realT}), a_rem = (1 \u2212 e) \u00d7 Arem ${fx(p.arem, 4)} (the expected share of the rest of ${Y0}${mix0 ? ', value-weighted' : ''}); a_real + a_rem = ${fx(p.areal + p.arem, 4)} = ${mix0 ? 'hk[0], the value-weighted mix' : 'uk[0]'}`, fx(p.arem, 4), 'sub');
+      } else
       x += row(`this season: a_real ${p.areal ? fx(p.areal, 4) : '0'} (no ${Y0} games yet), a_rem = the expected share of ${Y0} (k = 0): ${ug0 != null ? 'the value-weighted U/UG mix, as in Hit%' : (multi ? 'the two chains\' value-weighted mix of U, as in Hit%' : 'U')}; hk[0] = a_real + a_rem`, fx(p.arem, 4), 'sub');
       // R4 (W13-PV-07): the basis season and basis rule are printed only where the record carries them (null on 255 / 234
       // of the 296 returning kinds; the rule text names the season where it matters)
@@ -3139,9 +3304,17 @@ function gnInspectorHTML(p) {
     const hK = D ? D.kinds.find(kd => kd.grp === 'H') : null;
     if (hK && GM.Gfull && ((hK.Gf === GM.Gfull.C) !== (p.p === 'C'))) flags.push(hK.Gf === GM.Gfull.C ? 'catcher (history): his rows put him behind the plate, so G_full(C)' : 'not a catcher in his history: G_full(H)');
     if (rt.tag === 'S2-lite' || (D && D.kinds.some(kd => kd.prior === 's2lite'))) flags.push('S2-lite prior');
+    if (D && D.kinds.some(kd => kd.prior === 'newcomer')) flags.push(`prior:newcomer (no MLB row of the kind before ${Y0}: \u03bc0(e) = (1 \u2212 e) \u00d7 the age band's mean, D-2 (b))`);   // v53.1 (S10c)
+    // v53.1 (S10c): the season-to-date line (A-R8-7 item 1), from the kinds' td and the data date
+    const tdLine = () => {
+      const dt = (typeof GN_DATA_THROUGH !== 'undefined') ? GN_DATA_THROUGH : '\u2014';
+      if (!D) return `${Y0} to date through ${dt} (e = ${ns(rt.e)}): the units load with the rate chain`;
+      const parts = D.kinds.filter(kd => tdOf(kd)).map(kd => `${unitsT(kd.td[1])} ${uOf(kd)}`);
+      return `${Y0} to date: ${parts.length ? parts.join(' + ') : 'no units yet'} through ${dt} (e = ${ns(rt.e)})`;
+    };
     const cls = row('Type', typeLabels[p.t] || ns(p.t)) + row('Phase', p.ph || '\u2014') + row('Position', ns(p.p)) + row('Age (board)', ns(p.a))
       + row('Pricing age a0', `${ns(rt.a0)} (from ${ns(rt.a0src)})`)
-      + row('Season to date', rt.e ? `${Y0} to date: e = ${fx(rt.e, 3)}` : `${Y0} to date: no games yet (e = 0)`)
+      + row('Season to date', rt.e ? tdLine() : `${Y0} to date: no games yet (e = 0)`)
       + row('Confidence', p.conf || '\u2014')
       // R4 (W13-PV-10): with no injury-module record (inj.present false) the designation is not priced (f' = 1)
       + row('ESPN status', (p.il || (p.eid != null ? 'ACTIVE' : '\u2014')) + (injOnEspn ? (j.present === false ? ' \u2014 not priced: no injury-module record (f\u2032 = 1)' : ' \u2014 priced by the injury module (no Hit% deduction since v51.0)') : ''))
@@ -3925,7 +4098,7 @@ function renderOptions(name) {
   const rem = (data.remaining === undefined ? 2 : data.remaining);
   const c = optColor(rem);
   let sub;
-  if (p) { sub = `${p.p} | age ${p.a} | ${p.o && p.o.startsWith('FA') ? 'Free Agent' : (p.rn || p.o)}`; }
+  if (p) { sub = `${p.p} | age ${p.a != null ? p.a : '\u2014'} | ${p.o && p.o.startsWith('FA') ? 'Free Agent' : (p.rn || p.o)}`; }
   else { const loc = (data.events || []).map(e => e.team).find(t => t && t !== 'Waivers'); sub = loc ? `Currently: ${loc} \u00b7 not in valuation workbook` : 'Free agent / not rostered'; }
   const rows = (data.events || []).map(e => {
     const burn = e.burn, pend = e.pending_burn;
